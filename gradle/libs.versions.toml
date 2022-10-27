@@ -1,0 +1,14 @@
+[versions]
+lwjgl                   = "3.3.1"
+joml                    = "1.10.4"
+joml-primitives         = "1.10.0"
+
+
+[libraries]
+
+lwjgl-lwjgl     = { group = "org.lwjgl" , name = "lwjgl", version.ref = "lwjgl" }
+lwjgl-glfw      = { group = "org.lwjgl" , name = "lwjgl-glfw", version.ref = "lwjgl" }
+lwjgl-opengl    = { group = "org.lwjgl" , name = "lwjgl-opengl", version.ref = "lwjgl" }
+lwjgl-stb       = { group = "org.lwjgl" , name = "lwjgl-stb", version.ref = "lwjgl" }
+joml            = { group = "org.joml" , name = "joml", version.ref = "joml" }
+joml-primitives = { group = "org.joml" , name = "joml-primitives", version.ref = "joml-primitives" }
