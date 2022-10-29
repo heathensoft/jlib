@@ -45,7 +45,6 @@ public class Viewport {
         modified = true;
     }
     
-    // every frame (rendering frame)
     protected void refresh() {
         if (modified) {
             if (!tempArea.equals(viewArea)) {
@@ -73,27 +72,27 @@ public class Viewport {
         set(0,0,w,h);
     }
     
-    int x() {
+    public int x() {
         return viewArea.x();
     }
     
-    int y() {
+    public int y() {
         return viewArea.y();
     }
     
-    int width() {
+    public int width() {
         return viewArea.z();
     }
     
-    int height() {
+    public int height() {
         return viewArea.w();
     }
     
-    float w_inv() {
+    public float w_inv() {
         return width_inv;
     }
     
-    float h_inv() {
+    public float h_inv() {
         return height_inv;
     }
     

@@ -1,7 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.io.File;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import org.joml.Math;
 import org.joml.Vector3f;
@@ -138,10 +137,6 @@ public class Image implements Disposable {
     
     public ByteBuffer data() {
         return data;
-    }
-    
-    public void toPNG(File file) {
-        toPNG(file.path().toString());
     }
     
     public void toPNG(String path) {
