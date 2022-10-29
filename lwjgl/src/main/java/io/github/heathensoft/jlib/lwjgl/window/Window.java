@@ -49,7 +49,7 @@ public class Window extends AbstractWindow {
     private double mouse_screen_x;
     private double mouse_screen_y;
     private boolean should_update_app_res;
-    private boolean save_settings_on_exit;
+    private boolean use_default_settings;
     private boolean resizable_window;
     private boolean auto_resolution;
     private boolean auto_color_bits;
@@ -64,10 +64,14 @@ public class Window extends AbstractWindow {
     
     @Override
     protected void loadSettings(Settings user, BootConfiguration app_default) {
-        try { user.validate();
-            user.load();
-        } catch (IOException e) { Logger.warn(e,"unable to access settings file");
-        } save_settings_on_exit = user.getBool(SAVE_SETTINGS_ON_EXIT,app_default.save_settings_on_exit);
+        
+        if (!app_default.use_default_settings) {
+            try { user.validate();
+                user.load();
+            } catch (IOException e) {
+                Logger.warn(e,"unable to access settings file");
+            }
+        }
         settings_width = user.getInt(SETTINGS_WIDTH,app_default.settings_width);
         settings_height = user.getInt(SETTINGS_HEIGHT,app_default.settings_height);
         settings_refresh_rate = user.getInt(SETTINGS_REFRESH_RATE,app_default.settings_refresh_rate);
@@ -87,19 +91,19 @@ public class Window extends AbstractWindow {
     }
     
     @Override
-    protected void Initialize(List<Resolution> app_res_options) throws Exception {
+    protected void initialize(List<Resolution> app_res_options) throws Exception {
         if (app_res_options.isEmpty()) {
             throw new Exception("the application failed provide any resolutions");
         } this.app_res_options = app_res_options;
     
-        Logger.debug("setting error callback");
+        Logger.debug("setting glfw error callback");
         
         setErrorCallback();
         if (!glfwInit()) {
             freeErrorCallback();
             throw new Exception("unable to initialize glfw");
         }
-        Logger.debug("glfw initialized");
+        Logger.debug("glfw library initialized");
     
         Logger.debug("querying for primary monitor");
         long monitor = Monitor.primary();
@@ -214,7 +218,6 @@ public class Window extends AbstractWindow {
         glfwSwapInterval(vsync_enabled ? 1 : 0);
         glfwShowWindow(window);
         GL.createCapabilities();
-        //create and clear capabilities in engine
         
     }
     
@@ -231,8 +234,7 @@ public class Window extends AbstractWindow {
             Resolution.sortByClosest(framebuffer,list);
             Resolution closest = list.get(0);
             if (!app_resolution.equals(closest)) {
-                //Application app = Engine.get().application;
-                //app.resolution_request(closest);
+                Engine.get().app.resolution_request(closest);
                 Logger.debug("updating app resolution from: {}:{}",app_resolution.width(),app_resolution.height());
                 Logger.debug("updating app resolution to:   {}:{}",closest.width(),closest.height());
                 Logger.debug("setting viewport to reflect changes");
@@ -284,7 +286,7 @@ public class Window extends AbstractWindow {
     
     @Override
     protected void center() {
-        // used only in init if windowed (primary monitor)
+    
     }
     
     @Override
@@ -299,7 +301,7 @@ public class Window extends AbstractWindow {
     
     @Override
     protected void terminate() {
-        if (save_settings_on_exit) {
+        if (!use_default_settings) {
             Logger.info("saving user settings");
             try { saveSettings();
             } catch (IOException e) {
@@ -432,8 +434,11 @@ public class Window extends AbstractWindow {
             long monitor = Monitor.currentMonitor(window);
             if (monitor == 0L) { // already in windowed mode
                 glfwSetWindowSize(window,resolution.width(),resolution.height());
-            } else { glfwSetWindowMonitor(window,0L,0,0,
+            } else {
+                glfwSetWindowMonitor(window,0L,0,0,
                 resolution.width(),resolution.height(), GLFW_DONT_CARE);
+                // todo
+                center();
             } windowed_mode = Monitor.currentMonitor(window) == 0L;
             settings_refresh_rate = GLFW_DONT_CARE;
             settings_height = resolution.height();
@@ -478,7 +483,7 @@ public class Window extends AbstractWindow {
     
     @Override
     public void enableSaveSettingsOnExit(boolean enable) {
-        save_settings_on_exit = enable;
+        use_default_settings = !enable;
     }
     
     @Override
@@ -499,7 +504,6 @@ public class Window extends AbstractWindow {
     @Override
     public void enableResizable(boolean enable) {
         resizable_window = enable;
-        //todo: see if resizable works on fullscreen. (when switching back to windowed)
         glfwSetWindowAttrib(window,GLFW_RESIZABLE,enable ? GLFW_TRUE : GLFW_FALSE);
     }
     
@@ -612,13 +616,13 @@ public class Window extends AbstractWindow {
     }
     
     @Override
-    public boolean isgAntialiasingEnabled() {
+    public boolean isAntialiasingEnabled() {
         return antialiasing;
     }
     
     @Override
-    public boolean isSaveSettingsOnExitEnabled() {
-        return save_settings_on_exit;
+    public boolean isUseDefaultSettingsEnabled() {
+        return use_default_settings;
     }
     
     @Override
@@ -627,7 +631,7 @@ public class Window extends AbstractWindow {
     }
     
     @Override
-    public boolean istLimitFPSEnabled() {
+    public boolean isLimitFPSEnabled() {
         return limit_fps;
     }
     
@@ -636,7 +640,6 @@ public class Window extends AbstractWindow {
         user.setInt(SETTINGS_WIDTH,settings_width);
         user.setInt(SETTINGS_HEIGHT,settings_height);
         user.setInt(SETTINGS_REFRESH_RATE,settings_refresh_rate);
-        user.setBool(SAVE_SETTINGS_ON_EXIT,save_settings_on_exit);
         user.setBool(RESIZABLE_WINDOW,resizable_window);
         user.setBool(AUTO_RESOLUTION,auto_resolution);
         user.setBool(AUTO_COLOR_BITS,auto_color_bits);

@@ -78,10 +78,10 @@ interface PublicWindow {
     boolean isAutoColorBitsEnabled();
     boolean isCursorEnabled();
     boolean isVSyncEnabled();
-    boolean isgAntialiasingEnabled();
-    boolean isSaveSettingsOnExitEnabled();
+    boolean isAntialiasingEnabled();
+    boolean isUseDefaultSettingsEnabled();
     boolean isSleepOnSyncEnabled();
-    boolean istLimitFPSEnabled();
+    boolean isLimitFPSEnabled();
     
     void saveSettings() throws IOException;
     

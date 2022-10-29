@@ -48,12 +48,12 @@ public class BootConfiguration {
     
     public String window_title = "";
     
-    public boolean save_settings_on_exit = false;
+    public boolean use_default_settings = true;
     public boolean resizable_window = false;
-    public boolean auto_resolution = true;
+    public boolean auto_resolution = false;
     public boolean auto_color_bits = true;
     public boolean cursor_enabled = true;
-    public boolean windowed_mode = false;
+    public boolean windowed_mode = true;
     public boolean vsync_enabled = true;
     public boolean antialiasing = false;
     public boolean sleep_on_sync = true;

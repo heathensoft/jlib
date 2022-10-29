@@ -24,7 +24,7 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 public class CursorObject implements Disposable {
     
     private final long cursor;
-    private final long window;;
+    private final long window;
     
     /**
      * @param window handle
@@ -58,8 +58,6 @@ public class CursorObject implements Disposable {
         int h = image.height();
         int c = image.components();
         if (c != 4) throw new Exception("image must have 4 color components");
-        xH = Math.max(0,Math.min(xH,w - 1));
-        yH = Math.max(0,Math.min(yH,h - 1));
         try (MemoryStack stack = stackPush()) {
             GLFWImage img = GLFWImage.malloc(stack).set(w,h,rgba);
             image.dispose();

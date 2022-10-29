@@ -20,6 +20,7 @@ abstract class AbstractWindow implements PublicWindow {
     protected final int DEPTH_BITS = 24;
     protected final int STENCIL_BITS = 8;
     
+    protected static final String LOAD_SETTINGS_ON_INIT = "load-settings-on-init";
     protected static final String SAVE_SETTINGS_ON_EXIT = "save-settings-on-exit";
     protected static final String SETTINGS_REFRESH_RATE = "settings-refresh-rate";
     protected static final String SETTINGS_HEIGHT = "settings-height";
@@ -38,7 +39,7 @@ abstract class AbstractWindow implements PublicWindow {
     protected static final String LIMIT_FPS = "limit-fps";
 
     protected abstract void loadSettings(Settings user, BootConfiguration app_default);
-    protected abstract void Initialize(List<Resolution> app_res_options) throws Exception;
+    protected abstract void initialize(List<Resolution> app_res_options) throws Exception;
     protected abstract void updateAppResolution() throws Exception;
     protected abstract void processInput(float dt);
     protected abstract void refreshViewport();
