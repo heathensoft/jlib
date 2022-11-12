@@ -173,6 +173,11 @@ public class Area {
                maxY >= o.minY && minY <= o.maxY;
     }
     
+    public boolean intersects(int minX, int minY, int maxX, int maxY) {
+        return this.minX <= maxX && this.maxX >= minX &&
+               this.maxY >= minY && this.minY <= maxY;
+    }
+    
     public boolean intersection(Area o, Area dest) {
         dest.minX = Math.max(minX, o.minX);
         dest.minY = Math.max(minY, o.minY);

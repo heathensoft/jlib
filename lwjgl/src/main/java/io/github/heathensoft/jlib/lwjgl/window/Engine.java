@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 import io.github.heathensoft.jlib.common.Assert;
+import io.github.heathensoft.jlib.common.ThreadService;
 import org.lwjgl.Version;
 import org.tinylog.Logger;
 
@@ -18,12 +19,16 @@ import java.util.List;
 public final class Engine {
 
     private static Engine instance;
+    private static final int service_core_pool_size = 4;
+    private static final int service_max_pool_size = 16;
+    private static final int service_keep_alive_time_ms = 3000;
     
     private Engine() {}
     
-    public Time time;
-    public Window window;
-    public Application app;
+    private Time time;
+    private Window window;
+    private Application app;
+    private ThreadService service;
     
     public void run(Application app, String[] args) {
         Assert.notNull(app);
@@ -102,13 +107,29 @@ public final class Engine {
                 app.on_exit();
                 Logger.info("terminating window");
                 window.terminate();
+                if (service != null) {
+                    Logger.info("thread pool shutdown");
+                    service.dispose();
+                }
             }
         }
     }
     
     public void exit() {
-        instance.window.signalToClose();
+        instance.window().signalToClose();
         Logger.info("window signaled to close");
+    }
+    
+    public Time time() {
+        return time;
+    }
+    
+    public Window window() {
+        return window;
+    }
+    
+    public Application app() {
+        return app;
     }
     
     public <T extends Application> T app(Class<T> clazz) {
@@ -116,6 +137,16 @@ public final class Engine {
             throw new ClassCastException("wrong cast of application");
         } return clazz.cast(app);
     }
+    
+    public ThreadService service() {
+        if (service == null) {
+            service = new ThreadService(
+            service_core_pool_size,
+            service_max_pool_size,
+            service_keep_alive_time_ms);
+        } return service;
+    }
+    
     
     public static Engine get() {
         return instance == null ? (instance = new Engine()) : instance;

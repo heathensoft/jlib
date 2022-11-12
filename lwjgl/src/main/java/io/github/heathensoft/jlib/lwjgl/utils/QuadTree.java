@@ -1,9 +1,12 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.storage.generic.Reader;
+import org.joml.Vector2f;
 import org.joml.primitives.Circlef;
 import org.joml.primitives.Intersectionf;
 import org.joml.primitives.Rectanglef;
+
+import java.util.Collection;
 
 /**
  * Squared QuadTree (width == height)
@@ -16,15 +19,7 @@ import org.joml.primitives.Rectanglef;
 @SuppressWarnings("unchecked")
 public class QuadTree<E> {
     
-    private static final class Point<E> {
-        final float x, y;
-        final E e;
-        Point(float x, float y, E e) {
-            this.x = x;
-            this.y = y;
-            this.e = e;
-        }
-    }
+    private static final record Point<E>(float x, float y, E e) { }
     
     private static final int NW = 0;
     private static final int NE = 1;
@@ -46,6 +41,10 @@ public class QuadTree<E> {
         this.s = size;
         this.x0 = x0;
         this.y0 = y0;
+    }
+    
+    public void insert(E e, Vector2f v) {
+        insert(new Point<>(v.x, v.y, e));
     }
     
     public void insert(E e, float x, float y) {
@@ -105,6 +104,24 @@ public class QuadTree<E> {
                 regions[SE].queryR(itr);
             }
         }
+    }
+    
+    public void empty(Collection<E> c) {
+        int l = Math.min(idx,CAP);
+        for (int i = 0; i < l; i++) {
+            Point<E> p = points[i];
+            points[i] = null;
+            c.add(p.e);
+        } if (idx > CAP) {
+            regions[NW].empty(c);
+            regions[NE].empty(c);
+            regions[SW].empty(c);
+            regions[SE].empty(c);
+            regions[NW] = null;
+            regions[NE] = null;
+            regions[SW] = null;
+            regions[SE] = null;
+        } idx = 0;
     }
     
     private void insert(Point<E> p) {

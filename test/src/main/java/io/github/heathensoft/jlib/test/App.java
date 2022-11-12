@@ -1,20 +1,9 @@
 package io.github.heathensoft.jlib.test;
 
-import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.io.File;
-import io.github.heathensoft.jlib.common.io.Folder;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.*;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,10 +29,10 @@ public class App extends Application {
     }
     
     protected void on_start(Resolution resolution) throws Exception {
-        Engine.get().window.setInputProcessor(input);
+        Engine.get().window().setInputProcessor(input);
         
         Image image = new Resources().image("res/jlib/lwjgl/cursors/cursor.png");
-        Optional<CursorObject> opt = Engine.get().window.createCursor(image,0,0);
+        Optional<CursorObject> opt = Engine.get().window().createCursor(image,0,0);
         opt.ifPresent(CursorObject::use);
         
     }

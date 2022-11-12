@@ -116,7 +116,10 @@ public class Image implements Disposable {
                 toPNG(path);
             }
         }
-        
+    }
+    
+    public boolean isDisposed() {
+        return data == null;
     }
     
     public boolean notDisposed() {

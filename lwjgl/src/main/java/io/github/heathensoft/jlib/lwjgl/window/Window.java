@@ -123,7 +123,7 @@ public class Window extends AbstractWindow {
         glfwWindowHint(GLFW_RESIZABLE, resizable_window ? GLFW_TRUE : GLFW_FALSE);
         glfwWindowHint(GLFW_SAMPLES, antialiasing  ? 4 : 0);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
         glfwWindowHint(GLFW_RED_BITS, auto_color_bits ? display.redBits() : RED_BITS);
         glfwWindowHint(GLFW_BLUE_BITS, auto_color_bits ? display.blueBits() : BLUE_BITS);
         glfwWindowHint(GLFW_GREEN_BITS, auto_color_bits ? display.greenBits() : GREEN_BITS);
@@ -234,7 +234,7 @@ public class Window extends AbstractWindow {
             Resolution.sortByClosest(framebuffer,list);
             Resolution closest = list.get(0);
             if (!app_resolution.equals(closest)) {
-                Engine.get().app.resolution_request(closest);
+                Engine.get().app().resolution_request(closest);
                 Logger.debug("updating app resolution from: {}:{}",app_resolution.width(),app_resolution.height());
                 Logger.debug("updating app resolution to:   {}:{}",closest.width(),closest.height());
                 Logger.debug("setting viewport to reflect changes");

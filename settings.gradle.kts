@@ -6,5 +6,6 @@ include(
     "ai",
     "common",
     "lwjgl",
+    "tiles",
     "test"
 )

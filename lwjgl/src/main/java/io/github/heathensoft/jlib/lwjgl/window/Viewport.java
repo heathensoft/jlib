@@ -45,7 +45,7 @@ public class Viewport {
         modified = true;
     }
     
-    protected void refresh() {
+    public void refresh() {
         if (modified) {
             if (!tempArea.equals(viewArea)) {
                 tempArea.set(viewArea);
