@@ -29,17 +29,17 @@ import java.nio.ByteBuffer;
 
 public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
     
-    protected final byte[][] grid;
+    protected final byte[][] array;
     
     public ByteArray2D(int rows, int cols) {
-        this.grid = new byte[rows][cols];
+        this.array = new byte[rows][cols];
         this.rows = rows;
         this.cols = cols;
     }
     
     public ByteArray2D(byte[][] array2D) {
         if (array2D == null) throw new IllegalArgumentException("array2D == null");
-        this.grid = array2D;
+        this.array = array2D;
         this.rows = array2D.length;
         this.cols = array2D[0].length;
     }
@@ -57,7 +57,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
     public void read(ByteReader itr) {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                itr.next(grid[r][c]);
+                itr.next(array[r][c]);
             }
         }
     }
@@ -69,7 +69,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
     public void read(ByteReader2D itr) {
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                itr.next(c,r,grid[r][c]);
+                itr.next(c,r, array[r][c]);
             }
         }
     }
@@ -82,7 +82,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
     public void readRow(ByteReader itr, int row) {
         if (hasRow(row)) {
             for (int c = 0; c < cols; c++) {
-                itr.next(grid[row][c]);
+                itr.next(array[row][c]);
             }
         }
     }
@@ -95,7 +95,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
     public void readCol(ByteReader itr, int col) {
         if (hasCol(col)) {
             for (int r = 0; r < rows; r++) {
-                itr.next(grid[r][col]);
+                itr.next(array[r][col]);
             }
         }
     }
@@ -125,7 +125,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         maxY = Math.min(rows-1,maxY);
         for (int r = minY; r <= maxY; r++) {
             for (int c = minX; c <= maxX; c++) {
-                itr.next(grid[r][c]);
+                itr.next(array[r][c]);
             }
         }
     }
@@ -154,7 +154,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         maxY = Math.min(rows-1,maxY);
         for (int r = minY; r <= maxY; r++) {
             for (int c = minX; c <= maxX; c++) {
-                itr.next(c,r,grid[r][c]);
+                itr.next(c,r, array[r][c]);
             }
         }
     }
@@ -195,13 +195,13 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = buffer.get();
+                    array[r][c] = buffer.get();
                 }
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = func.calc(grid[r][c],buffer.get());
+                    array[r][c] = func.calc(array[r][c],buffer.get());
                 }
             }
         }
@@ -222,13 +222,13 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    grid[r][c] = buffer.get();
+                    array[r][c] = buffer.get();
                 }
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    grid[r][c] = func.calc(grid[r][c],buffer.get());
+                    array[r][c] = func.calc(array[r][c],buffer.get());
                 }
             }
         }
@@ -266,13 +266,13 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = values.dequeue();
+                    array[r][c] = values.dequeue();
                 }
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = func.calc(grid[r][c],values.dequeue());
+                    array[r][c] = func.calc(array[r][c],values.dequeue());
                 }
             }
         }
@@ -290,13 +290,13 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    grid[r][c] = values.dequeue();
+                    array[r][c] = values.dequeue();
                 }
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    grid[r][c] = func.calc(grid[r][c], values.dequeue());
+                    array[r][c] = func.calc(array[r][c], values.dequeue());
                 }
             }
         }
@@ -334,13 +334,13 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = values.pop();
+                    array[r][c] = values.pop();
                 }
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = func.calc(grid[r][c],values.pop());
+                    array[r][c] = func.calc(array[r][c],values.pop());
                 }
             }
         }
@@ -358,13 +358,13 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    grid[r][c] = values.pop();
+                    array[r][c] = values.pop();
                 }
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    grid[r][c] = func.calc(grid[r][c], values.pop());
+                    array[r][c] = func.calc(array[r][c], values.pop());
                 }
             }
         }
@@ -386,14 +386,14 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
                 int x = points.dequeue();
                 int y = points.dequeue();
                 if (hasRow(y) && hasCol(x))
-                    grid[y][x] = value;
+                    array[y][x] = value;
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             while (points.isEmpty()) {
                 int x = points.dequeue();
                 int y = points.dequeue();
                 if (hasRow(y) && hasCol(x)) {
-                    grid[y][x] = func.calc(grid[y][x],value);
+                    array[y][x] = func.calc(array[y][x],value);
                 }
             }
         }
@@ -413,13 +413,13 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
             while (points.isEmpty()) {
                 int x = points.dequeue();
                 int y = points.dequeue();
-                grid[y][x] = value;
+                array[y][x] = value;
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             while (points.isEmpty()) {
                 int x = points.dequeue();
                 int y = points.dequeue();
-                grid[y][x] = func.calc(grid[y][x],value);
+                array[y][x] = func.calc(array[y][x],value);
             }
         }
     }
@@ -440,14 +440,14 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
                 int x = points.pop();
                 int y = points.pop();
                 if (hasRow(y) && hasCol(x))
-                    grid[y][x] = value;
+                    array[y][x] = value;
             }
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             while (points.isEmpty()) {
                 int x = points.pop();
                 int y = points.pop();
                 if (hasRow(y) && hasCol(x)) {
-                    grid[y][x] = func.calc(grid[y][x],value);
+                    array[y][x] = func.calc(array[y][x],value);
                 }
             }
         }
@@ -467,12 +467,12 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
             while (points.isEmpty()) {
                 int x = points.pop();
                 int y = points.pop();
-                grid[y][x] = value;}
+                array[y][x] = value;}
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             while (points.isEmpty()) {
                 int x = points.pop();
                 int y = points.pop();
-                grid[y][x] = func.calc(grid[y][x],value);
+                array[y][x] = func.calc(array[y][x],value);
             }
         }
     }
@@ -483,7 +483,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
      */
     public void write(ByteArray2D from) {
         if (!sameDimension(from)) throw new RuntimeException("array is either null or not of same size as the write target array");
-        for (int r = 0; r < rows; r++) writeFunction.write(grid[r],from.grid[r]);
+        for (int r = 0; r < rows; r++) writeFunction.write(array[r],from.array[r]);
     }
     
     /**
@@ -512,11 +512,11 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = minY; r <= maxY; r++)
                 for (int c = minX; c <= maxX; c++)
-                    grid[r][c] = from.grid[r][c];
+                    array[r][c] = from.array[r][c];
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = func.calc(grid[r][c],from.grid[r][c]);
+                    array[r][c] = func.calc(array[r][c],from.array[r][c]);
                 }
             }
         }
@@ -546,11 +546,11 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
         if (writeFunction == WriteFunction.EQU) {
             for (int r = minY; r <= maxY; r++)
                 for (int c = minX; c <= maxX; c++)
-                    grid[r][c] = value;
+                    array[r][c] = value;
         } else { WriteFunction.ByteFunc func = writeFunction.byteFunc;
             for (int r = minY; r <= maxY; r++) {
                 for (int c = minX; c <= maxX; c++) {
-                    grid[r][c] = func.calc(grid[r][c],value);
+                    array[r][c] = func.calc(array[r][c],value);
                 }
             }
         }
@@ -562,7 +562,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
      */
     public void write(byte value) {
         for (int r = 0; r < rows; r++) {
-            writeFunction.write(grid[r],value);
+            writeFunction.write(array[r],value);
         }
     }
     
@@ -573,8 +573,8 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
      * @param y p.y
      */
     public void write(byte value, int x, int y) {
-        if (writeFunction == WriteFunction.EQU) grid[y][x] = value;
-        else grid[y][x] = writeFunction.byteFunc.calc(grid[y][x],value);
+        if (writeFunction == WriteFunction.EQU) array[y][x] = value;
+        else array[y][x] = writeFunction.byteFunc.calc(array[y][x],value);
     }
     
     /**
@@ -586,7 +586,7 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
      * @param y p.y
      */
     public void set(byte value, int x, int y) {
-        grid[y][x] = value;
+        array[y][x] = value;
     }
     
     /**
@@ -596,10 +596,10 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
      * @return value
      */
     public byte get(int x, int y) {
-        return grid[y][x];
+        return array[y][x];
     }
     
     public byte[][] get() {
-        return grid;
+        return array;
     }
 }

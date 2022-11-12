@@ -23,6 +23,7 @@ import static org.lwjgl.opengl.GL30.GL_R32F;
 import static org.lwjgl.opengl.GL31.*;
 
 /**
+ * Pain to write :D
  * @author Frederik Dahl
  * 30/10/2022
  */
@@ -625,7 +626,7 @@ public class Texture implements Disposable {
         target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_RG8, w, h,
-                0, GL_RG, GL_UNSIGNED_BYTE, data);
+        0, GL_RG, GL_UNSIGNED_BYTE, data);
     }
     
     
@@ -716,98 +717,653 @@ public class Texture implements Disposable {
     
     // ---------------------------------RG16 Unsigned Normalized
     
-    // Not finished
     
-    public void RG16(IntArray2D data) {
-        this.width = data.cols();
-        this.height = data.rows();
-        IntBuffer buffer = MemoryUtil.memAllocInt(data.size());
-        int[][] array2D = data.get();
+    
+    
+    public void RG16_2D(IntArray2D data) {
+        RG16_2D(data.get());
+    }
+    
+    public void RG16_2D(int[][] data) {
+        validate();
+        width = data[0].length;
+        height = data.length;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        IntBuffer buffer = MemoryUtil.memAllocInt(width * height);
         for (int row = 0; row < height; row++) {
-            buffer.put(array2D[row]);
+            buffer.put(data[row]);
         } buffer.flip();
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RG16, width, height,
-                0, GL_RG, GL_UNSIGNED_SHORT, buffer);
+        0, GL_RG, GL_UNSIGNED_SHORT, buffer);
         MemoryUtil.memFree(buffer);
     }
     
-    public void RG16(int[][] data) {
-        RG16(new IntArray2D(data));
-    }
-    
-    public void RG16(int[] data, int width, int height) {
-        this.width = width;
-        this.height = height;
+    public void RG16_2D(int[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(data.length);
-        for (int r = 0; r < height; r++) {
-            for (int c = 0; c < width; c++) {
-                buffer.put(data[c + (height * r)]);
-            }
+        for (int r = 0; r < h; r++) {
+            for (int c = 0; c < w; c++)
+                buffer.put(data[c + (h * r)]);
         } buffer.flip();
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-        glTexImage2D(target, 0, GL_RG16, width, height,
-                0, GL_RG, GL_UNSIGNED_SHORT, buffer);
+        glTexImage2D(target, 0, GL_RG16, w, h,
+        0, GL_RG, GL_UNSIGNED_SHORT, buffer);
         MemoryUtil.memFree(buffer);
     }
     
-    public void RG16(IntBuffer data, int width, int height) {
-        this.width = width;
-        this.height = height;
+    public void RG16_2D(IntBuffer data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-        glTexImage2D(target, 0, GL_RG16, width, height,
-                0, GL_RG, GL_UNSIGNED_SHORT, data);
+        glTexImage2D(target, 0, GL_RG16, w, h,
+        0, GL_RG, GL_UNSIGNED_SHORT, data);
     }
     
     
-    public void RG16(short[] data, int width, int height) {
-        this.width = width;
-        this.height = height;
-        int length = data.length;
-        ShortBuffer buffer = MemoryUtil.memAllocShort(length);
-        for (int i = 0; i < length; i += 2) {
+    public void RG16_2D(short[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ShortBuffer buffer = MemoryUtil.memAllocShort(l);
+        for (int i = 0; i < l; i += 2) {
             buffer.put(data[i]);
             buffer.put(data[i + 1]);
         } buffer.flip();
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-        glTexImage2D(target, 0, GL_RG16, width, height,
-                0, GL_RG, GL_UNSIGNED_SHORT, data);
+        glTexImage2D(target, 0, GL_RG16, w, h,
+        0, GL_RG, GL_UNSIGNED_SHORT, data);
         MemoryUtil.memFree(buffer);
     }
     
-    public void RG16(ShortBuffer buffer, int width, int height) {
-        this.width = width;
-        this.height = height;
+    public void RG16_2D(ShortBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-        glTexImage2D(target, 0, GL_RG16, width, height,
-                0, GL_RG, GL_UNSIGNED_SHORT, buffer);
+        glTexImage2D(target, 0, GL_RG16, w, h,
+        0, GL_RG, GL_UNSIGNED_SHORT, buffer);
     }
     
-    public void RG16(byte[] data, int width, int height) {
-        this.width = width;
-        this.height = height;
-        int length = data.length;
-        ByteBuffer buffer = MemoryUtil.memAlloc(length);
-        for (int i = 0; i < length; i += 4) {
+    public void RG16_2D(byte[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ByteBuffer buffer = MemoryUtil.memAlloc(l);
+        for (int i = 0; i < l; i += 4) {
             buffer.put(data[i]);
             buffer.put(data[i + 1]);
             buffer.put(data[i + 2]);
             buffer.put(data[i + 3]);
         } buffer.flip();
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-        glTexImage2D(target, 0, GL_RG16, width, height,
-                0, GL_RG, GL_UNSIGNED_SHORT, buffer);
+        glTexImage2D(target, 0, GL_RG16, w, h,
+        0, GL_RG, GL_UNSIGNED_SHORT, buffer);
         MemoryUtil.memFree(buffer);
     }
     
-    public void RG16(ByteBuffer buffer, int width, int height) {
-        this.width = width;
-        this.height = height;
+    public void RG16_2D(ByteBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
-        glTexImage2D(target, 0, GL_RG16, width, height,
-                0, GL_RG, GL_UNSIGNED_SHORT, buffer);
+        glTexImage2D(target, 0, GL_RG16, w, h,
+        0, GL_RG, GL_UNSIGNED_SHORT, buffer);
     }
     
+    
+    
+    // ---------------------------------RG16 Signed Normalized
+    
+    
+    
+    public void RG16_SNORM_2D(IntArray2D data) {
+        RG16_SNORM_2D(data.get());
+    }
+    
+    public void RG16_SNORM_2D(int[][] data) {
+        validate();
+        width = data[0].length;
+        height = data.length;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        IntBuffer buffer = MemoryUtil.memAllocInt(width * height);
+        for (int row = 0; row < height; row++) {
+            buffer.put(data[row]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RG16_SNORM, width, height,
+        0, GL_RG, GL_SHORT, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RG16_SNORM_2D(int[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        IntBuffer buffer = MemoryUtil.memAllocInt(data.length);
+        for (int r = 0; r < h; r++) {
+            for (int c = 0; c < w; c++)
+                buffer.put(data[c + (h * r)]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
+        0, GL_RG, GL_SHORT, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RG16_SNORM_2D(IntBuffer data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
+        0, GL_RG, GL_SHORT, data);
+    }
+    
+    
+    public void RG16_SNORM_2D(short[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ShortBuffer buffer = MemoryUtil.memAllocShort(l);
+        for (int i = 0; i < l; i += 2) {
+            buffer.put(data[i]);
+            buffer.put(data[i + 1]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
+        0, GL_RG, GL_SHORT, data);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RG16_SNORM_2D(ShortBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
+        0, GL_RG, GL_SHORT, buffer);
+    }
+    
+    public void RG16_SNORM_2D(byte[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ByteBuffer buffer = MemoryUtil.memAlloc(l);
+        for (int i = 0; i < l; i += 4) {
+            buffer.put(data[i]);
+            buffer.put(data[i + 1]);
+            buffer.put(data[i + 2]);
+            buffer.put(data[i + 3]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
+        0, GL_RG, GL_SHORT, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RG16_SNORM_2D(ByteBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
+        0, GL_RG, GL_SHORT, buffer);
+    }
+    
+    
+    
+    // ---------------------------------RGB8 Unsigned Normalized
+    
+    
+    
+    public void RGB8_2D(byte[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ByteBuffer buffer = MemoryUtil.memAlloc(l);
+        for (int i = 0; i < l; i += 3) {
+            buffer.put(data[i]);
+            buffer.put(data[i + 1]);
+            buffer.put(data[i + 2]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB8, w, h,
+        0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGB8_2D(ByteBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB8, w, h,
+                0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+    }
+    
+    
+    
+    // ---------------------------------RGB8 Signed Normalized
+    
+    
+    public void RGB8_SNORM_2D(byte[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ByteBuffer buffer = MemoryUtil.memAlloc(l);
+        for (int i = 0; i < l; i += 3) {
+            buffer.put(data[i]);
+            buffer.put(data[i + 1]);
+            buffer.put(data[i + 2]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB8_SNORM, w, h,
+        0, GL_RGB, GL_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGB8_SNORM_2D(ByteBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB8_SNORM, w, h,
+        0, GL_RGB, GL_BYTE, buffer);
+    }
+    
+    
+    
+    // ---------------------------------RGB16 Unsigned Normalized
+    
+    
+    
+    public void RGB16_2D(short[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ShortBuffer buffer = MemoryUtil.memAllocShort(l);
+        for (int i = 0; i < l; i += 3) {
+            buffer.put(data[i]);
+            buffer.put(data[i + 1]);
+            buffer.put(data[i + 2]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB16, w, h,
+        0, GL_RGB, GL_UNSIGNED_SHORT, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGB16_2D(ShortBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB16, w, h,
+        0, GL_RGB, GL_UNSIGNED_SHORT, buffer);
+    }
+    
+    
+    
+    // ---------------------------------RGB16 Signed Normalized
+    
+    
+    
+    public void RGB16_SNORM_2D(short[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ShortBuffer buffer = MemoryUtil.memAllocShort(l);
+        for (int i = 0; i < l; i += 3) {
+            buffer.put(data[i]);
+            buffer.put(data[i + 1]);
+            buffer.put(data[i + 2]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB16_SNORM, w, h,
+        0, GL_RGB, GL_SHORT, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGB16_SNORM_2D(ShortBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,3);
+        glTexImage2D(target, 0, GL_RGB16_SNORM, w, h,
+        0, GL_RGB, GL_SHORT, buffer);
+    }
+    
+    
+    
+    
+    // ---------------------------------RGBA4 Unsigned Normalized
+    // todo: include bytes
+    
+    
+    
+    public void RGBA4_2D(ShortArray2D data) {
+        RGBA4_2D(data.get());
+    }
+    
+    public void RGBA4_2D(short[][] data) {
+        validate();
+        width = data[0].length;
+        height = data.length;
+        depth = 1;
+        int size = width * height;
+        target = GL_TEXTURE_2D;
+        ShortBuffer buffer = MemoryUtil.memAllocShort(size);
+        for (int row = 0; row < height; row++) {
+            buffer.put(data[row]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,2);
+        glTexImage2D(target, 0, GL_RGBA4, width, height,
+        0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA4_2D(short[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ShortBuffer buffer = MemoryUtil.memAllocShort(l);
+        for (short datum : data) {
+            buffer.put(datum);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,2);
+        glTexImage2D(target, 0, GL_RGBA4, w, h,
+        0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA4_2D(ShortBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,2);
+        glTexImage2D(target, 0, GL_RGBA4, w, h,
+        0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, buffer);
+    }
+    
+    
+    
+    // ---------------------------------RGB32F Float
+    
+    
+    
+    public void RGB32F_2D(FloatArray2D data) {
+        RGB32F_2D(data.get());
+    }
+    
+    public void RGB32F_2D(float[][] data) {
+        validate();
+        width = data[0].length;
+        height = data.length;
+        depth = 1;
+        int size = width * height;
+        target = GL_TEXTURE_2D;
+        FloatBuffer buffer = MemoryUtil.memAllocFloat(size);
+        for (int row = 0; row < height; row++) {
+            buffer.put(data[row]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGB32F, width, height,
+        0, GL_RGB, GL_FLOAT, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGB32F_2D(float[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        FloatBuffer buffer = MemoryUtil.memAllocFloat(l);
+        for (float datum : data) {
+            buffer.put(datum);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGB32F, w, h,
+        0, GL_RGB, GL_FLOAT, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGB32F_2D(FloatBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGB32F, w, h,
+        0, GL_RGB, GL_FLOAT, buffer);
+    }
+    
+    
+    
+    // ---------------------------------RGBA8 Unsigned Normalized
+    
+    
+    
+    public void RGBA8_2D(IntArray2D data) {
+        RGBA8_2D(data.get());
+    }
+    
+    public void RGBA8_2D(int[][] data) {
+        validate();
+        width = data[0].length;
+        height = data.length;
+        depth = 1;
+        int size = width * height;
+        target = GL_TEXTURE_2D;
+        IntBuffer buffer = MemoryUtil.memAllocInt(size);
+        for (int row = 0; row < height; row++) {
+            buffer.put(data[row]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8, width, height,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA8_2D(int[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        IntBuffer buffer = MemoryUtil.memAllocInt(l);
+        for (int datum : data) {
+            buffer.put(datum);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8, w, h,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA8_2D(IntBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8, w, h,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    }
+    
+    public void RGBA8_2D(byte[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ByteBuffer buffer = MemoryUtil.memAlloc(l);
+        for (byte datum : data) {
+            buffer.put(datum);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8, w, h,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA8_2D(ByteBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8, w, h,
+        0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    }
+    
+    
+    
+    // ---------------------------------RGBA8 Signed Normalized
+    
+    
+    
+    public void RGBA8_SNORM_2D(IntArray2D data) {
+        RGBA8_SNORM_2D(data.get());
+    }
+    
+    public void RGBA8_SNORM_2D(int[][] data) {
+        validate();
+        width = data[0].length;
+        height = data.length;
+        depth = 1;
+        int size = width * height;
+        target = GL_TEXTURE_2D;
+        IntBuffer buffer = MemoryUtil.memAllocInt(size);
+        for (int row = 0; row < height; row++) {
+            buffer.put(data[row]);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8_SNORM, width, height,
+        0, GL_RGBA, GL_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA8_SNORM_2D(int[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        IntBuffer buffer = MemoryUtil.memAllocInt(l);
+        for (int datum : data) {
+            buffer.put(datum);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8_SNORM, width, height,
+        0, GL_RGBA, GL_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA8_SNORM_2D(IntBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8_SNORM, width, height,
+        0, GL_RGBA, GL_BYTE, buffer);
+    }
+    
+    public void RGBA8_SNORM_2D(byte[] data, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        int l = data.length;
+        ByteBuffer buffer = MemoryUtil.memAlloc(l);
+        for (byte datum : data) {
+            buffer.put(datum);
+        } buffer.flip();
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8_SNORM, w, h,
+        0, GL_RGBA, GL_BYTE, buffer);
+        MemoryUtil.memFree(buffer);
+    }
+    
+    public void RGBA8_SNORM_2D(ByteBuffer buffer, int w, int h) {
+        validate();
+        width = w;
+        height = h;
+        depth = 1;
+        target = GL_TEXTURE_2D;
+        glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        glTexImage2D(target, 0, GL_RGBA8_SNORM, w, h,
+        0, GL_RGBA, GL_BYTE, buffer);
+    }
     
     
     
