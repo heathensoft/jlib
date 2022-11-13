@@ -12,6 +12,12 @@ import static org.lwjgl.opengl.GL30C.GL_INVALID_FRAMEBUFFER_OPERATION;
 
 
 public class GLError {
+    
+    
+    public static void check(String bookmark) {
+        Logger.debug("checking glError, {}",bookmark);
+        check();
+    }
 
     public static void check() {
         int code;

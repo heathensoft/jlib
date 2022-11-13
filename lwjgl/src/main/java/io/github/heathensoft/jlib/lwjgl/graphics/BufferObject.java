@@ -30,15 +30,14 @@ public class BufferObject implements Disposable {
     protected final int usage;
     protected final int name;
     
-    protected BufferObject(int target, int usage) {
+    public BufferObject(int target, int usage) {
         this.name = glGenBuffers();
         this.target = target;
         this.usage = usage;
     }
     
-    public BufferObject bind() {
+    public void bind() {
         glBindBuffer(target, name);
-        return this;
     }
     
     public void bufferData(byte[] data) {

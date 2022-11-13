@@ -34,7 +34,8 @@ public class SpriteVertexData implements Disposable {
         indices = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
         vertexData = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
         instanceData = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
-        vao = new Vao().bind();
+        vao = new Vao();
+        vao.bind();
         indices.bind();
         indices.bufferData(Sprite.generateIndices(sprites));
         vertexData.bind();

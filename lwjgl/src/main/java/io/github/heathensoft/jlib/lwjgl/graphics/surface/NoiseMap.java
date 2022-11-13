@@ -6,6 +6,8 @@ import io.github.heathensoft.jlib.common.utils.NoiseFunction;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+
 /**
  * @author Frederik Dahl
  * 23/06/2022
@@ -91,7 +93,7 @@ public class NoiseMap {
     }
     
     public Texture toTexture(int GL_WRAP, int GL_FILTER) {
-        Texture texture = new Texture();
+        Texture texture = new Texture(GL_TEXTURE_2D);
         texture.bindToActiveSlot();
         texture.filter(GL_FILTER);
         texture.wrapST(GL_WRAP);

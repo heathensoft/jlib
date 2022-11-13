@@ -5,6 +5,7 @@ import io.github.heathensoft.jlib.common.storage.primitive.ByteArray2D;
 import io.github.heathensoft.jlib.common.storage.primitive.FloatArray2D;
 import io.github.heathensoft.jlib.common.storage.primitive.IntArray2D;
 import io.github.heathensoft.jlib.common.storage.primitive.ShortArray2D;
+import org.lwjgl.opengl.GL11C;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -12,7 +13,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
-import static org.lwjgl.opengl.GL11.*;
+//import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_WRAP_R;
 import static org.lwjgl.opengl.GL13C.GL_TEXTURE0;
@@ -48,11 +49,18 @@ public class Texture implements Disposable {
     private int depth = 0;
     
     
-    public Texture() {
+    public Texture(int target) {
+        this.target = target;
         id = glGenTextures();
+        System.out.println(id);
+        GLError.check("texture constructor");
     }
     
     public void bindToActiveSlot() {
+        glBindTexture(target, id);
+    }
+    
+    public void bindToActiveSlot(int target) {
         glBindTexture(target, id);
     }
     
@@ -563,7 +571,7 @@ public class Texture implements Disposable {
         glTexImage2D(target, 0, GL_R32I, width, height,
         0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
         MemoryUtil.memFree(data);
-        GLError.check();
+        GLError.check("specify R32UI");
     }
     
     
@@ -1140,8 +1148,6 @@ public class Texture implements Disposable {
     }
     
     
-    
-    
     // ---------------------------------RGBA4 Unsigned Normalized
     // todo: include bytes
     
@@ -1279,10 +1285,12 @@ public class Texture implements Disposable {
             buffer.put(data[row]);
         } buffer.flip();
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
+        System.out.println(GL_NONE);
+        System.out.println(target);
         glTexImage2D(target, 0, GL_RGBA8, width, height,
         0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
         MemoryUtil.memFree(buffer);
-        GLError.check();
+        GLError.check("specify rgba8");
     }
     
     public void RGBA8_2D(int[] data, int w, int h) {
@@ -1342,7 +1350,7 @@ public class Texture implements Disposable {
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RGBA8, w, h,
         0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
-        GLError.check();
+        GLError.check("specify RGBA8");
     }
     
     
@@ -1584,6 +1592,8 @@ public class Texture implements Disposable {
     }
     
     private void preValidate() {
+        //todo:
+        /*
         String error = null;
         if (isSpecified()) {
             error = "texture target already specified";
@@ -1592,6 +1602,8 @@ public class Texture implements Disposable {
         } if (error != null) {
             throw new RuntimeException("unable to validate texture, " + error);
         }
+        
+         */
     }
     
 }

@@ -8,6 +8,7 @@ import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
 
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 /**
@@ -74,7 +75,7 @@ public class DepthMap8 {
     }
     
     public Texture toTexture(int GL_WRAP, int GL_FILTER) {
-        Texture texture = new Texture();
+        Texture texture = new Texture(GL_TEXTURE_2D);
         texture.bindToActiveSlot();
         texture.filter(GL_FILTER);
         texture.wrapST(GL_WRAP);

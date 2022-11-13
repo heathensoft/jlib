@@ -30,6 +30,11 @@ public class IntArray2D extends PrimitiveArray2D implements ReadableInt2D {
     
     protected final int[][] array;
     
+    
+    public IntArray2D(int size) {
+        this(size,size);
+    }
+    
     public IntArray2D(int rows, int cols) {
         this.array = new int[rows][cols];
         this.rows = rows;

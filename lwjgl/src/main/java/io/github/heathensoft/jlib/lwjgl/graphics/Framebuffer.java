@@ -51,6 +51,14 @@ public abstract class Framebuffer implements Disposable {
         return height;
     }
     
+    public void setClearMask(int mask) {
+        clearMask = mask;
+    }
+    
+    public void setClearColor(float r, float g, float b, float a) {
+        clearColor.set(r, g, b, a);
+    }
+    
     public abstract void disposeInternal();
     
     public abstract void resize(Resolution resolution);

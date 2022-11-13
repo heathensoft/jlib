@@ -8,11 +8,11 @@ in flat uint id;
 in vec2 uv;
 in vec4 color;
 
-uniform sampler2D u_sampler0;
+uniform sampler2D u_sampler;
 
 void main() {
 
-    f_color = texture(u_sampler0,uv).rgba * color;
+    f_color = texture(u_sampler,uv).rgba * color;
 
     if(f_color.a > 0.5) {
         f_id = id;
