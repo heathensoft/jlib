@@ -788,12 +788,10 @@ public class Window extends AbstractWindow {
     private final GLFWJoystickCallback joystick_callback = new GLFWJoystickCallback() {
         @Override
         public void invoke(int id, int event) {
-            if (glfwJoystickIsGamepad(id)) {
-                if (event == GLFW_CONNECTED) {
-                    current_processor.controller_connect(id,true);
-                } else if (event == GLFW_DISCONNECTED) {
-                    current_processor.controller_connect(id,false);
-                }
+            if (event == GLFW_CONNECTED) {
+                current_processor.controller_connect(id,true);
+            } else if (event == GLFW_DISCONNECTED) {
+                current_processor.controller_connect(id,false);
             }
         }
     };
