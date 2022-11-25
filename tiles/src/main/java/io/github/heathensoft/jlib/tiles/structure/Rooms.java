@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.tiles.structure;
 import io.github.heathensoft.jlib.common.storage.primitive.*;
 import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
 import io.github.heathensoft.jlib.common.utils.Area;
+import io.github.heathensoft.jlib.common.utils.IDGen;
 import io.github.heathensoft.jlib.tiles.TileUtil;
 
 import java.util.*;
@@ -27,6 +28,7 @@ public class Rooms {
         int m_size = map_dim.size();
         this.map = map;
         this.ids = new IDGen();
+        this.ids.obtainID(); // start from 1 (0 is obstacle)
         this.rooms = new IntBag(32);
         this.layout = new IntArray2D(m_size,m_size);
         int[][] adj = TileUtil.adjacent4;
@@ -311,20 +313,6 @@ public class Rooms {
         int room = ids.obtainID();
         rooms.set(room,0);
         return room;
-    }
-    
-    
-    private static final class IDGen {
-        private final IntQueue room_ids
-        = new IntQueue(16);
-        private int new_id = 1;
-        private int obtainID() {
-            if (room_ids.isEmpty()) {
-                return new_id++;
-            } else return room_ids.dequeue();
-        } private void returnID(int r) {
-            room_ids.enqueue(r);
-        }
     }
     
     private static final class Divide {

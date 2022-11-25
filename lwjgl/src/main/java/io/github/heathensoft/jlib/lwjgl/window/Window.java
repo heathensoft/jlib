@@ -27,7 +27,7 @@ import static org.lwjgl.opengl.GL11.GL_TRUE;
 
 
 public class Window extends AbstractWindow {
-    
+
     private InputProcessor current_processor;
     private List<Resolution> app_res_options;
     private Resolution app_resolution;
@@ -463,7 +463,7 @@ public class Window extends AbstractWindow {
             current_processor.on_activation(x,y);
         }
     }
-    
+
     @Override
     public void setTitle(String string) {
         if (string != null) { title = string;
@@ -686,7 +686,7 @@ public class Window extends AbstractWindow {
             return Optional.empty();
         }
     }
-    
+
     private final GLFWMonitorCallback monitor_callback = new GLFWMonitorCallback() {
         public void invoke(long monitor, int event) {
             if (event == GLFW_DISCONNECTED) {
@@ -804,4 +804,5 @@ public class Window extends AbstractWindow {
             }
         }
     };
+
 }

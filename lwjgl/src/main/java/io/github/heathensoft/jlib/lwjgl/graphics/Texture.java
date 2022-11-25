@@ -5,7 +5,6 @@ import io.github.heathensoft.jlib.common.storage.primitive.ByteArray2D;
 import io.github.heathensoft.jlib.common.storage.primitive.FloatArray2D;
 import io.github.heathensoft.jlib.common.storage.primitive.IntArray2D;
 import io.github.heathensoft.jlib.common.storage.primitive.ShortArray2D;
-import org.lwjgl.opengl.GL11C;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -13,7 +12,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
-//import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_WRAP_R;
 import static org.lwjgl.opengl.GL13C.GL_TEXTURE0;
@@ -43,7 +41,7 @@ public class Texture implements Disposable {
     }
     
     private int id;
-    private int target = GL_NONE;
+    private int target;
     private int width = 0;
     private int height = 0;
     private int depth = 0;
@@ -52,15 +50,9 @@ public class Texture implements Disposable {
     public Texture(int target) {
         this.target = target;
         id = glGenTextures();
-        System.out.println(id);
-        GLError.check("texture constructor");
     }
     
     public void bindToActiveSlot() {
-        glBindTexture(target, id);
-    }
-    
-    public void bindToActiveSlot(int target) {
         glBindTexture(target, id);
     }
     
@@ -178,15 +170,44 @@ public class Texture implements Disposable {
     
     
     
+    public void image_2D(Image image) throws Exception {
+        this.width = image.width();
+        this.height = image.height();
+        this.depth = 1;
+        int i_format; // GPU side
+        int format; // client memory
+        int stride = 4;
+        switch (image.components()) {
+            case 1 -> {
+                format = GL_RED;
+                i_format = GL_R8;
+                stride = 1;
+            }case 2 -> {
+                format = GL_RG;
+                i_format = GL_RG8;
+                stride = 2;
+            }case 3 -> {
+                i_format = format = GL_RGB;
+                if ((width & 3) != 0) {
+                    stride = 2 - (width & 1);}
+            }case 4 -> {
+                format = GL_RGBA;
+                i_format = GL_RGBA8;
+            } default -> throw new Exception("unsupported format");
+        } glPixelStorei(GL_UNPACK_ALIGNMENT,stride);
+        glTexImage2D(target, 0, i_format, width, height,
+                0, format, GL_UNSIGNED_BYTE, image.data());
+        Disposable.dispose(image);
+    }
+    
+    
     // ---------------------------------R8 Unsigned Normalized
     
     public void R8_2D(byte[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         ByteBuffer buffer = MemoryUtil.memAlloc(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -203,11 +224,9 @@ public class Texture implements Disposable {
     }
     
     public void R8_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         ByteBuffer buffer = MemoryUtil.memAlloc(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -221,11 +240,9 @@ public class Texture implements Disposable {
     }
     
     public void R8_2D(ByteBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,1);
         glTexImage2D(target, 0, GL_R8, w, h,
         0, GL_RED, GL_UNSIGNED_BYTE, data);
@@ -241,12 +258,10 @@ public class Texture implements Disposable {
     }
     
     public void R8_SNORM_2D(byte[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         ByteBuffer buffer = MemoryUtil.memAlloc(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -259,11 +274,9 @@ public class Texture implements Disposable {
     }
     
     public void R8_SNORM_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         ByteBuffer buffer = MemoryUtil.memAlloc(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -277,11 +290,9 @@ public class Texture implements Disposable {
     }
     
     public void R8_SNORM_2D(ByteBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,1);
         glTexImage2D(target, 0, GL_R8_SNORM, w, h,
         0, GL_RED, GL_BYTE, data);
@@ -297,12 +308,10 @@ public class Texture implements Disposable {
     }
     
     public void R16_2D(short[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -316,11 +325,9 @@ public class Texture implements Disposable {
     }
     
     public void R16_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -334,11 +341,9 @@ public class Texture implements Disposable {
     }
     
     public void R16_2D(ShortBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_R16, w, h,
         0, GL_RED, GL_UNSIGNED_SHORT, data);
@@ -356,12 +361,10 @@ public class Texture implements Disposable {
     }
     
     public void R16_SNORM_2D(short[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -374,11 +377,9 @@ public class Texture implements Disposable {
     }
     
     public void R16_SNORM_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -392,11 +393,9 @@ public class Texture implements Disposable {
     }
     
     public void R16_SNORM_2D(ShortBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_R16_SNORM, width, height,
         0, GL_RED, GL_SHORT, data);
@@ -413,12 +412,10 @@ public class Texture implements Disposable {
     }
     
     public void R32F_2D(float[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         FloatBuffer buffer = MemoryUtil.memAllocFloat(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -431,11 +428,9 @@ public class Texture implements Disposable {
     }
     
     public void R32F_2D(float[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         FloatBuffer buffer = MemoryUtil.memAllocFloat(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -449,11 +444,9 @@ public class Texture implements Disposable {
     }
     
     public void R32F_2D(FloatBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_R32F, w, h,
         0, GL_RED, GL_FLOAT, data);
@@ -470,12 +463,10 @@ public class Texture implements Disposable {
     }
     
     public void R32I_2D(int[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -488,11 +479,9 @@ public class Texture implements Disposable {
     }
     
     public void R32I_2D(int[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -506,11 +495,9 @@ public class Texture implements Disposable {
     }
     
     public void R32I_2D(IntBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_R32I, w, h,
                 0, GL_RED_INTEGER, GL_INT, data);
@@ -526,12 +513,10 @@ public class Texture implements Disposable {
     }
     
     public void R32UI_2D(int[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -544,11 +529,9 @@ public class Texture implements Disposable {
     }
     
     public void R32UI_2D(int[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -562,11 +545,9 @@ public class Texture implements Disposable {
     }
     
     public void R32UI_2D(IntBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_R32I, width, height,
         0, GL_RED_INTEGER, GL_UNSIGNED_INT, data);
@@ -584,12 +565,10 @@ public class Texture implements Disposable {
     }
     
     public void RG8_2D(short[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -602,11 +581,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -620,11 +597,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_2D(ShortBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_RG8, w, h,
         0, GL_RG, GL_UNSIGNED_BYTE, data);
@@ -632,11 +607,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int length = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(length);
         for (int i = 0; i < length; i += 2) {
@@ -651,11 +624,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_2D(ByteBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_RG8, w, h,
         0, GL_RG, GL_UNSIGNED_BYTE, data);
@@ -673,12 +644,10 @@ public class Texture implements Disposable {
     }
     
     public void RG8_SNORM_2D(short[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -691,11 +660,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_SNORM_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -709,11 +676,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_SNORM_2D(ShortBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_RG8_SNORM, width, height,
         0, GL_RG, GL_BYTE, data);
@@ -721,11 +686,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_SNORM_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int length = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(length);
         for (int i = 0; i < length; i += 2) {
@@ -740,11 +703,9 @@ public class Texture implements Disposable {
     }
     
     public void RG8_SNORM_2D(ByteBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_RG8_SNORM, width, height,
         0, GL_RG, GL_BYTE, data);
@@ -763,11 +724,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_2D(int[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(width * height);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -780,11 +739,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_2D(int[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -798,11 +755,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_2D(IntBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RG16, w, h,
         0, GL_RG, GL_UNSIGNED_SHORT, data);
@@ -811,11 +766,9 @@ public class Texture implements Disposable {
     
     
     public void RG16_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ShortBuffer buffer = MemoryUtil.memAllocShort(l);
         for (int i = 0; i < l; i += 2) {
@@ -830,11 +783,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_2D(ShortBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RG16, w, h,
         0, GL_RG, GL_UNSIGNED_SHORT, buffer);
@@ -842,11 +793,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(l);
         for (int i = 0; i < l; i += 4) {
@@ -863,11 +812,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_2D(ByteBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RG16, w, h,
         0, GL_RG, GL_UNSIGNED_SHORT, buffer);
@@ -885,11 +832,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_SNORM_2D(int[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(width * height);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -902,11 +847,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_SNORM_2D(int[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(data.length);
         for (int r = 0; r < h; r++) {
             for (int c = 0; c < w; c++)
@@ -920,11 +863,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_SNORM_2D(IntBuffer data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
         0, GL_RG, GL_SHORT, data);
@@ -933,11 +874,9 @@ public class Texture implements Disposable {
     
     
     public void RG16_SNORM_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ShortBuffer buffer = MemoryUtil.memAllocShort(l);
         for (int i = 0; i < l; i += 2) {
@@ -952,11 +891,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_SNORM_2D(ShortBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
         0, GL_RG, GL_SHORT, buffer);
@@ -964,11 +901,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_SNORM_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(l);
         for (int i = 0; i < l; i += 4) {
@@ -985,11 +920,9 @@ public class Texture implements Disposable {
     }
     
     public void RG16_SNORM_2D(ByteBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RG16_SNORM, w, h,
         0, GL_RG, GL_SHORT, buffer);
@@ -1003,11 +936,9 @@ public class Texture implements Disposable {
     
     
     public void RGB8_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(l);
         for (int i = 0; i < l; i += 3) {
@@ -1023,11 +954,9 @@ public class Texture implements Disposable {
     }
     
     public void RGB8_2D(ByteBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,3);
         glTexImage2D(target, 0, GL_RGB8, w, h,
         0, GL_RGB, GL_UNSIGNED_BYTE, buffer);
@@ -1040,11 +969,9 @@ public class Texture implements Disposable {
     
     
     public void RGB8_SNORM_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(l);
         for (int i = 0; i < l; i += 3) {
@@ -1060,11 +987,9 @@ public class Texture implements Disposable {
     }
     
     public void RGB8_SNORM_2D(ByteBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,3);
         glTexImage2D(target, 0, GL_RGB8_SNORM, w, h,
         0, GL_RGB, GL_BYTE, buffer);
@@ -1078,11 +1003,9 @@ public class Texture implements Disposable {
     
     
     public void RGB16_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ShortBuffer buffer = MemoryUtil.memAllocShort(l);
         for (int i = 0; i < l; i += 3) {
@@ -1098,11 +1021,9 @@ public class Texture implements Disposable {
     }
     
     public void RGB16_2D(ShortBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,3);
         glTexImage2D(target, 0, GL_RGB16, w, h,
         0, GL_RGB, GL_UNSIGNED_SHORT, buffer);
@@ -1116,11 +1037,9 @@ public class Texture implements Disposable {
     
     
     public void RGB16_SNORM_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ShortBuffer buffer = MemoryUtil.memAllocShort(l);
         for (int i = 0; i < l; i += 3) {
@@ -1136,11 +1055,9 @@ public class Texture implements Disposable {
     }
     
     public void RGB16_SNORM_2D(ShortBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,3);
         glTexImage2D(target, 0, GL_RGB16_SNORM, w, h,
         0, GL_RGB, GL_SHORT, buffer);
@@ -1158,12 +1075,10 @@ public class Texture implements Disposable {
     }
     
     public void RGBA4_2D(short[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         ShortBuffer buffer = MemoryUtil.memAllocShort(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -1176,11 +1091,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA4_2D(short[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ShortBuffer buffer = MemoryUtil.memAllocShort(l);
         for (short datum : data) {
@@ -1194,11 +1107,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA4_2D(ShortBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_RGBA4, w, h,
         0, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4, buffer);
@@ -1216,12 +1127,10 @@ public class Texture implements Disposable {
     }
     
     public void RGB32F_2D(float[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         FloatBuffer buffer = MemoryUtil.memAllocFloat(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -1234,11 +1143,9 @@ public class Texture implements Disposable {
     }
     
     public void RGB32F_2D(float[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         FloatBuffer buffer = MemoryUtil.memAllocFloat(l);
         for (float datum : data) {
@@ -1252,11 +1159,9 @@ public class Texture implements Disposable {
     }
     
     public void RGB32F_2D(FloatBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RGB32F, w, h,
         0, GL_RGB, GL_FLOAT, buffer);
@@ -1274,12 +1179,10 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_2D(int[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -1294,11 +1197,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_2D(int[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         IntBuffer buffer = MemoryUtil.memAllocInt(l);
         for (int datum : data) {
@@ -1312,11 +1213,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_2D(IntBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RGBA8, w, h,
         0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
@@ -1324,11 +1223,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(l);
         for (byte datum : data) {
@@ -1342,11 +1239,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_2D(ByteBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RGBA8, w, h,
         0, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
@@ -1364,12 +1259,10 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_SNORM_2D(int[][] data) {
-        preValidate();
         width = data[0].length;
         height = data.length;
         depth = 1;
         int size = width * height;
-        target = GL_TEXTURE_2D;
         IntBuffer buffer = MemoryUtil.memAllocInt(size);
         for (int row = 0; row < height; row++) {
             buffer.put(data[row]);
@@ -1382,11 +1275,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_SNORM_2D(int[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         IntBuffer buffer = MemoryUtil.memAllocInt(l);
         for (int datum : data) {
@@ -1400,11 +1291,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_SNORM_2D(IntBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RGBA8_SNORM, width, height,
         0, GL_RGBA, GL_BYTE, buffer);
@@ -1412,11 +1301,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_SNORM_2D(byte[] data, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         int l = data.length;
         ByteBuffer buffer = MemoryUtil.memAlloc(l);
         for (byte datum : data) {
@@ -1430,11 +1317,9 @@ public class Texture implements Disposable {
     }
     
     public void RGBA8_SNORM_2D(ByteBuffer buffer, int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_RGBA8_SNORM, w, h,
         0, GL_RGBA, GL_BYTE, buffer);
@@ -1449,11 +1334,9 @@ public class Texture implements Disposable {
     
     
     public void DEPTH16(int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,2);
         glTexImage2D(target, 0, GL_DEPTH_COMPONENT16, w, h,
         0, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, (ShortBuffer) null);
@@ -1461,11 +1344,9 @@ public class Texture implements Disposable {
     }
     
     public void DEPTH32(int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_DEPTH_COMPONENT32, w, h,
         0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, (IntBuffer) null);
@@ -1473,11 +1354,9 @@ public class Texture implements Disposable {
     }
     
     public void DEPTH32F(int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_DEPTH_COMPONENT32F, w, h,
         0, GL_DEPTH_COMPONENT, GL_FLOAT, (FloatBuffer) null);
@@ -1485,11 +1364,9 @@ public class Texture implements Disposable {
     }
     
     public void DEPTH24_STENCIL8(int w, int h) {
-        preValidate();
         width = w;
         height = h;
         depth = 1;
-        target = GL_TEXTURE_2D;
         glPixelStorei(GL_UNPACK_ALIGNMENT,4);
         glTexImage2D(target, 0, GL_DEPTH24_STENCIL8, w, h,
         0, GL_UNSIGNED_INT_24_8 , GL_FLOAT, (IntBuffer) null);
@@ -1591,19 +1468,5 @@ public class Texture implements Disposable {
         return target != GL_NONE;
     }
     
-    private void preValidate() {
-        //todo:
-        /*
-        String error = null;
-        if (isSpecified()) {
-            error = "texture target already specified";
-        }else if (isDisposed()) {
-            error = "texture target is disposed";
-        } if (error != null) {
-            throw new RuntimeException("unable to validate texture, " + error);
-        }
-        
-         */
-    }
     
 }

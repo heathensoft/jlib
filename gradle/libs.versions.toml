@@ -10,5 +10,6 @@ lwjgl-lwjgl     = { group = "org.lwjgl" , name = "lwjgl", version.ref = "lwjgl" 
 lwjgl-glfw      = { group = "org.lwjgl" , name = "lwjgl-glfw", version.ref = "lwjgl" }
 lwjgl-opengl    = { group = "org.lwjgl" , name = "lwjgl-opengl", version.ref = "lwjgl" }
 lwjgl-stb       = { group = "org.lwjgl" , name = "lwjgl-stb", version.ref = "lwjgl" }
+lwjgl-nuklear   = { group = "org.lwjgl" , name = "lwjgl-nuklear", version.ref = "lwjgl" }
 joml            = { group = "org.joml" , name = "joml", version.ref = "joml" }
 joml-primitives = { group = "org.joml" , name = "joml-primitives", version.ref = "joml-primitives" }

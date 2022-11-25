@@ -1,5 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
+import io.github.heathensoft.jlib.common.Disposable;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ import java.util.Map;
  */
 
 
-public class TextureAtlas {
+public class TextureAtlas implements Disposable {
     
     private final Texture texture;
     private final String filename;
@@ -123,5 +124,10 @@ public class TextureAtlas {
     
     public Texture texture() {
         return texture;
+    }
+    
+    @Override
+    public void dispose() {
+        Disposable.dispose(texture);
     }
 }

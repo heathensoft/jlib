@@ -36,8 +36,9 @@ public class BufferObject implements Disposable {
         this.usage = usage;
     }
     
-    public void bind() {
+    public BufferObject bind() {
         glBindBuffer(target, name);
+        return this;
     }
     
     public void bufferData(byte[] data) {

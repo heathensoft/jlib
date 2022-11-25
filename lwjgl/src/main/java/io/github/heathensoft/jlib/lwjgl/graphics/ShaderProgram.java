@@ -115,6 +115,10 @@ public class ShaderProgram implements Disposable {
         }
     }
     
+    public int getUniform(String name) {
+        return uniforms.getOrDefault(name,-1);
+    }
+    
     public void createUniformBlockIndex(String name) {
         int index = glGetUniformBlockIndex(this.name,name);
         if (index == GL_INVALID_INDEX) throw new RuntimeException("no such block: " + name);

@@ -27,9 +27,10 @@ public class Vao implements Disposable {
         id = glGenVertexArrays();
     }
     
-    public void bind() {
+    public Vao bind() {
         if (bound != id)
             glBindVertexArray(bound = id);
+        return this;
     }
     
     public static void bindZERO() {

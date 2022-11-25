@@ -78,7 +78,7 @@ public class Keyboard {
         return pressed(key1) && pressed(key2);
     }
     
-    public boolean justPressed(int key) {
+    public boolean just_pressed(int key) {
         if (key >= GLFW_KEY_LAST) return false;
         return keys[key] && !pkeys[key];
     }
@@ -88,11 +88,11 @@ public class Keyboard {
      * @param mod mod (i.e. ctrl, alt, shift etc.)
      * @return mod is pressed, and key is just pressed
      */
-    public boolean justPressed(int key, int mod) {
-        return pressed(mod) && justPressed(key);
+    public boolean just_pressed(int key, int mod) {
+        return pressed(mod) && just_pressed(key);
     }
     
-    public boolean justReleased(int key) {
+    public boolean just_released(int key) {
         return pkeys[key] && !keys[key];
     }
     

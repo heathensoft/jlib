@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.common;
+package io.github.heathensoft.jlib.common.thread;
 
 /**
  * Task executed by runnable Worker

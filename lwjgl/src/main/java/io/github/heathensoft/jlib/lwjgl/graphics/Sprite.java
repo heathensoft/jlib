@@ -30,34 +30,39 @@ public class Sprite {
     public static final int DEFAULT_ID = 0;
     public static final int UV_SIZE = 2;
     public static final int POS_SIZE = 2;
+    public static final int COLOR_SIZE = 1;
+    public static final int ID_SIZE = 1;
     public static final int VERTICES = 4;
     public static final int NUM_INDICES = 6;
-    public static final int INSTANCE_DATA_SIZE = 2;
-    public static final int VERTEX_SIZE = POS_SIZE + UV_SIZE;
-    public static final int VERTICES_SIZE = VERTICES * VERTEX_SIZE;
-    public static final int SIZE = VERTICES_SIZE + INSTANCE_DATA_SIZE;
+    public static final int VERTEX_SIZE = POS_SIZE + UV_SIZE + COLOR_SIZE + ID_SIZE;
+    public static final int SIZE = VERTICES * VERTEX_SIZE;
     
     public static final Color DEFAULT_COLOR = Color.WHITE;
-    public static final float DEFAULT_COLOR_BITS = DEFAULT_COLOR.toFloatBits();
     
     protected static final int X1 = 0;     // x
     protected static final int Y1 = 1;     // y + h
     protected static final int U1 = 2;     // u
     protected static final int V1 = 3;     // v
-    protected static final int X2 = 4;     // x
-    protected static final int Y2 = 5;     // y
-    protected static final int U2 = 6;     // u
-    protected static final int V2 = 7;     // v2
-    protected static final int X3 = 8;     // x + w
-    protected static final int Y3 = 9;     // y
-    protected static final int U3 = 10;    // u2
-    protected static final int V3 = 11;    // v2
-    protected static final int X4 = 12;    // x + h
-    protected static final int Y4 = 13;    // y + h
-    protected static final int U4 = 14;    // u2
-    protected static final int V4 = 15;    // v
-    protected static final int CO = 16;    // color
-    protected static final int ID = 17;    // id
+    protected static final int C1 = 4;
+    protected static final int I1 = 5;
+    protected static final int X2 = 6;     // x
+    protected static final int Y2 = 7;     // y
+    protected static final int U2 = 8;     // u
+    protected static final int V2 = 9;     // v2
+    protected static final int C2 = 10;
+    protected static final int I2 = 11;
+    protected static final int X3 = 12;    // x + w
+    protected static final int Y3 = 13;    // y
+    protected static final int U3 = 14;    // u2
+    protected static final int V3 = 15;    // v2
+    protected static final int C3 = 16;
+    protected static final int I3 = 17;
+    protected static final int X4 = 18;    // x + h
+    protected static final int Y4 = 19;    // y + h
+    protected static final int U4 = 20;    // u2
+    protected static final int V4 = 21;    // v
+    protected static final int C4 = 22;
+    protected static final int I4 = 23;
     
     private final float[] data = new float[SIZE];
     private final Color color = Color.WHITE.cpy();
@@ -355,22 +360,37 @@ public class Sprite {
     }
     
     public void setID(int id) {
-        data[ID] = id;
+        data[I1] = id;
+        data[I2] = id;
+        data[I3] = id;
+        data[I4] = id;
     }
     
     public void setColor(Color color) {
         this.color.set(color);
-        data[CO] = color.toFloatBits();
+        float floatBits = color.toFloatBits();
+        data[C1] = floatBits;
+        data[C2] = floatBits;
+        data[C3] = floatBits;
+        data[C4] = floatBits;
     }
     
     public void setColorDefault() {
         this.color.set(DEFAULT_COLOR);
-        data[CO] = DEFAULT_COLOR_BITS;
+        float floatBits = color.toFloatBits();
+        data[C1] = floatBits;
+        data[C2] = floatBits;
+        data[C3] = floatBits;
+        data[C4] = floatBits;
     }
     
     public void setAlpha (float a) {
         color.a = a;
-        data[CO] = color.toFloatBits();
+        float floatBits = color.toFloatBits();
+        data[C1] = floatBits;
+        data[C2] = floatBits;
+        data[C3] = floatBits;
+        data[C4] = floatBits;
     }
     
     public void flipX() {
@@ -493,7 +513,7 @@ public class Sprite {
     }
     
     public int id() {
-        return (int) data[ID];
+        return (int) data[I1];
     }
     
     public float rotationDeg() {
@@ -517,24 +537,31 @@ public class Sprite {
     
     private void setData(float x, float y, float x2, float y2, float w, float h,
                          float u, float v, float u2, float v2) {
+        float floatBits = color.toFloatBits();
         data[X1] = x;
         data[Y1] = y2;
         data[U1] = u;
         data[V1] = v;
+        data[C1] = floatBits;
+        data[I1] = DEFAULT_ID;
         data[X2] = x;
         data[Y2] = y;
         data[U2] = u;
         data[V2] = v2;
+        data[C2] = floatBits;
+        data[I2] = DEFAULT_ID;
         data[X3] = x2;
         data[Y3] = y;
         data[U3] = u2;
         data[V3] = v2;
+        data[C3] = floatBits;
+        data[I3] = DEFAULT_ID;
         data[X4] = x2;
         data[Y4] = y2;
         data[U4] = u2;
         data[V4] = v;
-        data[CO] = color.toFloatBits();
-        data[ID] = DEFAULT_ID;
+        data[C4] = floatBits;
+        data[I4] = DEFAULT_ID;
         width = w;
         height = h;
         originX = w / 2f;

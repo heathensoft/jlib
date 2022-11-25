@@ -1,5 +1,6 @@
-package io.github.heathensoft.jlib.common;
+package io.github.heathensoft.jlib.common.thread;
 
+import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.storage.generic.Pool;
 
 import java.util.concurrent.*;

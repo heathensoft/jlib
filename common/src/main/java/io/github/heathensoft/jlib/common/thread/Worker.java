@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.common;
+package io.github.heathensoft.jlib.common.thread;
 
 
 import io.github.heathensoft.jlib.common.storage.generic.Poolable;

@@ -1,8 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 import io.github.heathensoft.jlib.common.Assert;
-import io.github.heathensoft.jlib.common.ThreadService;
-import io.github.heathensoft.jlib.lwjgl.graphics.GLError;
+import io.github.heathensoft.jlib.common.thread.ThreadService;
 import org.lwjgl.Version;
 import org.tinylog.Logger;
 

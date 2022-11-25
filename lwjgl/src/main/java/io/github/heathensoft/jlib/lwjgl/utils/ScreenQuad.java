@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.test;
+package io.github.heathensoft.jlib.lwjgl.utils;
 
 
 import io.github.heathensoft.jlib.common.Disposable;
@@ -27,19 +27,16 @@ public class ScreenQuad implements Disposable {
         vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_STATIC_DRAW);
         
         float[] vertices = {
-                // position     // texCoord
-                 1.0f,-1.0f,     1.0f, 0.0f, // Bottom right 0
-                -1.0f, 1.0f,     0.0f, 1.0f, // Top left     1
-                 1.0f, 1.0f ,    1.0f, 1.0f, // Top right    2
-                -1.0f,-1.0f,     0.0f, 0.0f, // Bottom left  3
+                 1.0f,-1.0f,1.0f, 0.0f, // Bottom right 0
+                -1.0f, 1.0f,0.0f, 1.0f, // Top left     1
+                 1.0f, 1.0f,1.0f, 1.0f, // Top right    2
+                -1.0f,-1.0f,0.0f, 0.0f, // Bottom left  3
         };
-        
         short[] indices = {
                 2, 1, 0, // Top right triangle
                 0, 1, 3  // bottom left triangle
         };
-        vao = new Vao();
-        vao.bind();
+        vao = new Vao().bind();
         indexBuffer.bind();
         indexBuffer.bufferData(indices);
         vertexBuffer.bind();
@@ -57,13 +54,34 @@ public class ScreenQuad implements Disposable {
         vao.bind();
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
     }
-    
-    
-    
+
     @Override
     public void dispose() {
         Disposable.dispose(vao);
         Disposable.dispose(indexBuffer);
         Disposable.dispose(vertexBuffer);
+    }
+
+    public static String default_screen_vs_shader() {
+        return """
+                #version 440
+                layout (location=0) in vec4 a_pos;
+                layout (location=1) in vec2 a_uv;
+                out vec2 uv;
+                void main() {
+                    uv = a_uv;
+                    gl_Position = a_pos;
+                }""";
+    }
+
+    public static String default_screen_fs_shader() {
+        return """
+                #version 440
+                layout (location=0) out vec4 f_color;
+                in vec2 uv;
+                uniform sampler2D u_sampler;
+                void main() {
+                    f_color = texture(u_sampler,uv);
+                }""";
     }
 }

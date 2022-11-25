@@ -26,7 +26,7 @@ public abstract class Framebuffer implements Disposable {
     private static Framebuffer readBuffer = null;
     private static Framebuffer drawBuffer = null;
     
-    protected int id;
+    protected int name;
     protected int width;
     protected int height;
     protected int clearMask = GL_COLOR_BUFFER_BIT;
@@ -34,13 +34,13 @@ public abstract class Framebuffer implements Disposable {
     
     
     public Framebuffer(int width, int height) {
-        this.id = glGenFramebuffers();
+        this.name = glGenFramebuffers();
         this.width = width;
         this.height = height;
     }
     
-    public int id() {
-        return id;
+    public int name() {
+        return name;
     }
     
     public int width() {
@@ -65,7 +65,7 @@ public abstract class Framebuffer implements Disposable {
     
     public final void dispose() {
         onDispose(this);
-        glDeleteFramebuffers(id);
+        glDeleteFramebuffers(name);
         disposeInternal();
     }
     
@@ -83,9 +83,9 @@ public abstract class Framebuffer implements Disposable {
     }
     
     public static void bind(Framebuffer buffer) {
-        int bufferID = buffer == null ? 0 : buffer.id;
-        int readBufferID = readBuffer == null ? 0 : readBuffer.id;
-        int drawBufferID = drawBuffer == null ? 0 : drawBuffer.id;
+        int bufferID = buffer == null ? 0 : buffer.name;
+        int readBufferID = readBuffer == null ? 0 : readBuffer.name;
+        int drawBufferID = drawBuffer == null ? 0 : drawBuffer.name;
         if (bufferID != readBufferID || bufferID != drawBufferID) {
             readBuffer = buffer; drawBuffer = buffer;
             glBindFramebuffer(GL_FRAMEBUFFER, bufferID);
@@ -93,8 +93,8 @@ public abstract class Framebuffer implements Disposable {
     }
     
     public static void bindRead(Framebuffer buffer) {
-        int bufferID = buffer == null ? 0 : buffer.id;
-        int readBufferID = readBuffer == null ? 0 : readBuffer.id;
+        int bufferID = buffer == null ? 0 : buffer.name;
+        int readBufferID = readBuffer == null ? 0 : readBuffer.name;
         if (bufferID != readBufferID) {
             readBuffer = buffer;
             glBindFramebuffer(GL_READ_FRAMEBUFFER, bufferID);
@@ -102,8 +102,8 @@ public abstract class Framebuffer implements Disposable {
     }
     
     public static void bindDraw(Framebuffer buffer) {
-        int bufferID = buffer == null ? 0 : buffer.id;
-        int drawBufferID = drawBuffer == null ? 0 : drawBuffer.id;
+        int bufferID = buffer == null ? 0 : buffer.name;
+        int drawBufferID = drawBuffer == null ? 0 : drawBuffer.name;
         if (bufferID != drawBufferID) {
             drawBuffer = buffer;
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, bufferID);

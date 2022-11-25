@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
-import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.common.Disposable;
 import org.joml.Math;
 import org.lwjgl.system.MemoryUtil;
@@ -18,15 +17,14 @@ import static io.github.heathensoft.jlib.lwjgl.graphics.Sprite.*;
 
 
 public class SpriteBatch implements Disposable {
-    
+
+    public static final float DEFAULT_COLOR_BITS = DEFAULT_COLOR.toFloatBits();
     public static final int MAX_CAPACITY = Short.MAX_VALUE / 4;
     
     private final SpriteVertexData vertexData;
     private final FloatBuffer vertexBuffer;
-    private final FloatBuffer instanceBuffer;
     private final int capacity;
     
-    private ShaderProgram shader; // Dispose externally
     private int count;
     private int drawCalls;
     private int drawCallsTotal;
@@ -35,38 +33,17 @@ public class SpriteBatch implements Disposable {
     
     public SpriteBatch(int capacity) {
         this.capacity = capacity = Math.min(MAX_CAPACITY,capacity);
-        vertexBuffer = MemoryUtil.memAllocFloat(capacity * VERTICES_SIZE);
-        instanceBuffer = MemoryUtil.memAllocFloat(capacity * INSTANCE_DATA_SIZE);
+        vertexBuffer = MemoryUtil.memAllocFloat(capacity * SIZE);
         vertexData = new SpriteVertexData(capacity);
     }
     
-    public ShaderProgram shader() {
-        return shader;
-    }
-    
-    public void setShader(ShaderProgram shader) {
-        Assert.notNull("shader cannot be null", shader);
-        if (shader != this.shader) {
-            if (rendering) {
-                if (count > 0)
-                    flush();
-            } this.shader = shader;
-            this.shader.use();
-        }
-    }
-    
     public void begin() {
-        if (shader == null) {
-            Logger.warn("spriteBatch: null shader");
-            return;
-        }
         if (rendering) {
             Logger.warn("spriteBatch: already in rendering state");
             return;
         }
         drawCalls = 0;
         rendering = true;
-        shader.use();
     }
     
     public void end() {
@@ -79,7 +56,7 @@ public class SpriteBatch implements Disposable {
     }
     
     private void flush() {
-        vertexData.render(vertexBuffer,instanceBuffer,count);
+        vertexData.render(vertexBuffer,count);
         count = 0;
         drawCalls++;
         drawCallsTotal++;
@@ -88,8 +65,7 @@ public class SpriteBatch implements Disposable {
     public void draw(Sprite sprite) {
         if (rendering) {
             if (count == capacity) flush();
-            vertexBuffer.put(sprite.data(),0, VERTICES_SIZE);
-            instanceBuffer.put(sprite.data(), VERTICES_SIZE, INSTANCE_DATA_SIZE);
+            vertexBuffer.put(sprite.data(),0, SIZE);
             count++;
         } else {
             Logger.warn("spriteBatch: call begin before draw");
@@ -119,6 +95,24 @@ public class SpriteBatch implements Disposable {
     
      */
     
+    public void draw(float x, float y, float width, float height, float color, float id) {
+        draw(0,0,1,1,x,y,width,height,color,id);
+    }
+    
+    public void draw(float u, float v, float u2, float v2, float x, float y, float width, float height, float color, float id) {
+        if (rendering) {
+            if (count == capacity) flush();
+            final float x2 = x + width;
+            final float y2 = y + height;
+            vertexBuffer
+            .put(x).put(y2).put(u).put(v).put(color).put(id)
+            .put(x).put(y).put(u).put(v2).put(color).put(id)
+            .put(x2).put(y).put(u2).put(v2).put(color).put(id)
+            .put(x2).put(y2).put(u2).put(v).put(color).put(id);
+            count++;
+        }
+    }
+    
     public void draw(TextureRegion region, float x, float y, float width, float height) {
         draw(region, x, y, width, height, DEFAULT_ID);
     }
@@ -137,13 +131,10 @@ public class SpriteBatch implements Disposable {
             final float u2 = region.u2();
             final float v2 = region.v2();
             vertexBuffer
-                    .put(x).put(y2).put(u).put(v)
-                    .put(x).put(y).put(u).put(v2)
-                    .put(x2).put(y).put(u2).put(v2)
-                    .put(x2).put(y2).put(u2).put(v);
-            instanceBuffer.
-                    put(color).
-                    put(id);
+                    .put(x).put(y2).put(u).put(v).put(color).put(id)
+                    .put(x).put(y).put(u).put(v2).put(color).put(id)
+                    .put(x2).put(y).put(u2).put(v2).put(color).put(id)
+                    .put(x2).put(y2).put(u2).put(v).put(color).put(id);
             count++;
         }
     }
@@ -179,13 +170,10 @@ public class SpriteBatch implements Disposable {
             final float u2 = region.u2();
             final float v2 = region.v2();
             vertexBuffer
-                    .put(x1).put(y2).put(u).put(v)
-                    .put(x1).put(y1).put(u).put(v2)
-                    .put(x2).put(y1).put(u2).put(v2)
-                    .put(x2).put(y2).put(u2).put(v);
-            instanceBuffer.
-                    put(color).
-                    put(id);
+                    .put(x).put(y2).put(u).put(v).put(color).put(id)
+                    .put(x).put(y).put(u).put(v2).put(color).put(id)
+                    .put(x2).put(y).put(u2).put(v2).put(color).put(id)
+                    .put(x2).put(y2).put(u2).put(v).put(color).put(id);
             count++;
         }
     }
@@ -249,27 +237,30 @@ public class SpriteBatch implements Disposable {
                 y1 = localY + worldOriginY;
                 x2 = localX2 + worldOriginX;
                 y2 = localY2 + worldOriginY;
+
+                // TODO: !!!!!!!!!!!!!!!!!
+
                 x3 = x2;
                 y3 = y1;
                 x4 = x2;
                 y4 = y2;
             }
             vertexBuffer
-                    .put(x1).put(y1).put(u).put(v)
-                    .put(x2).put(y2).put(u).put(v2)
-                    .put(x3).put(y3).put(u2).put(v2)
-                    .put(x4).put(y4).put(u2).put(v);
-            instanceBuffer.
-                    put(color).
-                    put(id);
+                    .put(x).put(y2).put(u).put(v).put(color).put(id)
+                    .put(x).put(y).put(u).put(v2).put(color).put(id)
+                    .put(x2).put(y).put(u2).put(v2).put(color).put(id)
+                    .put(x2).put(y2).put(u2).put(v).put(color).put(id);
             count++;
         }
+    }
+    
+    public boolean isRendering() {
+        return rendering;
     }
     
     @Override
     public void dispose() {
         if (vertexBuffer != null) MemoryUtil.memFree(vertexBuffer);
-        if (instanceBuffer != null) MemoryUtil.memFree(instanceBuffer);
         Disposable.dispose(vertexData);
     }
     
