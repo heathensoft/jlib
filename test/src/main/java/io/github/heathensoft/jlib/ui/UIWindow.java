@@ -1,13 +1,8 @@
 package io.github.heathensoft.jlib.ui;
 
 import io.github.heathensoft.jlib.common.utils.Area;
-import io.github.heathensoft.jlib.common.utils.interactable.Interactable;
+import io.github.heathensoft.jlib.lwjgl.window.interactable.Interactable;
 import io.github.heathensoft.jlib.lwjgl.graphics.Color;
-import io.github.heathensoft.jlib.lwjgl.graphics.Sprite;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
-import io.github.heathensoft.jlib.ui.HUD;
-import io.github.heathensoft.jlib.ui.HudAssets;
 import org.joml.Vector2f;
 
 /**
@@ -27,7 +22,7 @@ public class UIWindow extends Interactable {
     private Color color;
 
     public UIWindow(Vector2f position, float cw, float ch, float border_thickness, Color color) {
-        registerInteractable();
+        iRegisterInteractable();
         this.position = position;
         this.color = color;
         this.content_width = cw;

@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.common.utils.interactable;
+package io.github.heathensoft.jlib.lwjgl.window.interactable;
 
 
 import io.github.heathensoft.jlib.common.storage.generic.Container;
@@ -16,7 +16,10 @@ import java.util.Map;
  * Meant to be used to uniquely identify interactable objects
  * by a R32UI (texture integer) pixel id.
  *
- * there are 12 bits available for Type and 20 bits for Type instance.
+ * there are 8 bits available for Type and 16 bits for Type instance.
+ *
+ * the 8 LSB in the interactable data is available for any other usage.
+ * Like sending a texture id to shader.
  *
  * A pixel ID is automatically assigned to any Object of a class extending
  * Interactable ->
@@ -72,7 +75,7 @@ public class Interactables {
      */
     public static void clear() {
         if (instance != null) {
-            instance.interactables.read(container -> container.read(interactable -> interactable.setPixelID(0)));
+            instance.interactables.read(container -> container.read(interactable -> interactable.iSetPixelID(0)));
             instance.interactables.clear();
             instance.types_by_id.clear();
             instance.groups_by_id.clear();
@@ -114,14 +117,15 @@ public class Interactables {
     }
 
     /**
-     * @param pixelID pixel id
-     * @return interactable or null if id == 0
+     * @param data interactable data
+     * @return interactable or null if pixel id = (data >> 8) == 0
      * @throws IllegalStateException If the pixel id is invalid
      */
-    public Interactable interactable(int pixelID) throws IllegalStateException {
+    public Interactable interactable(int data) throws IllegalStateException {
+        int pixelID = data >> 8;
         if (pixelID == 0) return null;
-        try { int type_id = pixelID >> 20;
-            int instance_id = pixelID & 0x000F_FFFF;
+        try { int type_id = pixelID >> 16;
+            int instance_id = pixelID & 0x0000_FFFF;
             return interactables.get(type_id).get(instance_id);
         } catch (ArrayIndexOutOfBoundsException e) {
             throw new IllegalStateException("invalid interactable",e);
@@ -141,24 +145,25 @@ public class Interactables {
     }
 
     protected void add(Interactable interactable) {
-        if (interactable.pixelID() != 0) {
+        if (interactable.iPixelID() != 0) {
             throw new IllegalStateException("attempting to add interactable already in collection");
         } InteractableType type = type(interactable.getClass());
         int instance_id = type.obtain_instance_id();
         interactables.get(type.id()).set(instance_id,interactable);
-        interactable.setPixelID(type.id() << 20 | instance_id);
+        int pixel_id = (type.id() << 16) | instance_id;
+        interactable.iSetPixelID(pixel_id);
     }
 
     protected void remove(Interactable interactable) {
-        if (interactable.pixelID() == 0) {
+        if (interactable.iPixelID() == 0) {
             throw new IllegalStateException("attempting to remove interactable not in collection");
         } InteractableType type = type(interactable.getClass());
-        int instance_id = interactable.pixelID() & 0x000F_FFFF;
+        int instance_id = interactable.iTypeInstanceID();
         Interactable removed = interactables.get(type.id()).remove(instance_id);
         if (removed != interactable) {
             throw new IllegalStateException("interactable not found");
         } type.returnID(instance_id);
-        interactable.setPixelID(0);
+        interactable.iSetPixelID(0);
     }
 
     public int count(InteractableType type) {

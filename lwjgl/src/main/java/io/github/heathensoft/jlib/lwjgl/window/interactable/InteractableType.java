@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.common.utils.interactable;
+package io.github.heathensoft.jlib.lwjgl.window.interactable;
 
 import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
 import io.github.heathensoft.jlib.common.utils.IDGen;

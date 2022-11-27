@@ -29,7 +29,7 @@ public class Text {
      * @param containerWidth in the character width units
      * @return estimated height of the text;
      */
-    public int calculateHeight(int containerWidth) {
+    public int calculateHeight(int containerWidth) { // store height, and do this on resize
         int px = 0;
         int py = 0;
         for (Paragraph paragraph : paragraphs) {
@@ -39,7 +39,7 @@ public class Text {
                 if (px + l > containerWidth) {
                     px = 0;
                     py++;
-                } /* + 1 for space*/
+                } /* + 1 for space (as in space-bar ) */
                 px += l + 1;
             }
         } return py;

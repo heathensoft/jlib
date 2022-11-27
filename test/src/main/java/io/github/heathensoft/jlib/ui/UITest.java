@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.ui;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.utils.interactable.Interactable;
-import io.github.heathensoft.jlib.common.utils.interactable.InteractableGroup;
-import io.github.heathensoft.jlib.common.utils.interactable.Interactables;
+import io.github.heathensoft.jlib.lwjgl.window.interactable.Interactable;
+import io.github.heathensoft.jlib.lwjgl.window.interactable.InteractableGroup;
+import io.github.heathensoft.jlib.lwjgl.window.interactable.Interactables;
 import io.github.heathensoft.jlib.lwjgl.graphics.*;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.lwjgl.utils.ScreenQuad;
@@ -88,7 +88,7 @@ public class UITest extends Application {
 
             if (interactable != null) {
 
-                if (interactable.memberOf(windowGroup)) {
+                if (interactable.iMemberOf(windowGroup)) {
 
                     UIWindow uiWindow = windowGroup.cast(interactable);
 

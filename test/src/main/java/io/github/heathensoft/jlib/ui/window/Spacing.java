@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.hud;
+package io.github.heathensoft.jlib.ui.window;
 
 /**
  * @author Frederik Dahl

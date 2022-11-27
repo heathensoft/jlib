@@ -6,6 +6,9 @@ import io.github.heathensoft.jlib.lwjgl.graphics.IDBuffer;
 import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
+import org.lwjgl.system.MemoryStack;
+
+import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -41,12 +44,6 @@ public class HUD {
         FRAMEBUFFER = new HudFramebuffer(ID_BUFFER,WIDTH,HEIGHT);
     }
 
-    // do this after you are finished drawing interactables.
-    // both hud and entities. Do not clear the id buffer before this call.
-    public void updateIdBuffer(Vector2f mouseViewport) {
-        ID_BUFFER.readID(mouseViewport.x,mouseViewport.y);
-    }
-
     /**
      * Render HUD AFTER rendering the "world".
      * This clears the HUD color texture, renders the HUD
@@ -64,8 +61,13 @@ public class HUD {
         FRAMEBUFFER.clearColorBuffer();
         SHADER.use();
         SHADER.setUniform("u_combined", MATRIX);
-        SHADER.setUniform1i("u_sampler",0);
-        ASSETS.assets_texture().bindToSlot(0);
+        int numTextures = ASSETS.NUM_TEXTURES;
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(numTextures);
+            for (int i = 0; i < numTextures; i++) buffer.put(i);
+            SHADER.setUniform1iv("u_texture",buffer.flip());
+        } for (int i = 0; i < numTextures; i++)
+            ASSETS.texture(i).bindToSlot(i);
         batch.begin();
         // draw elements
         batch.end();

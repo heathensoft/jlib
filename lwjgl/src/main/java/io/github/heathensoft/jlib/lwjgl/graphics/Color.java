@@ -9,6 +9,8 @@ package io.github.heathensoft.jlib.lwjgl.graphics;
 
 public class Color {
     
+    public static final Color EMPTY = new Color(0x00000000);
+    public static final Color BLACK = new Color(0x000000FF);
     public static final Color WHITE = new Color(0xFFFFFFFF);
     
     public float r, g, b, a;
@@ -133,8 +135,7 @@ public class Color {
      * {@link #intToFloatColor(int)}). Converting a color to a float and back can be lossy for alpha.
      * @return the packed color as a 32-bit float */
     public float toFloatBits () {
-        int color = ((int)(255 * a) << 24) | ((int)(255 * b) << 16) | ((int)(255 * g) << 8) | ((int)(255 * r));
-        return intToFloatColor(color);
+        return intToFloatColor(toIntBits());
     }
     
     /** Packs the color components into a 32-bit integer with the format ABGR.
