@@ -40,7 +40,7 @@ public abstract class InputProcessor {
     
     protected void on_mouse_press(int button, boolean press) {}
     
-    protected void on_mouse_scroll(int amount) {}
+    protected void on_mouse_scroll(float amount) {}
     
     protected void on_mouse_enter(boolean enter) {}
     

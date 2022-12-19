@@ -161,7 +161,7 @@ public abstract class Framebuffer implements Disposable {
     
     /**
      * Clear single drawbuffer
-     * @param index 1 - 15
+     * @param index not GL_COLOR_ATTACHMENT, but the index of that attachment
      * @param value the color value
      */
     public static void clearColorBufferInt(int index, IntBuffer value) {
@@ -170,7 +170,7 @@ public abstract class Framebuffer implements Disposable {
     
     /**
      * Clear single drawbuffer
-     * @param index 1 - 15
+     * @param index not GL_COLOR_ATTACHMENT, but the index of that attachment
      * @param value the color value
      */
     public static void clearColorBufferUInt(int index, IntBuffer value) {
@@ -179,7 +179,7 @@ public abstract class Framebuffer implements Disposable {
     
     /**
      * Clear single drawbuffer
-     * @param index 1 - 15
+     * @param index not GL_COLOR_ATTACHMENT, but the index of that attachment
      * @param value the color value
      */
     public static void clearColorBufferFloat(int index, FloatBuffer value) {

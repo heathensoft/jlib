@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.lwjgl.graphics;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.IDGen;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
+import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -67,6 +68,10 @@ public class IDBuffer extends Framebuffer {
         pbo.bind();
         pbo.bufferData((long) width * height * Integer.BYTES);
         BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER);
+    }
+
+    public void readID(Vector2f mouseViewport) {
+        readID(mouseViewport.x,mouseViewport.y);
     }
     
     public void readID(float mouseViewportX, float mouseViewportY) {

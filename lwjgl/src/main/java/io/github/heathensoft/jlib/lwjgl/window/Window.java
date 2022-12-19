@@ -781,7 +781,7 @@ public class Window extends AbstractWindow {
     private final GLFWScrollCallback mouse_scroll_callback = new GLFWScrollCallback() {
         @Override
         public void invoke(long window, double vertical, double horizontal) {
-            current_processor.on_mouse_scroll((int)Math.round(horizontal));
+            current_processor.on_mouse_scroll((float)horizontal);
         }
     };
     

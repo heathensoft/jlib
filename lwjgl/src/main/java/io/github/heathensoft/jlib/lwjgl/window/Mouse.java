@@ -37,8 +37,8 @@ public class Mouse {
     private final Vector2f[] drag_vector = new Vector2f[NUM_BUTTONS];
 
     private boolean mouse_left_window;
-    private int callback_scroll;
-    private int current_scroll;
+    private float callback_scroll;
+    private float current_scroll;
 
     public Mouse() {
         for (int i = 0; i < NUM_BUTTONS; i++) {
@@ -97,7 +97,7 @@ public class Mouse {
         }
     }
 
-    public int get_scroll() {
+    public float get_scroll() {
         return current_scroll;
     }
 
@@ -161,7 +161,7 @@ public class Mouse {
         callback_button[button] = press;
     }
 
-    public void on_mouse_scroll(int amount) {
+    public void on_mouse_scroll(float amount) {
         callback_scroll += amount;
     }
 

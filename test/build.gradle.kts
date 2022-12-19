@@ -9,6 +9,7 @@ repositories {
 dependencies {
     implementation(project(":common"))
     implementation(project(":lwjgl"))
+    implementation(files("../libs/json/json-simple-1.1.1.jar"))
     implementation(files("../libs/lwjgl-3.3.1/lwjgl.jar"))
     implementation(files("../libs/lwjgl-3.3.1/lwjgl-glfw.jar"))
     implementation(files("../libs/lwjgl-3.3.1/lwjgl-opengl.jar"))

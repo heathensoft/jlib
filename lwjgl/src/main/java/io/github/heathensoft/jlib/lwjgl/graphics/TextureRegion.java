@@ -68,10 +68,10 @@ public class TextureRegion {
         h = Math.round(Math.abs(v2 - v) * texHeight);
         
         if (w == 1 && h == 1) {
-            float adjustX = 0.25f / texWidth;
+            float adjustX = 0.20f / texWidth;
             u += adjustX;
             u2 -= adjustX;
-            float adjustY = 0.25f / texHeight;
+            float adjustY = 0.20f / texHeight;
             v += adjustY;
             v2 -= adjustY;
         }

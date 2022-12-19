@@ -72,7 +72,7 @@ public class Rooms {
         }
     }
     
-    public void remove(Area area) {
+    public synchronized void remove(Area area) {
         Area tmpA0 = new Area(area);
         Area m_bounds = map.area();
         if (m_bounds.intersection(tmpA0)) {
@@ -164,7 +164,7 @@ public class Rooms {
         }
     }
     
-    public void place(Area area) {
+    public synchronized void place(Area area) {
         // this is a generic placement method.
         // it does not matter how many tiles are placed at once.
         // more to consider than if we were to only place singles.

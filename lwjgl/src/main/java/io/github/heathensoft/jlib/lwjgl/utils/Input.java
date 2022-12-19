@@ -69,7 +69,7 @@ public class Input extends InputProcessor {
     }
 
     @Override
-    protected void on_mouse_scroll(int amount) {
+    protected void on_mouse_scroll(float amount) {
         mouse.on_mouse_scroll(amount);
     }
 
