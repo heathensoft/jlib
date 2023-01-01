@@ -15,6 +15,7 @@ public class Color {
     public static final Color RED = new Color(0xFF0000FF);
     public static final Color GREEN = new Color(0x00FF00FF);
     public static final Color BLUE = new Color(0x0000FFFF);
+    public static final Color TMP = new Color();
     
     public float r, g, b, a;
     

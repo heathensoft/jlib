@@ -119,10 +119,10 @@ public class TextureRegion {
     public void toRegionUVs(Vector4f texUVs) {
         final float xRatio = (float) w / (float) texture.width();
         final float yRatio = (float) h / (float) texture.height();
-        texUVs.x = texUVs.x * xRatio + u;
-        texUVs.y = texUVs.y * yRatio + v;
-        texUVs.z = texUVs.z * xRatio + u;
-        texUVs.w = texUVs.w * yRatio + v;
+        texUVs.x = texUVs.x * xRatio + u; // u
+        texUVs.y = texUVs.y * yRatio + v; // v
+        texUVs.z = texUVs.z * xRatio + u; // u2
+        texUVs.w = texUVs.w * yRatio + v; // v2
     }
     
     /**

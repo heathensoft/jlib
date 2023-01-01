@@ -63,11 +63,13 @@ public class DepthMap8 {
                 break;
             case 4:
                 for (int i = 0; i < length; i++) {
-                    avg += (data.get(i*c) & 0xff);
-                    avg += (data.get(i*c+1) & 0xff);
-                    avg += (data.get(i*c+2) & 0xff);
-                    avg = Math.round((float) avg/3);
-                    map[i] = (byte) (avg & 0xff);
+                    int alpha = (data.get(i*c+3) & 0xff);
+                    if (alpha > 127) {
+                        avg += (data.get(i*c) & 0xff);
+                        avg += (data.get(i*c+1) & 0xff);
+                        avg += (data.get(i*c+2) & 0xff);
+                        avg = Math.round((float) avg/3);
+                    } map[i] = (byte) (avg & 0xff);
                     avg = 0;
                 }
             break;

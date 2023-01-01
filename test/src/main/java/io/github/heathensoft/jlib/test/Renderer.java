@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.test;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.hud.Hud;
+import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.graphics.ShaderProgram;
 import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
@@ -18,14 +18,14 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Renderer implements Disposable {
 
-    private final Hud hud;
+    private final GUI GUI;
     private final ScreenQuad screenQuad;
     private final SpriteBatch spriteBatch;
     private final ShaderProgram defaultProgram;
 
-    public Renderer(Hud hud) throws Exception {
-        this.hud = hud;
-        spriteBatch = new SpriteBatch(256);
+    public Renderer(GUI GUI) throws Exception {
+        this.GUI = GUI;
+        spriteBatch = new SpriteBatch(512);
         screenQuad = new ScreenQuad();
         String vs_shader = ScreenQuad.default_screen_vs_shader();
         String fs_shader = ScreenQuad.default_screen_fs_shader();
@@ -35,8 +35,8 @@ public class Renderer implements Disposable {
     }
 
     public void render(float frame_time, float alpha, Vector2f mouseViewport) {
-        hud.clearIdBuffer();
-        hud.render(spriteBatch,mouseViewport);
+        GUI.clearIdBuffer();
+        GUI.render(spriteBatch,mouseViewport);
         Framebuffer.bindDefault();
         Framebuffer.viewport();
         Framebuffer.clear();
@@ -44,7 +44,7 @@ public class Renderer implements Disposable {
         glDisable(GL_BLEND);
         defaultProgram.use();
         defaultProgram.setUniform1i("u_sampler",0);
-        hud.FRAMEBUFFER.hud_texture().bindToSlot(0);
+        GUI.FRAMEBUFFER.hud_texture().bindToSlot(0);
         screenQuad.render();
     }
 

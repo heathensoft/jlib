@@ -50,6 +50,7 @@ public class TextureAtlas implements Disposable {
     private final Map<String, TextureRegion> regions;
     
     public TextureAtlas(Texture texture, List<String> layout) throws Exception {
+        /* Todo: figure out proper size of map */
         this.regionNames = new ArrayList<>();
         this.regions = new HashMap<>();
         this.texture = texture;
@@ -110,8 +111,12 @@ public class TextureAtlas implements Disposable {
         return regions;
     }
     
-    public TextureRegion get(String region) {
-        return regions.get(region);
+    public TextureRegion get(String key) {
+        return regions.get(key);
+    }
+
+    public void put(String key, TextureRegion region) {
+        regions.put(key,region);
     }
     
     public List<String> regionNames() {

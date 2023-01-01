@@ -1,9 +1,11 @@
 package io.github.heathensoft.jlib.test;
 
-import io.github.heathensoft.jlib.hud.Hud;
-import io.github.heathensoft.jlib.hud.interactable.Interactable;
-import io.github.heathensoft.jlib.hud.interactable.Interactables;
-import io.github.heathensoft.jlib.hud.interactable.UInteractable;
+import io.github.heathensoft.jlib.gui.GUI;
+import io.github.heathensoft.jlib.gui.GUIHelp;
+import io.github.heathensoft.jlib.gui.interactable.Interactable;
+import io.github.heathensoft.jlib.gui.interactable.Interactables;
+import io.github.heathensoft.jlib.gui.interactable.UInteractable;
+import io.github.heathensoft.jlib.gui.text.Text;
 import io.github.heathensoft.jlib.lwjgl.graphics.IDBuffer;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
@@ -13,6 +15,7 @@ import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector2f;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 
 /**
  * @author Frederik Dahl
@@ -24,13 +27,13 @@ public class Controls {
 
     private Interactable previousElement;
     private Input input;
-    private Hud hud;
+    private GUI GUI;
     private boolean isDragging;
 
-    public Controls(Hud hud) {
+    public Controls(GUI GUI) {
         Input.initialize();
         this.input = Input.get();
-        this.hud = hud;
+        this.GUI = GUI;
     }
 
     public void update(float dt) {
@@ -39,10 +42,19 @@ public class Controls {
 
         Keyboard keyboard = input.keyboard();
         Mouse mouse = input.mouse();
-        IDBuffer idBuffer = hud.ID_BUFFER;
+        IDBuffer idBuffer = GUI.ID_BUFFER;
         if(keyboard.just_pressed(GLFW_KEY_ESCAPE)) {
             Engine.get().exit();
         }
+
+        if(keyboard.just_pressed(GLFW_KEY_SPACE)) {
+            GUI.repack();
+        }
+
+        Vector2f coords = new Vector2f(mouse.position()).mul(1280,720);
+
+        if (mouse.scrolled())
+            System.out.println(mouse.get_scroll());
 
         int id = idBuffer.pixelID();
 
@@ -55,9 +67,9 @@ public class Controls {
                 UInteractable current = (UInteractable) currentElement;
                 if (mouse.is_dragging(Mouse.LEFT)) {
                     Vector2f vector = MathLib.vec2(mouse.drag_vector(Mouse.LEFT));
-                    vector.mul(hud.WIDTH,hud.HEIGHT);
+                    vector.mul(GUI.WIDTH, GUI.HEIGHT);
                     Vector2f origin = MathLib.vec2(mouse.position());
-                    origin.mul(hud.WIDTH,hud.HEIGHT);
+                    origin.mul(GUI.WIDTH, GUI.HEIGHT);
                     origin.sub(vector);
                     current.onGrab(origin,vector,Mouse.LEFT);
                 }
@@ -93,16 +105,16 @@ public class Controls {
                     if (mouse.just_started_drag(Mouse.LEFT)) {
 
                         Vector2f vector = MathLib.vec2(mouse.drag_vector(Mouse.LEFT));
-                        vector.mul(hud.WIDTH,hud.HEIGHT);
+                        vector.mul(GUI.WIDTH, GUI.HEIGHT);
                         Vector2f origin = MathLib.vec2(mouse.position());
-                        origin.mul(hud.WIDTH,hud.HEIGHT);
+                        origin.mul(GUI.WIDTH, GUI.HEIGHT);
                         origin.sub(vector);
                         current.onGrab(origin,vector,Mouse.LEFT);
                         isDragging = true;
                     }
                     else {
                         Vector2f position = MathLib.vec2(mouse.position());
-                        position.mul(hud.WIDTH,hud.HEIGHT);
+                        position.mul(GUI.WIDTH, GUI.HEIGHT);
                         current.onCursorHover(position);
                         if (mouse.just_clicked(Mouse.LEFT)) {
                             current.onClick(position,Mouse.LEFT);
@@ -120,6 +132,17 @@ public class Controls {
                             current.onScroll(mouse.get_scroll());
                         }
                     }
+                    if (isDragging) {
+                        GUI.setCursor(current.cursorDrag());
+                    } else {
+                        GUI.setCursor(current.cursorHover());
+                    }
+                }
+
+            } else {
+                // current element == null;
+                if (previousElement != null) {
+                    GUI.setCursor(GUI.CURSOR_ARROW);
                 }
             }
         }

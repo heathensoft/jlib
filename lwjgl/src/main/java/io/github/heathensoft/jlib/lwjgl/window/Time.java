@@ -10,7 +10,7 @@ import static java.lang.System.nanoTime;
 
 public class Time {
     
-    private double initTime;
+    private long initTime;
     private double lastFrame;
     private float timeAccumulator;
     private float frameTimeLimit;
@@ -48,7 +48,8 @@ public class Time {
     
     public double timeSeconds() { return nanoTime() / 1_000_000_000.0; }
     
-    public double runTime() { return nanoTime() - initTime; }
+    public long runTime() {
+        return nanoTime() - initTime; }
     
     public double runTimeSeconds() { return (nanoTime() - initTime) / 1_000_000_000.0 ; }
     

@@ -1,5 +1,5 @@
 
-hud.png
+GUI.png
 size: 256, 128
 format: RGBA8888
 filter: Nearest, Nearest
@@ -13,21 +13,21 @@ amiga_font
   index: -1
 blank
   rotate: false
-  xy: 26, 8
+  xy: 170, 74
   size: 2, 2
   orig: 2, 2
   offset: 0, 0
   index: -1
 build_icon
   rotate: false
-  xy: 188, 108
+  xy: 197, 108
   size: 18, 18
   orig: 18, 18
   offset: 0, 0
   index: -1
 icon_outline
   rotate: false
-  xy: 130, 54
+  xy: 130, 56
   size: 20, 20
   orig: 20, 20
   offset: 0, 0
@@ -39,6 +39,20 @@ icon_selector
   orig: 24, 24
   offset: 0, 0
   index: -1
+scrollbar_container_top
+  rotate: false
+  xy: 130, 31
+  size: 11, 5
+  orig: 11, 5
+  offset: 0, 0
+  index: -1
+scrollbar_top
+  rotate: false
+  xy: 26, 5
+  size: 11, 5
+  orig: 11, 5
+  offset: 0, 0
+  index: -1
 search_icon
   rotate: false
   xy: 26, 11
@@ -48,23 +62,23 @@ search_icon
   index: -1
 settings_icon
   rotate: false
-  xy: 151, 56
+  xy: 151, 58
   size: 18, 18
   orig: 18, 18
   offset: 0, 0
   index: -1
 stats_icon
   rotate: false
-  xy: 130, 35
+  xy: 130, 37
   size: 18, 18
   orig: 18, 18
   offset: 0, 0
   index: -1
 tiny_font
   rotate: false
-  xy: 130, 75
-  size: 57, 51
-  orig: 57, 51
+  xy: 130, 77
+  size: 66, 49
+  orig: 66, 49
   offset: 0, 0
   index: -1
 window_border_bottom
@@ -76,36 +90,36 @@ window_border_bottom
   index: -1
 window_border_top
   rotate: false
-  xy: 149, 51
+  xy: 149, 53
   size: 1, 2
   orig: 1, 2
   offset: 0, 0
   index: -1
 window_border_vertical
   rotate: false
-  xy: 130, 33
+  xy: 151, 56
   size: 3, 1
   orig: 3, 1
   offset: 0, 0
   index: -1
 window_close_icon
   rotate: false
-  xy: 188, 96
-  size: 11, 11
-  orig: 11, 11
+  xy: 197, 91
+  size: 16, 16
+  orig: 16, 16
   offset: 0, 0
   index: -1
 window_maximize_icon
   rotate: false
-  xy: 207, 115
-  size: 11, 11
-  orig: 11, 11
+  xy: 216, 110
+  size: 16, 16
+  orig: 16, 16
   offset: 0, 0
   index: -1
 window_restore_icon
   rotate: false
-  xy: 45, 18
-  size: 11, 11
-  orig: 11, 11
+  xy: 45, 13
+  size: 16, 16
+  orig: 16, 16
   offset: 0, 0
   index: -1

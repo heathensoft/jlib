@@ -66,6 +66,7 @@ public final class Engine {
                 Logger.info("starting application");
                 app.on_start(window.appResolution());
                 Logger.info("application is running");
+                time.init();
                 while (!window.shouldClose()) {
                     delta = 1f / window.getTargetUPS();
                     frameTime = time.frameTime();

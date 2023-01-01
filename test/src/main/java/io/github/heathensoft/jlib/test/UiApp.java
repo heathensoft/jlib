@@ -1,11 +1,13 @@
 package io.github.heathensoft.jlib.test;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.hud.Hud;
-import io.github.heathensoft.jlib.hud.ui.Size;
-import io.github.heathensoft.jlib.hud.ui.Spacing;
-import io.github.heathensoft.jlib.hud.ui.VBoxContainer;
-import io.github.heathensoft.jlib.hud.ui.window.HudWindow;
+import io.github.heathensoft.jlib.gui.GUI;
+import io.github.heathensoft.jlib.gui.window.HBoxContainer;
+import io.github.heathensoft.jlib.gui.window.Size;
+import io.github.heathensoft.jlib.gui.window.Spacing;
+import io.github.heathensoft.jlib.gui.window.VBoxContainer;
+import io.github.heathensoft.jlib.gui.window.window.DynamicWindow;
+import io.github.heathensoft.jlib.gui.window.window.ScrollableBox;
 import io.github.heathensoft.jlib.lwjgl.graphics.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.lwjgl.window.Application;
@@ -16,6 +18,9 @@ import org.joml.Vector2f;
 
 import java.util.List;
 
+import static io.github.heathensoft.jlib.gui.GUI.*;
+
+
 /**
  * @author Frederik Dahl
  * 18/12/2022
@@ -24,7 +29,7 @@ import java.util.List;
 
 public class UiApp extends Application  {
 
-    private Hud hud;
+    private GUI GUI;
     private Renderer renderer;
     private Controls controls;
 
@@ -35,47 +40,70 @@ public class UiApp extends Application  {
         config.settings_height = 720;
         config.settings_width = 1280;
         config.windowed_mode = true;
-        config.resizable_window = true;
     }
 
     @Override
     protected void on_start(Resolution resolution) throws Exception {
-        hud = new Hud(resolution.width(),resolution.height());
-        renderer = new Renderer(hud);
-        controls = new Controls(hud);
+        GUI = new GUI(resolution.width(),resolution.height());
+        renderer = new Renderer(GUI);
+        controls = new Controls(GUI);
+
+        int elementSize = 32;
+        NAV_BG_COLOR.set(Color.valueOf("14233a"));
+        WIN_BG_COLOR.set(Color.valueOf("303843"));
+        WIN_BORDER_COLOR.set(Color.valueOf("d5d6db"));
+        NAV_TXT_COLOR.set(Color.valueOf("d5d6db"));
+        NAV_BTN_COLOR.set(Color.valueOf("d5d6db"));
+        NAV_BTN_INACTIVE_COLOR.set(Color.valueOf("405273"));
+        NAV_BTN_CLOSE_HOVER_COLOR.set(Color.valueOf("b55945"));
+        NAV_BTN_RESTORE_HOVER_COLOR.set(Color.valueOf("819447"));
+        NAV_BTN_MAXIMIZE_HOVER_COLOR.set(Color.valueOf("819447"));
+
+        Field field = new Field(16,elementSize,2,4);
+        ScrollableBox<Field> scrollBox = new ScrollableBox<Field>(
+                field,
+                new Spacing(),
+                new Spacing(),
+                new Spacing());
+
         Content content = new Content(
-                new Size(100,96),
-                new Spacing(0),
-                new Spacing(0),
+                new Size(4*elementSize,3*elementSize),
+                new Spacing(6,6,3,6),
                 new Spacing(2),
-                Color.valueOf("546756"),
-                Color.EMPTY.cpy()
+                new Spacing(2),
+                Color.valueOf("636663"),
+                WIN_BORDER_COLOR.cpy()
         );
 
         Content content2 = new Content(
-                new Size(100,46),
-                new Spacing(0),
-                new Spacing(0,0,0,0),
+                new Size(4*elementSize,3*elementSize),
+                new Spacing(3,6,6,6),
                 new Spacing(2),
-                Color.valueOf("303843"),
-                Color.EMPTY.cpy()
+                new Spacing(2),
+                Color.valueOf("636663"),
+                WIN_BORDER_COLOR.cpy()
         );
-        VBoxContainer hBoxContainer = new VBoxContainer(new Spacing(),new Spacing(),new Spacing());
-        hBoxContainer.addContent(content2);
-        hBoxContainer.addContent(content);
-        HudWindow window = new HudWindow(hud,hBoxContainer,"Inventory");
-        window.setNavBackgroundColor(Color.valueOf("14233a"));
-        window.setBackgroundColor(Color.valueOf("303843"));
-        window.setBorderColor(Color.valueOf("d5d6db"));
-        window.setNavTextColor(Color.valueOf("d5d6db"));
-        window.setNavButtonColor(Color.valueOf("d5d6db"));
-        window.setNavCloseButtonHoverColor(Color.valueOf("b55945"));
-        window.setNavRestoreButtonHoverColor(Color.valueOf("819447"));
+
+        VBoxContainer vBoxContainer = new VBoxContainer(new Spacing(),new Spacing(),new Spacing());
+        vBoxContainer.addContent(content);
+        vBoxContainer.addContent(content2);
+
+        HBoxContainer hBoxContainer = new HBoxContainer(new Spacing(),new Spacing(),new Spacing());
+        hBoxContainer.addContent(scrollBox);
+        hBoxContainer.addContent(vBoxContainer);
+
+        //DynamicWindow window2 = new DynamicWindow(GUI,hBoxContainer,"Character?");
+        //HudWindow window = new HudWindow(hud,scrollBox,"Inventory?");
+        //scrollBox.content().addElements(67);
+
+
+
+
     }
 
     @Override
     protected void on_update(float delta) {
-        hud.update(delta);
+        GUI.update(delta);
         controls.update(delta);
     }
 
@@ -87,7 +115,7 @@ public class UiApp extends Application  {
 
     @Override
     protected void on_exit() {
-        Disposable.dispose(renderer,hud);
+        Disposable.dispose(renderer, GUI);
     }
 
     @Override

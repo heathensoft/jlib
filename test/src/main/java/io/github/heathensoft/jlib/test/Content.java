@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.test;
 
-import io.github.heathensoft.jlib.hud.HudGraphics;
-import io.github.heathensoft.jlib.hud.ui.Box;
-import io.github.heathensoft.jlib.hud.ui.Size;
-import io.github.heathensoft.jlib.hud.ui.Spacing;
+import io.github.heathensoft.jlib.gui.GUIGraphics;
+import io.github.heathensoft.jlib.gui.window.Box;
+import io.github.heathensoft.jlib.gui.window.Size;
+import io.github.heathensoft.jlib.gui.window.Spacing;
 import io.github.heathensoft.jlib.lwjgl.graphics.Color;
 import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
 
@@ -31,7 +31,7 @@ public class Content extends Box {
     }
 
     @Override
-    public void render(SpriteBatch batch, HudGraphics graphics, int x0, int y0) {
+    public void render(SpriteBatch batch, GUIGraphics graphics, int x0, int y0) {
         drawBackground(batch, graphics, x0, y0);
         drawBorder(batch, graphics, x0, y0);
     }
