@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.utils.IDGen;
+import io.github.heathensoft.jlib.common.utils.IDPool;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;
@@ -32,7 +32,7 @@ import static org.lwjgl.opengl.GL32.*;
 
 public class IDBuffer extends Framebuffer {
     
-    public static final IDGen ID_GEN = new IDGen();
+    public static final IDPool ID_GEN = new IDPool();
     
     private final Texture uid_texture;
     private final ByteBuffer pixelBuffer;

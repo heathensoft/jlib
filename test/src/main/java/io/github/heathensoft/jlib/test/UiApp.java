@@ -1,5 +1,7 @@
 package io.github.heathensoft.jlib.test;
 
+import io.github.heathensoft.jlib.brush.Brush;
+import io.github.heathensoft.jlib.brush.BrushShape;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.window.HBoxContainer;
@@ -92,11 +94,13 @@ public class UiApp extends Application  {
         hBoxContainer.addContent(scrollBox);
         hBoxContainer.addContent(vBoxContainer);
 
-        //DynamicWindow window2 = new DynamicWindow(GUI,hBoxContainer,"Character?");
+        DynamicWindow window2 = new DynamicWindow(GUI,hBoxContainer,"Character?");
         //HudWindow window = new HudWindow(hud,scrollBox,"Inventory?");
-        //scrollBox.content().addElements(67);
+        scrollBox.content().addElements(67);
 
 
+        Brush brush = new Brush(BrushShape.CIRCLE,16);
+        brush.dispose();
 
 
     }

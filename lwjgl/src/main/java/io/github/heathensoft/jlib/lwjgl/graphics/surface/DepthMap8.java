@@ -48,28 +48,29 @@ public class DepthMap8 {
         this.rows = img.height();
         this.map = new byte[cols * rows];
         int c = img.components();
-        int avg = 0;
+        float avg = 0;
+        float alpha;
         int length = size();
         ByteBuffer data = img.data();
         switch (c) {
             case 1: case 2: case 3:
                 for (int i = 0; i < length; i++) {
-                    for (int j = 0; j < c; j++)
+                    for (int j = 0; j < c; j++) {
                         avg += (data.get(i*c+j) & 0xff);
-                    avg = Math.round((float) avg/c);
-                    map[i] = (byte) (avg & 0xff);
+                    } avg = avg/c;
+                    map[i] = (byte) (Math.round(avg) & 0xff);
                     avg = 0;
                 }
                 break;
             case 4:
                 for (int i = 0; i < length; i++) {
-                    int alpha = (data.get(i*c+3) & 0xff);
-                    if (alpha > 127) {
-                        avg += (data.get(i*c) & 0xff);
-                        avg += (data.get(i*c+1) & 0xff);
-                        avg += (data.get(i*c+2) & 0xff);
-                        avg = Math.round((float) avg/3);
-                    } map[i] = (byte) (avg & 0xff);
+                    alpha = (data.get(i*c+3) & 0xff) / 255.0f;
+                    avg += (data.get(i*c) & 0xff);
+                    avg += (data.get(i*c+1) & 0xff);
+                    avg += (data.get(i*c+2) & 0xff);
+                    avg = avg/3;
+                    avg *= alpha;
+                    map[i] = (byte) (Math.round(avg) & 0xff);
                     avg = 0;
                 }
             break;

@@ -6,7 +6,7 @@ import io.github.heathensoft.jlib.lwjgl.graphics.*;
 import io.github.heathensoft.jlib.lwjgl.window.CursorObject;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Window;
-import io.github.heathensoft.jlib.packing.RectPacker;
+import io.github.heathensoft.jlib.common.utils.RectPacker;
 import org.joml.Matrix4f;
 import org.joml.Random;
 import org.joml.Vector2f;
@@ -93,8 +93,6 @@ public class GUI implements Disposable {
     private final CursorObject[] CURSORS;
     private int current_cursor;
 
-    private IntBuffer rectangles;
-    int num = 100;
 
     public GUI(int width, int height) throws Exception {
         WIDTH = width; HEIGHT = height;
@@ -115,37 +113,9 @@ public class GUI implements Disposable {
             window.createCursor(GLFW_ARROW_CURSOR + i);
             if (opt.isPresent()) CURSORS[i] = opt.get();
         } GUIHelp.initialize(this);
-
-        int max = 128;
-        int min = 4;
-
-        rectangles = IntBuffer.allocate(5 * num * 2);
-        Random random = new Random(67);
-        for (int i = 0; i < num; i++) {
-            int w = random.nextInt(max + 1 - min) + min;
-            int h = random.nextInt(max + 1 - min) + min;
-            rectangles.put(i).put(w).put(h);
-        }
-
-        max = 64;
-        min = 8;
-        for (int i = 0; i < num; i++) {
-            int w = random.nextInt(max + 1 - min) + min;
-            int h = random.nextInt(max + 1 - min) + min;
-            rectangles.put(i).put(w).put(h);
-        }
-
-
-        rectangles.flip();
-
-        try (MemoryStack stack = MemoryStack.stackPush()){
-            IntBuffer bounds = stack.mallocInt(2);
-            RectPacker.pack(rectangles,bounds);
-            System.out.println(bounds.get(0) + " , " + bounds.get(1));
-        }
-
     }
 
+    /*
     public void repack() {
         rectangles = IntBuffer.allocate(5 * num * 2);
         Random random = new Random();
@@ -173,6 +143,8 @@ public class GUI implements Disposable {
         }
     }
 
+     */
+
     public void render(SpriteBatch batch, Vector2f mouseViewport) {
         Framebuffer.bindDraw(FRAMEBUFFER);
         Framebuffer.viewport();
@@ -185,6 +157,7 @@ public class GUI implements Disposable {
         Debug.render(batch,this);
         GUIWindow.renderAll(batch);
         GUIHelp.render(batch);
+        /*
         float c0 = new Color(1.0f,0,0,1).toFloatBits();
         float c1 = new Color(0,1.0f,0,1).toFloatBits();
         float c2 = new Color(0,0,1.0f,1).toFloatBits();
@@ -209,6 +182,8 @@ public class GUI implements Disposable {
             }
             batch.draw(GRAPHICS.blank(),x,y,w,h,c,0);
         }
+
+         */
         batch.end();
         ID_BUFFER.readID(mouseViewport);
     }

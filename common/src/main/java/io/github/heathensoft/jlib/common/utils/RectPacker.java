@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.packing;
+package io.github.heathensoft.jlib.common.utils;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -13,12 +13,14 @@ import java.util.List;
 
 public class RectPacker {
 
+
     /**
      * Packs a number of rectangles inside the least possible space (power of 2)
      * @param rectangles Rectangles of format: [id | width | height]
      *               Even though the input stride is 3, the capacity of
      *               the rectangles' buffer has to accommodate for an output
      *               stride of 5: [id | width | height | x | y]
+     *               So the size of the buffer should be: num rectangles * 5
      * @param bounds buffer of size 2 for the resulting pack: width and height
      */
     public static void pack(IntBuffer rectangles, IntBuffer bounds) {

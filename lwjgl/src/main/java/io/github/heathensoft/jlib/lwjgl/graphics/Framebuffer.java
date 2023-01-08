@@ -185,7 +185,17 @@ public abstract class Framebuffer implements Disposable {
     public static void clearColorBufferFloat(int index, FloatBuffer value) {
         glClearBufferfv(GL_COLOR,index,value);
     }
-    
+
+    public static void clearColorBufferFloat(int index, Color clearColor) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer color = stack.mallocFloat(4);
+            color.put(clearColor.r);
+            color.put(clearColor.g);
+            color.put(clearColor.b);
+            color.put(clearColor.a);
+            clearColorBufferFloat(0,color.flip());
+        }
+    }
     /**
      * Clear depth buffer
      * @param value the color value

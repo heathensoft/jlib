@@ -47,10 +47,6 @@ public class Controls {
             Engine.get().exit();
         }
 
-        if(keyboard.just_pressed(GLFW_KEY_SPACE)) {
-            GUI.repack();
-        }
-
         Vector2f coords = new Vector2f(mouse.position()).mul(1280,720);
 
         if (mouse.scrolled())

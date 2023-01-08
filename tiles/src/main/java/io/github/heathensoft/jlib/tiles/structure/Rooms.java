@@ -3,7 +3,7 @@ package io.github.heathensoft.jlib.tiles.structure;
 import io.github.heathensoft.jlib.common.storage.primitive.*;
 import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
 import io.github.heathensoft.jlib.common.utils.Area;
-import io.github.heathensoft.jlib.common.utils.IDGen;
+import io.github.heathensoft.jlib.common.utils.IDPool;
 import io.github.heathensoft.jlib.tiles.TileUtil;
 
 import java.util.*;
@@ -19,7 +19,7 @@ public class Rooms {
     public static final int OBSTACLE = 0;
     
     private final TMap map;
-    private final IDGen ids;
+    private final IDPool ids;
     private final IntBag rooms;
     private final IntArray2D layout;
     
@@ -27,7 +27,7 @@ public class Rooms {
         TMap.Size map_dim = map.dimension();
         int m_size = map_dim.size();
         this.map = map;
-        this.ids = new IDGen();
+        this.ids = new IDPool();
         this.ids.obtainID(); // start from 1 (0 is obstacle)
         this.rooms = new IntBag(32);
         this.layout = new IntArray2D(m_size,m_size);

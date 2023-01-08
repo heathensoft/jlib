@@ -67,14 +67,6 @@ public class GUIGraphics implements Disposable {
         // core atlas
         List<String> layout = resources.asLines(PRIMARY_ATLAS_TXT_PATH);
         Image img = resources.image(PRIMARY_ATLAS_PNG_PATH);
-
-        // normal map
-
-        DepthMap8 depthMap8 = new DepthMap8(img);
-        depthMap8.toPNG("depthmap8.png");
-        NormalMap normalMap = new NormalMap(depthMap8,1);
-        normalMap.toPNG("normalmap.png");
-
         Texture atlas_texture = new Texture(GL_TEXTURE_2D);
         atlas_texture.bindToActiveSlot();
         atlas_texture.filter(GL_LINEAR,GL_NEAREST);

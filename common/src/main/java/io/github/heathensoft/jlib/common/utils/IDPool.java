@@ -8,7 +8,7 @@ import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
  */
 
 
-public class IDGen {
+public class IDPool {
     private final IntQueue ids
             = new IntQueue(16);
     private int new_id = 0;

@@ -24,7 +24,11 @@ public abstract class Application {
             String[] args);
     
     protected abstract void on_start(Resolution resolution) throws Exception;
-    
+
+    /**
+     *
+     * @param delta delta time in seconds
+     */
     protected abstract void on_update(float delta);
     
     protected abstract void on_render(float frame_time, float alpha);
