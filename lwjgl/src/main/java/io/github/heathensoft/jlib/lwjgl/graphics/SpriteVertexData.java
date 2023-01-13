@@ -12,15 +12,12 @@ import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
 import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 /**
- * Vertex data: position | uv coordinate
- * Instance data: id (normalized 4 * unsigned byte) | color
- *
  * @author Frederik Dahl
  * 01/07/2022
  */
 
 
-public class SpriteVertexData implements Disposable {
+class SpriteVertexData implements Disposable {
     
     private final Vao vao;
     private final BufferObject indices;

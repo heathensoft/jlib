@@ -5,9 +5,6 @@ import io.github.heathensoft.jlib.common.storage.primitive.FloatArray2D;
 import io.github.heathensoft.jlib.common.utils.NoiseFunction;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
-
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 
 /**
  * @author Frederik Dahl
@@ -42,10 +39,10 @@ public class NoiseMap {
         int rows = depthmap.rows();
         int cols = depthmap.cols();
         this.map = new FloatArray2D(rows,cols);
-        float[][] map = map().get();
+        float[][] map = get().get();
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                float n = ((depthmap.data()[c + r * cols] & 0xff) / 255f);
+                float n = ((depthmap.get()[c + r * cols] & 0xff) / 255f);
                 map[r][c] = (2 * n - 1) * amplitude + baseline;
             }
         }
@@ -138,7 +135,7 @@ public class NoiseMap {
         return map.cols();
     }
     
-    public FloatArray2D map() {
+    public FloatArray2D get() {
         return map;
     }
 }

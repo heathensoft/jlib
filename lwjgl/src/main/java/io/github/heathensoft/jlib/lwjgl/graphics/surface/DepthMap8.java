@@ -30,7 +30,7 @@ public class DepthMap8 {
         this.cols = nm.cols();
         this.rows = nm.rows();
         this.map = new byte[cols * rows];
-        float[][] m = nm.map().get();
+        float[][] m = nm.get().get();
         float amp = nm.amplitude();
         float bsl = nm.baseline();
         int idx = 0;
@@ -76,13 +76,14 @@ public class DepthMap8 {
         }
     }
     
-    public Texture toTexture(int GL_WRAP, int GL_FILTER) {
+    public Texture toTexture(int wrap, int min_filter, int max_filter, boolean mipmap) {
         Texture texture = Texture.generate2D(cols,rows);
         texture.bindToActiveSlot();
-        texture.filter(GL_FILTER,GL_FILTER);
-        texture.wrapST(GL_WRAP);
-        texture.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED,false);
-        texture.uploadData(data());
+        texture.filter(min_filter,max_filter);
+        texture.wrapST(wrap);
+        texture.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED,mipmap);
+        if (mipmap) texture.generateMipmap();
+        texture.uploadData(get());
         return texture;
     }
     
@@ -92,7 +93,7 @@ public class DepthMap8 {
         stbi_write_png(path, cols, rows,1,buffer, cols);
     }
     
-    public byte[] data() {
+    public byte[] get() {
         return map;
     }
     

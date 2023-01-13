@@ -41,7 +41,7 @@ public class NormalMap {
         float[][] depth = new float[rows][cols];
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                float d = ((dm.data()[c + r * cols] & 0xff) / 255f);
+                float d = ((dm.get()[c + r * cols] & 0xff) / 255f);
                 depth[r][c] = (2 * d - 1) * amp;
             }
         }
@@ -72,7 +72,7 @@ public class NormalMap {
         float[][] depth = new float[rows][cols];
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                float d = ((dm.data()[c + r * cols] & 0xffff) / (float)0xffff);
+                float d = ((dm.get()[c + r * cols] & 0xffff) / (float)0xffff);
                 depth[r][c] = (2 * d - 1) * amp;
             }
         }
@@ -94,14 +94,15 @@ public class NormalMap {
             }
         }
     }
-    
-    public Texture toTexture(int GL_WRAP, int GL_FILTER) {
+
+    public Texture toTexture(int wrap, int min_filter, int max_filter, boolean mipmap) {
         Texture texture = Texture.generate2D(cols,rows);
         texture.bindToActiveSlot();
-        texture.filter(GL_FILTER,GL_FILTER);
-        texture.wrapST(GL_WRAP);
-        texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED,false);
-        texture.uploadData(data());
+        texture.filter(min_filter,max_filter);
+        texture.wrapST(wrap);
+        texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED,mipmap);
+        if (mipmap) texture.generateMipmap();
+        texture.uploadData(get());
         return texture;
     }
     
@@ -111,7 +112,7 @@ public class NormalMap {
         stbi_write_png(path,cols,rows,CHANNELS,buffer,cols * CHANNELS);
     }
     
-    public byte[] data() {
+    public byte[] get() {
         return map;
     }
     
