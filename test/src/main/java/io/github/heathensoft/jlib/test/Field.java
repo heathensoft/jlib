@@ -1,11 +1,11 @@
 package io.github.heathensoft.jlib.test;
 
+import io.github.heathensoft.jlib.graphicsOld.Color;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 import io.github.heathensoft.jlib.gui.GUIGraphics;
 import io.github.heathensoft.jlib.gui.window.Size;
 import io.github.heathensoft.jlib.gui.window.window.VirtualWindow;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
 
 /**
  * @author Frederik Dahl

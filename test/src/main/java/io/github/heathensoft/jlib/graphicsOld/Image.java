@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.graphics;
+package io.github.heathensoft.jlib.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
@@ -24,8 +24,9 @@ public class Image implements Disposable {
     
     private final int width;
     private final int height;
+    private final int components;
+    
     private ByteBuffer data;
-    private final TextureFormat format;
     
     public Image(ByteBuffer buffer) throws Exception {
         this(buffer,false);
@@ -36,32 +37,24 @@ public class Image implements Disposable {
             IntBuffer w = stack.mallocInt(1);
             IntBuffer h = stack.mallocInt(1);
             IntBuffer c = stack.mallocInt(1);
-
             if (!stbi_info_from_memory(buffer, w, h, c)) {
                 throw new Exception("unable to read image info: " + stbi_failure_reason());
-            }
-            stbi_set_flip_vertically_on_load(flip);
+            } stbi_set_flip_vertically_on_load(flip);
             data = stbi_load_from_memory(buffer, w, h, c, 0);
-            if (data == null) throw new Exception("unable to load image: " + stbi_failure_reason());
-
-            width = w.get(0);
+            if (data == null) {
+                throw new Exception("unable to load image: " + stbi_failure_reason());
+            } width = w.get(0);
             height = h.get(0);
-            switch (c.get(0)) {
-                case 1  -> format = TextureFormat.R8_UNSIGNED_NORMALIZED;
-                case 2  -> format = TextureFormat.RG8_UNSIGNED_NORMALIZED;
-                case 3  -> format = TextureFormat.RGB8_UNSIGNED_NORMALIZED;
-                case 4  -> format = TextureFormat.RGBA8_UNSIGNED_NORMALIZED;
-                default -> format = TextureFormat.INVALID;
-            }
+            components = c.get(0);
         }
     }
-
+    
     public void premultiplyAlpha() {
         if (notDisposed()) {
             final ByteBuffer b = data;
             final int w = width;
             final int h = height;
-            final int c = format.channels;
+            final int c = components;
             if (c == 4) {
                 int stride = w * 4;
                 for (int y = 0; y < h; y++) {
@@ -81,7 +74,7 @@ public class Image implements Disposable {
         if (notDisposed()) {
             final int w = width;
             final int h = height;
-            final int c = format.channels;
+            final int c = components;
             if (c >= 3) {
                 final float n = 1 / 255f;
                 maxAngleDeg = Math.max(0,Math.min(90, maxAngleDeg));
@@ -139,9 +132,9 @@ public class Image implements Disposable {
     public int height() {
         return height;
     }
-
-    public TextureFormat format() {
-        return format;
+    
+    public int components() {
+        return components;
     }
     
     public ByteBuffer data() {
@@ -149,8 +142,8 @@ public class Image implements Disposable {
     }
     
     public void toPNG(String path) {
-        final int stride = width * format.channels;
-        if (!stbi_write_png(path,width,height,format.channels,data,stride))
+        final int stride = width * components;
+        if (!stbi_write_png(path,width,height, components,data,stride))
             Logger.warn("unable to write image to png: " + stbi_failure_reason());
     }
     

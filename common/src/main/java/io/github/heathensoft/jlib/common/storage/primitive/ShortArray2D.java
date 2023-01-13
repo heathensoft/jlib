@@ -4,6 +4,7 @@ package io.github.heathensoft.jlib.common.storage.primitive;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.ShortReader;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.ShortReader2D;
 
+import java.nio.CharBuffer;
 import java.nio.ShortBuffer;
 
 /**
@@ -600,5 +601,11 @@ public class ShortArray2D extends PrimitiveArray2D implements ReadableShort2D {
     
     public short[][] get() {
         return array;
+    }
+
+    public void get(ShortBuffer buffer) {
+        for (int r = 0; r < rows; r++) {
+            buffer.put(array[r]);
+        }
     }
 }

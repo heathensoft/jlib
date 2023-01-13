@@ -1,9 +1,8 @@
-package io.github.heathensoft.jlib.lwjgl.graphics;
+package io.github.heathensoft.jlib.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.common.Disposable;
 import org.joml.*;
-import org.lwjgl.opengl.GL20C;
 import org.lwjgl.system.MemoryStack;
 import org.tinylog.Logger;
 
@@ -12,9 +11,7 @@ import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.lwjgl.opengl.GL11.GL_FALSE;
-import static org.lwjgl.opengl.GL11.GL_NONE;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30C.glUniform1uiv;
 import static org.lwjgl.opengl.GL31.*;

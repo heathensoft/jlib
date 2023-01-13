@@ -9,6 +9,7 @@ import org.tinylog.Logger;
 
 import java.nio.FloatBuffer;
 
+import static io.github.heathensoft.jlib.lwjgl.utils.MathLib.closestNumber;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -80,6 +81,19 @@ public class DebugLines2D {
             vertices.put(x0).put(y0).put(color).put(x1).put(y1).put(color);
             line_count++;
         }
+    }
+
+    public static void drawGrid(OrthographicCamera camera, int grid_size, boolean begin, boolean end) {
+        if (begin) begin(camera.combined());
+        float vp_x_half = camera.viewport.x / 2f * camera.zoom;
+        float vp_y_half = camera.viewport.y / 2f * camera.zoom;
+        int x0 = closestNumber((int) Math.ceil(camera.position.x - vp_x_half),grid_size) - grid_size;
+        int x1 = closestNumber((int) Math.ceil(camera.position.x + vp_x_half),grid_size) + grid_size;
+        int y0 = closestNumber((int) Math.ceil(camera.position.y - vp_y_half),grid_size) - grid_size;
+        int y1 = closestNumber((int) Math.ceil(camera.position.y + vp_y_half),grid_size) + grid_size;
+        for (int c = x0; c <= x1; c += grid_size) DebugLines2D.drawVertical(y0,y1,c);
+        for (int r = y0; r <= y1; r += grid_size) DebugLines2D.drawHorizontal(x0,x1,r);
+        if (end) end();
     }
     
     public static void drawGrid(OrthographicCamera camera, boolean begin, boolean end) {

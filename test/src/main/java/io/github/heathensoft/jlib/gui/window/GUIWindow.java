@@ -3,8 +3,8 @@ package io.github.heathensoft.jlib.gui.window;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.storage.generic.Stack;
 import io.github.heathensoft.jlib.common.utils.Area;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
 import io.github.heathensoft.jlib.gui.GUI;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
 import org.joml.Vector2f;
 
 import java.util.ArrayList;

@@ -1,8 +1,8 @@
 package io.github.heathensoft.jlib.gui.text;
 
 
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;

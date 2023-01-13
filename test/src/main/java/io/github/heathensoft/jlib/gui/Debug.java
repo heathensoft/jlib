@@ -2,12 +2,12 @@ package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.utils.Area;
 import io.github.heathensoft.jlib.common.utils.Coordinate;
+import io.github.heathensoft.jlib.graphicsOld.Color;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 import io.github.heathensoft.jlib.gui.window.Size;
 import io.github.heathensoft.jlib.gui.text.AsciiFont;
 import io.github.heathensoft.jlib.gui.text.Glyph;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;

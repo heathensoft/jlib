@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.common.storage.primitive;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.FloatReader;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.FloatReader2D;
 
+import java.nio.CharBuffer;
 import java.nio.FloatBuffer;
 
 
@@ -600,5 +601,11 @@ public class FloatArray2D extends PrimitiveArray2D implements ReadableFloat2D {
     
     public float[][] get() {
         return array;
+    }
+
+    public void get(FloatBuffer buffer) {
+        for (int r = 0; r < rows; r++) {
+            buffer.put(array[r]);
+        }
     }
 }

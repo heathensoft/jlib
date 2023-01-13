@@ -1,8 +1,11 @@
 package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.graphicsOld.Color;
+import io.github.heathensoft.jlib.graphicsOld.Framebuffer;
+import io.github.heathensoft.jlib.graphicsOld.IDBuffer;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
 import io.github.heathensoft.jlib.gui.window.GUIWindow;
-import io.github.heathensoft.jlib.lwjgl.graphics.*;
 import io.github.heathensoft.jlib.lwjgl.window.CursorObject;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Window;

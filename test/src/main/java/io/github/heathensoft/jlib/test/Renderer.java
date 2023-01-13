@@ -1,10 +1,10 @@
 package io.github.heathensoft.jlib.test;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.graphicsOld.Framebuffer;
+import io.github.heathensoft.jlib.graphicsOld.ShaderProgram;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
 import io.github.heathensoft.jlib.gui.GUI;
-import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
-import io.github.heathensoft.jlib.lwjgl.graphics.ShaderProgram;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
 import io.github.heathensoft.jlib.lwjgl.utils.ScreenQuad;
 import org.joml.Vector2f;
 

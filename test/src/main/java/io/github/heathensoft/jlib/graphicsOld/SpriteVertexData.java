@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.graphics;
+package io.github.heathensoft.jlib.graphicsOld;
 
 
 import io.github.heathensoft.jlib.common.Disposable;

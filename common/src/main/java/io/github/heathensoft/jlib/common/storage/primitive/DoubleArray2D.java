@@ -4,6 +4,7 @@ package io.github.heathensoft.jlib.common.storage.primitive;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.DoubleReader;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.DoubleReader2D;
 
+import java.nio.CharBuffer;
 import java.nio.DoubleBuffer;
 
 
@@ -601,5 +602,11 @@ public class DoubleArray2D extends PrimitiveArray2D implements ReadableDouble2D 
     
     public double[][] get() {
         return array;
+    }
+
+    public void get(DoubleBuffer buffer) {
+        for (int r = 0; r < rows; r++) {
+            buffer.put(array[r]);
+        }
     }
 }

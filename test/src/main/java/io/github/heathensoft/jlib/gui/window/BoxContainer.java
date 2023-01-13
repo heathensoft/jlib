@@ -1,8 +1,8 @@
 package io.github.heathensoft.jlib.gui.window;
 
+import io.github.heathensoft.jlib.graphicsOld.Color;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
 import io.github.heathensoft.jlib.gui.GUIGraphics;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,8 +1,8 @@
 package io.github.heathensoft.jlib.gui.text;
 
 
+import io.github.heathensoft.jlib.graphicsOld.Color;
 import io.github.heathensoft.jlib.gui.interactable.UInteractable;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

@@ -1,12 +1,12 @@
 package io.github.heathensoft.jlib.test;
 
+import io.github.heathensoft.jlib.graphicsOld.IDBuffer;
 import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.GUIHelp;
 import io.github.heathensoft.jlib.gui.interactable.Interactable;
 import io.github.heathensoft.jlib.gui.interactable.Interactables;
 import io.github.heathensoft.jlib.gui.interactable.UInteractable;
 import io.github.heathensoft.jlib.gui.text.Text;
-import io.github.heathensoft.jlib.lwjgl.graphics.IDBuffer;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;

@@ -2,16 +2,14 @@ package io.github.heathensoft.jlib.brush;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Area;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
-import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.graphicsOld.Color;
+import io.github.heathensoft.jlib.graphicsOld.Texture;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
-import static org.lwjgl.opengl.GL13.GL_CLAMP_TO_BORDER;
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 /**
  * @author Frederik Dahl
@@ -71,6 +69,7 @@ public class Brush implements Disposable {
                 }
 
             }
+            texture.bindToActiveSlot();
             texture.wrapST(GL_CLAMP_TO_EDGE);
             texture.filter(GL_NEAREST);
             texture.R8_2D(pixels.flip(),TEXTURE_SIZE,TEXTURE_SIZE);
@@ -111,6 +110,7 @@ public class Brush implements Disposable {
                     }
                 }
             }
+            texture.bindToActiveSlot();
             glTexSubImage2D(GL_TEXTURE_2D,0,0,0,
             TEXTURE_SIZE,TEXTURE_SIZE,GL_RED,GL_UNSIGNED_BYTE,pixels.flip());
             //stbi_write_png("brush.png",TEXTURE_SIZE,TEXTURE_SIZE,1,pixels,TEXTURE_SIZE);

@@ -1,5 +1,6 @@
-package io.github.heathensoft.jlib.lwjgl.graphics;
+package io.github.heathensoft.jlib.graphicsOld;
 
+import io.github.heathensoft.jlib.common.Assert;
 import org.joml.Math;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
@@ -79,6 +80,7 @@ public class Sprite {
     public Sprite() { }
     
     public Sprite(TextureRegion region, float x, float y, float w, float h) {
+        Assert.notNull(region);
         this.region = region;
         final float x2 = x + w;
         final float y2 = y + h;
@@ -90,6 +92,7 @@ public class Sprite {
     }
     
     public Sprite(TextureRegion region, float x, float y, float w, float h, int subRegion) {
+        Assert.notNull(region);
         this.region = region;
         final float x2 = x + w;
         final float y2 = y + h;
@@ -98,6 +101,7 @@ public class Sprite {
     }
     
     public void set(TextureRegion region, float x, float y, float w, float h) {
+        Assert.notNull(region);
         this.region = region;
         final float x2 = x + w;
         final float y2 = y + h;
@@ -109,6 +113,7 @@ public class Sprite {
     }
     
     public void set(TextureRegion region, float x, float y, float w, float h, int subRegion) {
+        Assert.notNull(region);
         this.region = region;
         final float x2 = x + w;
         final float y2 = y + h;

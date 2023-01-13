@@ -1,9 +1,8 @@
 package io.github.heathensoft.jlib.lwjgl.graphics.surface;
 
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
 import org.joml.Math;
-
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 
 /**
  * 16-bit depth map
@@ -36,11 +35,12 @@ public class DepthMap16 {
     }
     
     public Texture toTexture(int GL_WRAP, int GL_FILTER) {
-        Texture texture = new Texture(GL_TEXTURE_2D);
+        Texture texture = Texture.generate2D(cols,rows);
         texture.bindToActiveSlot();
-        texture.filter(GL_FILTER);
+        texture.filter(GL_FILTER,GL_FILTER);
         texture.wrapST(GL_WRAP);
-        texture.R16_2D(map,cols,rows);
+        texture.allocate(TextureFormat.R16_UNSIGNED_NORMALIZED,false);
+        texture.uploadData(data());
         return texture;
     }
     

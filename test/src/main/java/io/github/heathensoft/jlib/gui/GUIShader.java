@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.gui;
 
-import io.github.heathensoft.jlib.lwjgl.graphics.ShaderProgram;
-import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.graphicsOld.ShaderProgram;
+import io.github.heathensoft.jlib.graphicsOld.Texture;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;

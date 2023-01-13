@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.graphics;
+package io.github.heathensoft.jlib.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import org.joml.Vector2i;
@@ -47,7 +47,7 @@ public class TextureAtlas implements Disposable {
     private final Texture texture;
     private final String filename;
     private final List<String> regionNames;
-    private final Map<String,TextureRegion> regions;
+    private final Map<String, TextureRegion> regions;
     
     public TextureAtlas(Texture texture, List<String> layout) throws Exception {
         /* Todo: figure out proper size of map */
@@ -100,13 +100,14 @@ public class TextureAtlas implements Disposable {
             Vector2i xy = xyList.get(i);
             Vector2i wh = whList.get(i);
             TextureRegion region = new TextureRegion(
-            texture, xy.x, xy.y, wh.x, wh.y);
+                    texture, xy.x, xy.y, wh.x, wh.y
+            );
             regions.put(key,region);
             regionNames.add(key);
         }
     }
     
-    public Map<String,TextureRegion> regions() {
+    public Map<String, TextureRegion> regions() {
         return regions;
     }
     

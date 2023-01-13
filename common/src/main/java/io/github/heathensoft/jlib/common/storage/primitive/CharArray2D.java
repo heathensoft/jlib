@@ -4,6 +4,7 @@ package io.github.heathensoft.jlib.common.storage.primitive;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.CharReader;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.CharReader2D;
 
+import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
 
@@ -601,5 +602,11 @@ public class CharArray2D extends PrimitiveArray2D implements ReadableChar2D {
     
     public char[][] get() {
         return array;
+    }
+
+    public void get(CharBuffer buffer) {
+        for (int r = 0; r < rows; r++) {
+            buffer.put(array[r]);
+        }
     }
 }

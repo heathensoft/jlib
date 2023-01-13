@@ -1,13 +1,13 @@
 package io.github.heathensoft.jlib.gui.window.window;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.GUIGraphics;
 import io.github.heathensoft.jlib.gui.interactable.OnClick;
 import io.github.heathensoft.jlib.gui.interactable.OnCursorHover;
 import io.github.heathensoft.jlib.gui.interactable.UInteractable;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector2f;
 

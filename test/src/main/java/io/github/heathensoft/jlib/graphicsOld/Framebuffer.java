@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.graphics;
+package io.github.heathensoft.jlib.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
@@ -68,8 +68,6 @@ public abstract class Framebuffer implements Disposable {
     }
 
     public abstract void disposeInternal();
-
-    public abstract Texture texture(int index);
     
     public static Framebuffer drawBuffer() {
         return drawBuffer;

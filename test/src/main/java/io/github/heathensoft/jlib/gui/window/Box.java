@@ -1,10 +1,10 @@
 package io.github.heathensoft.jlib.gui.window;
 
+import io.github.heathensoft.jlib.graphicsOld.Color;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 import io.github.heathensoft.jlib.gui.GUIGraphics;
 import io.github.heathensoft.jlib.gui.window.window.BoxContent;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
 import org.joml.Vector2f;
 
 /**

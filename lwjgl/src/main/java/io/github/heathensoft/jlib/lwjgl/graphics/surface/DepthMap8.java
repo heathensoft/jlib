@@ -3,12 +3,12 @@ package io.github.heathensoft.jlib.lwjgl.graphics.surface;
 import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
 import org.joml.Math;
 import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 /**
@@ -43,11 +43,10 @@ public class DepthMap8 {
     }
     
     public DepthMap8(Image img) {
-        Assert.notNull(img);
         this.cols = img.width();
         this.rows = img.height();
         this.map = new byte[cols * rows];
-        int c = img.components();
+        int c = img.format().channels;
         float avg = 0;
         float alpha;
         int length = size();
@@ -78,11 +77,12 @@ public class DepthMap8 {
     }
     
     public Texture toTexture(int GL_WRAP, int GL_FILTER) {
-        Texture texture = new Texture(GL_TEXTURE_2D);
+        Texture texture = Texture.generate2D(cols,rows);
         texture.bindToActiveSlot();
-        texture.filter(GL_FILTER);
+        texture.filter(GL_FILTER,GL_FILTER);
         texture.wrapST(GL_WRAP);
-        texture.R8_2D(map,cols,rows);
+        texture.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED,false);
+        texture.uploadData(data());
         return texture;
     }
     

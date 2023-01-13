@@ -602,4 +602,10 @@ public class ByteArray2D extends PrimitiveArray2D implements ReadableByte2D {
     public byte[][] get() {
         return array;
     }
+
+    public void get(ByteBuffer buffer) {
+        for (int r = 0; r < rows; r++) {
+            buffer.put(array[r]);
+        }
+    }
 }

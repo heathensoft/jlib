@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.common.storage.primitive;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.LongReader;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.LongReader2D;
 
+import java.nio.CharBuffer;
 import java.nio.LongBuffer;
 
 
@@ -600,5 +601,11 @@ public class LongArray2D extends PrimitiveArray2D implements ReadableLong2D {
     
     public long[][] get() {
         return array;
+    }
+
+    public void get(LongBuffer buffer) {
+        for (int r = 0; r < rows; r++) {
+            buffer.put(array[r]);
+        }
     }
 }

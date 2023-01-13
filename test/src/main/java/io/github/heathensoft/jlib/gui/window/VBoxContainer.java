@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.gui.window;
 
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
+
+import io.github.heathensoft.jlib.graphicsOld.Color;
 
 /**
  * @author Frederik Dahl

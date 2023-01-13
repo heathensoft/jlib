@@ -50,6 +50,8 @@ public class MathLib {
     private static int rayIdx;
     private static int rayAbbIdx;
     private static int frustumIdx;
+
+    private static final int[] logTable;
     
     private static final Vector4f[] vec4;
     private static final Vector3f[] vec3;
@@ -121,6 +123,46 @@ public class MathLib {
         for (int i = 0; i < frustum.length; i++) {
             frustum[i] = new FrustumIntersection();
         }
+
+        logTable = new int[256];
+        logTable[0] = logTable[1] = 0;
+        for (int i=2; i<256; i++) logTable[i] = 1 + logTable[i/2];
+        logTable[0] = -1;
+
+
+    }
+
+    public static int log2(float f) {
+        int x = Float.floatToIntBits(f);
+        int c = x >> 23;
+        if (c != 0) return c - 127; //Compute directly from exponent.
+        else { //Subnormal, must compute from mantissa.
+            int t = x >> 16;
+            if (t != 0) return logTable[t] - 133;
+            else return (x >> 8 != 0) ? logTable[t] - 141 : logTable[x] - 149;
+        }
+    }
+
+    public static int nextPow2(int value) {
+        if (value-- == 0) return 1;
+        value |= value >>> 1;
+        value |= value >>> 2;
+        value |= value >>> 4;
+        value |= value >>> 8;
+        value |= value >>> 16;
+        return value + 1;
+    }
+
+    public static int closestNumber(int n, int m) {
+        int q = n / m; // find the quotient
+        int n1 = m * q; // 1st possible closest number
+        // 2nd possible closest number
+        int n2 = (n * m) > 0 ? (m * (q + 1)) : (m * (q - 1));
+        // if true, then n1 is the required closest number
+        // else n2 is the required closest number
+        if (java.lang.Math.abs(n - n1) < java.lang.Math.abs(n - n2))
+            return n1;
+        return n2;
     }
     
     public static Vector4f vec4() {

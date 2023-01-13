@@ -56,7 +56,7 @@ public class CursorObject implements Disposable {
         Assert.notNull("image disposed",rgba);
         int w = image.width();
         int h = image.height();
-        int c = image.components();
+        int c = image.format().channels;
         if (c != 4) throw new Exception("image must have 4 color components");
         try (MemoryStack stack = stackPush()) {
             GLFWImage img = GLFWImage.malloc(stack).set(w,h,rgba);

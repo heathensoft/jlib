@@ -1,14 +1,14 @@
 package io.github.heathensoft.jlib.gui.window.window;
 
 
+import io.github.heathensoft.jlib.graphicsOld.Color;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 import io.github.heathensoft.jlib.gui.Debug;
 import io.github.heathensoft.jlib.gui.GUIGraphics;
 import io.github.heathensoft.jlib.gui.window.Box;
 import io.github.heathensoft.jlib.gui.window.Size;
 import io.github.heathensoft.jlib.gui.window.Spacing;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 
 

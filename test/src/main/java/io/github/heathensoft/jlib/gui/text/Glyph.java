@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.gui.text;
 
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
+
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 
 /**
  * @author Frederik Dahl

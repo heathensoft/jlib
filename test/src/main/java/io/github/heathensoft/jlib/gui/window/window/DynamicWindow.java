@@ -2,13 +2,13 @@ package io.github.heathensoft.jlib.gui.window.window;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Area;
+import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
+import io.github.heathensoft.jlib.graphicsOld.TextureRegion;
 import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.GUIGraphics;
 import io.github.heathensoft.jlib.gui.window.Box;
 import io.github.heathensoft.jlib.gui.window.GUIWindow;
 import io.github.heathensoft.jlib.gui.window.Size;
-import io.github.heathensoft.jlib.lwjgl.graphics.SpriteBatch;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 

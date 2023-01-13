@@ -5,6 +5,7 @@ import io.github.heathensoft.jlib.common.storage.primitive.FloatArray2D;
 import io.github.heathensoft.jlib.common.utils.NoiseFunction;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 
@@ -91,14 +92,10 @@ public class NoiseMap {
     public void smoothen() {
         /* **** */
     }
-    
+
     public Texture toTexture(int GL_WRAP, int GL_FILTER) {
-        Texture texture = new Texture(GL_TEXTURE_2D);
-        texture.bindToActiveSlot();
-        texture.filter(GL_FILTER);
-        texture.wrapST(GL_WRAP);
-        texture.R32F_2D(map);
-        return texture;
+        // todo:
+        return null;
     }
     
     public void toPNG(String path) {

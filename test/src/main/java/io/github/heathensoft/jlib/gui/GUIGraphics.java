@@ -1,15 +1,11 @@
 package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.graphicsOld.*;
 import io.github.heathensoft.jlib.gui.text.AsciiFont;
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
-import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureAtlas;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
 import io.github.heathensoft.jlib.lwjgl.graphics.surface.DepthMap16;
 import io.github.heathensoft.jlib.lwjgl.graphics.surface.DepthMap8;
 import io.github.heathensoft.jlib.lwjgl.graphics.surface.NormalMap;
-import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 
 import java.util.HashMap;
 import java.util.List;

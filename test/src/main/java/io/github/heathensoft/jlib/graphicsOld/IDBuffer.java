@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.graphics;
+package io.github.heathensoft.jlib.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.IDPool;
@@ -10,6 +10,8 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL13.GL_CLAMP_TO_BORDER;
 import static org.lwjgl.opengl.GL15.GL_STREAM_READ;
 import static org.lwjgl.opengl.GL21.GL_PIXEL_PACK_BUFFER;
 import static org.lwjgl.opengl.GL30.*;
@@ -44,12 +46,11 @@ public class IDBuffer extends Framebuffer {
         super(width, height);
         bind(this);
         // initialize id-texture. read/write ops.
-        uid_texture = Texture.generate2D(width, height);
+        uid_texture = new Texture(GL_TEXTURE_2D);
         uid_texture.bindToActiveSlot();
-        uid_texture.filter(GL_NEAREST,GL_NEAREST);
-        uid_texture.wrapST(GL_CLAMP_TO_EDGE);
-        uid_texture.allocate(TextureFormat.R32_UNSIGNED_INTEGER,false);
-        //uid_texture.R32UI_2D((IntBuffer)null,width,height);
+        uid_texture.nearest();
+        uid_texture.wrapST(GL_CLAMP_TO_BORDER);
+        uid_texture.R32UI_2D((IntBuffer)null,width,height);
         glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,
         uid_texture.target(), uid_texture.id(),0);
         drawBuffers(GL_COLOR_ATTACHMENT0);
@@ -110,18 +111,15 @@ public class IDBuffer extends Framebuffer {
     public Texture texture() {
         return uid_texture;
     }
-
-    public Texture texture(int index) {
-        return uid_texture;
-    }
-
+    
+    @Override
     public void disposeInternal() {
         if (syncBuffer != null) MemoryUtil.memFree(syncBuffer);
         if (pixelBuffer != null) MemoryUtil.memFree(pixelBuffer);
         Disposable.dispose(pbo,uid_texture);
     }
-
-
+    
+    @Override
     public void resize(Resolution resolution) {
     
     }

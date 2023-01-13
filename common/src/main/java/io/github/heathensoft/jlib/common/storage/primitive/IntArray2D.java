@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.common.storage.primitive;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.IntReader;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.IntReader2D;
 
+import java.nio.CharBuffer;
 import java.nio.IntBuffer;
 
 
@@ -605,5 +606,11 @@ public class IntArray2D extends PrimitiveArray2D implements ReadableInt2D {
     
     public int[][] get() {
         return array;
+    }
+
+    public void get(IntBuffer buffer) {
+        for (int r = 0; r < rows; r++) {
+            buffer.put(array[r]);
+        }
     }
 }

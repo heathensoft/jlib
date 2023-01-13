@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.graphics.Framebuffer;
-import io.github.heathensoft.jlib.lwjgl.graphics.IDBuffer;
-import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.graphicsOld.Framebuffer;
+import io.github.heathensoft.jlib.graphicsOld.IDBuffer;
+import io.github.heathensoft.jlib.graphicsOld.Texture;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import org.lwjgl.system.MemoryStack;
 
