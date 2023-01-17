@@ -1,8 +1,10 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
-import io.github.heathensoft.jlib.common.io.Folder;
+import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.common.io.Settings;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -44,11 +46,12 @@ public abstract class Application {
     
     public String framework() { return "HeathenSoft"; }
     
-    public final Folder user_folder() { return Folder.user_home(framework(),name()); }
-    
-    public final Folder app_folder(Class<?> clazz) { return Folder.jar_adjacent(clazz); }
-    
-    public final Settings settings() {
-        return settings == null ? new Settings(user_folder().file("settings")) : settings;
+    public final Settings settings() throws IOException  {
+        if (settings == null) {
+            Path appFolder = External.APP_DATA(framework(),name());
+            Path settingsFile = appFolder.resolve("settings");
+            new External(settingsFile).createFile(false);
+            settings = new Settings(settingsFile);
+        } return settings;
     }
 }

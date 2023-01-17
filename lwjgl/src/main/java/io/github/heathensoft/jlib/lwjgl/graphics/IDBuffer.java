@@ -1,37 +1,39 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.utils.IDPool;
-import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
+import static org.lwjgl.opengl.GL11.GL_NEAREST;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
+import static org.lwjgl.opengl.GL11.glReadPixels;
 import static org.lwjgl.opengl.GL15.GL_STREAM_READ;
+import static org.lwjgl.opengl.GL15.glUnmapBuffer;
 import static org.lwjgl.opengl.GL21.GL_PIXEL_PACK_BUFFER;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0;
+import static org.lwjgl.opengl.GL30.GL_MAP_READ_BIT;
+import static org.lwjgl.opengl.GL30.GL_RED_INTEGER;
+import static org.lwjgl.opengl.GL30.glMapBufferRange;
 import static org.lwjgl.opengl.GL32.*;
 
 /**
  * Texture can be shared between multiple framebuffers.
  * I.e. Both HUD and "World" draws id's to this texture.
  * Using this texture as attachment in both framebuffers.
- * Just remember top clear the texture every frame.
+ * Just remember to clear the texture every frame.
  *
  * If used with interactables, the buffer bust be cleared with 0 value
  *
  * @author Frederik Dahl
- * 17/11/2022
+ * 14/01/2023
  */
 
 
 public class IDBuffer extends Framebuffer {
-    
-    public static final IDPool ID_GEN = new IDPool();
-    
+
     private final Texture uid_texture;
     private final ByteBuffer pixelBuffer;
     private final IntBuffer syncBuffer;
@@ -39,7 +41,7 @@ public class IDBuffer extends Framebuffer {
     private long syncObject;
     private int syncStatus;
     private int pixelID;
-    
+
     public IDBuffer(int width, int height) throws Exception {
         super(width, height);
         bind(this);
@@ -47,14 +49,11 @@ public class IDBuffer extends Framebuffer {
         uid_texture = Texture.generate2D(width, height);
         uid_texture.bindToActiveSlot();
         uid_texture.filter(GL_NEAREST,GL_NEAREST);
-        uid_texture.wrapST(GL_CLAMP_TO_EDGE);
+        uid_texture.clampToEdge();
         uid_texture.allocate(TextureFormat.R32_UNSIGNED_INTEGER,false);
-        //uid_texture.R32UI_2D((IntBuffer)null,width,height);
-        glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,
-        uid_texture.target(), uid_texture.id(),0);
-        drawBuffers(GL_COLOR_ATTACHMENT0);
-        readBuffer(GL_COLOR_ATTACHMENT0);
-        setClearMask(GL_COLOR_BUFFER_BIT);
+        attachColor(uid_texture,0,true);
+        drawBuffer(0);
+        readBuffer(0);
         setClearColor(0,0,0,0);
         checkStatus();
         // prepare pixel read ops
@@ -72,7 +71,7 @@ public class IDBuffer extends Framebuffer {
     public void readID(Vector2f mouseViewport) {
         readID(mouseViewport.x,mouseViewport.y);
     }
-    
+
     public void readID(float mouseViewportX, float mouseViewportY) {
         int x = (int)(mouseViewportX * width);
         int y = (int)(mouseViewportY * height);
@@ -102,11 +101,11 @@ public class IDBuffer extends Framebuffer {
             }
         }
     }
-    
+
     public int pixelID() {
         return pixelID;
     }
-    
+
     public Texture texture() {
         return uid_texture;
     }
@@ -115,14 +114,11 @@ public class IDBuffer extends Framebuffer {
         return uid_texture;
     }
 
-    public void disposeInternal() {
+    @Override
+    public void dispose() {
+        super.dispose();
         if (syncBuffer != null) MemoryUtil.memFree(syncBuffer);
         if (pixelBuffer != null) MemoryUtil.memFree(pixelBuffer);
-        Disposable.dispose(pbo,uid_texture);
-    }
-
-
-    public void resize(Resolution resolution) {
-    
+        Disposable.dispose(pbo);
     }
 }

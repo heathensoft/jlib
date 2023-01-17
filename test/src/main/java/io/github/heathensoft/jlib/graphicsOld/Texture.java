@@ -1309,6 +1309,7 @@ public class Texture implements Disposable {
         0, GL_UNSIGNED_INT_24_8 , GL_FLOAT, (IntBuffer) null);
         GLError.check();
     }
+
     
     
     

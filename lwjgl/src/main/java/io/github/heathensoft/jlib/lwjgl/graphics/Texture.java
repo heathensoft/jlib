@@ -63,6 +63,7 @@ public class Texture implements Disposable {
 
     public static Texture image2D(Image image, boolean mipmap) {
         Texture texture = generate2D(image.width(),image.height());
+        texture.bindToActiveSlot();
         texture.allocate(image.format(),mipmap);
         texture.uploadData(image.data());
         return texture;
@@ -87,7 +88,7 @@ public class Texture implements Disposable {
     public void uploadSubData(ByteBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
         if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
         if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
-        glPixelStorei(target,format.pack_alignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
         switch (target) {
@@ -101,7 +102,7 @@ public class Texture implements Disposable {
     public void uploadSubData(ShortBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
         if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
         if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
-        glPixelStorei(target,format.pack_alignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
         switch (target) {
@@ -116,7 +117,7 @@ public class Texture implements Disposable {
     public void uploadSubData(IntBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
         if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
         if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
-        glPixelStorei(target,format.pack_alignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
         switch (target) {
@@ -131,7 +132,7 @@ public class Texture implements Disposable {
     public void uploadSubData(FloatBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
         if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
         if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
-        glPixelStorei(target,format.pack_alignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
         switch (target) {
@@ -296,6 +297,43 @@ public class Texture implements Disposable {
         uploadSubData(data,0);
     }
 
+    public void get(ByteBuffer pixels) {
+        get(pixels,0);
+    }
+
+    public void get(ByteBuffer pixels, int level) {
+        glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
+        glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
+    }
+
+    public void get(ShortBuffer pixels) {
+        get(pixels,0);
+    }
+
+    public void get(ShortBuffer pixels, int level) {
+        glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
+        glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
+    }
+
+    public void get(IntBuffer pixels) {
+        get(pixels,0);
+    }
+
+    public void get(IntBuffer pixels, int level) {
+        glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
+        glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
+    }
+
+    public void get(FloatBuffer pixels) {
+        get(pixels,0);
+    }
+
+    public void get(FloatBuffer pixels, int level) {
+        glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
+        glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
+    }
+
+
     public void generateMipmap() {
         glGenerateMipmap(target);
     }
@@ -317,6 +355,10 @@ public class Texture implements Disposable {
             format = null;
             id = -1;
         }
+    }
+
+    public TextureFormat format() {
+        return format;
     }
 
     public boolean isAllocated() {

@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
-import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.common.io.OS;
 import io.github.heathensoft.jlib.common.io.Settings;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
@@ -15,6 +14,7 @@ import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -64,7 +64,7 @@ public class Window extends AbstractWindow {
     
     @Override
     protected void loadSettings(Settings user, BootConfiguration app_default) {
-        
+
         if (!app_default.use_default_settings) {
             try { user.validate();
                 user.load();
@@ -451,7 +451,7 @@ public class Window extends AbstractWindow {
     
     @Override
     public void setInputProcessor(InputProcessor processor) {
-        Assert.notNull("processor cannot be null", processor);
+        Objects.requireNonNull(processor,"processor cannot be null");
         if (processor != current_processor) {
             current_processor = processor;
             double x = mouse_screen_x;

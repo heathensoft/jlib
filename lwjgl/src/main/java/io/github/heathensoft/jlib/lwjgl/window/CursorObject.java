@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
-import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import org.lwjgl.glfw.GLFWImage;
@@ -51,9 +50,7 @@ public class CursorObject implements Disposable {
      * @throws Exception caught and logged by Window.
      */
     protected CursorObject(Image image, long window, int xH, int yH) throws Exception {
-        Assert.notNull("null cursor image",image);
         ByteBuffer rgba = image.data();
-        Assert.notNull("image disposed",rgba);
         int w = image.width();
         int h = image.height();
         int c = image.format().channels;

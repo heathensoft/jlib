@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.graphicsOld;
 
-import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.common.Disposable;
 import org.joml.*;
 import org.lwjgl.system.MemoryStack;
@@ -146,7 +145,6 @@ public class ShaderProgram implements Disposable {
     }
     
     public void createUniforms(String... names) {
-        Assert.notNull((Object[]) names);
         for (String name : names) {
             createUniform(name);
         }

@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
-import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.common.thread.ThreadService;
 import org.lwjgl.Version;
 import org.tinylog.Logger;
@@ -31,7 +30,6 @@ public final class Engine {
     private ThreadService service;
     
     public void run(Application app, String[] args) {
-        Assert.notNull(app);
         if (this.app == null) {
             this.app = app;
             this.window = new Window();
@@ -51,10 +49,11 @@ public final class Engine {
             Logger.info("reserved memory: {}MB", memory);
             Logger.info("available processors: {}", processors);
             Logger.info("application has provided: {} resolution options",app_res.size());
-            Logger.info("loading window user settings");
-            window.loadSettings(app.settings(),config);
-            Logger.info("initializing window");
-            try { window.initialize(app_res);
+            try {
+                Logger.info("loading window user settings");
+                window.loadSettings(app.settings(),config);
+                Logger.info("initializing window");
+                window.initialize(app_res);
             } catch (Exception e) {
                 Logger.error(e);
                 return;

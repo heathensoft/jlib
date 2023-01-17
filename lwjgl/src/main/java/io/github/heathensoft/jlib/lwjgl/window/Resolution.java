@@ -1,7 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 
-import io.github.heathensoft.jlib.common.Assert;
 import org.lwjgl.glfw.GLFWVidMode;
 
 import java.util.Comparator;
@@ -83,7 +82,6 @@ public record Resolution(int width, int height) implements Comparable<Resolution
     }
     
     public static void sortByClosest(GLFWVidMode vidMode, List<Resolution> options) {
-        Assert.notNull("videoMode is null",vidMode);
         sortByClosest(new Resolution(vidMode.width(), vidMode.height()), options);
     }
     

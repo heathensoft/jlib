@@ -1,8 +1,9 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
-import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.storage.primitive.iterators.IntReader;
+
+import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LAST;
 
@@ -97,7 +98,7 @@ public class Keyboard {
     }
     
     public void setTextProcessor(TextProcessor processor) {
-        Assert.notNull("null argument text processor",processor);
+        Objects.requireNonNull(processor,"null argument text processor");
         if (textProcessor != processor) {
             queued_chars.dequeueAll(charCollector);
             textProcessor = processor;

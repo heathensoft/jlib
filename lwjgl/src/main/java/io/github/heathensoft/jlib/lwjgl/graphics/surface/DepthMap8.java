@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.lwjgl.graphics.surface;
 
-import io.github.heathensoft.jlib.common.Assert;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
@@ -26,7 +25,6 @@ public class DepthMap8 {
     private final byte[] map;
     
     public DepthMap8(NoiseMap nm) {
-        Assert.notNull(nm);
         this.cols = nm.cols();
         this.rows = nm.rows();
         this.map = new byte[cols * rows];
