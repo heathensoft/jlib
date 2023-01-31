@@ -33,12 +33,18 @@ public class External {
         this.path = path;
     }
 
+    /**
+     * This buffer is allocated on the heap and can not interface with lwjgl
+     * @return bytebuffer of read data
+     * @throws IOException
+     */
     @SuppressWarnings("all")
     public ByteBuffer readToBuffer() throws IOException {
         ByteBuffer buffer;
         try (SeekableByteChannel byteChannel = Files.newByteChannel(path, StandardOpenOption.READ)) {
             buffer = ByteBuffer.allocate((int)byteChannel.size() + 1);
             while (byteChannel.read(buffer) != -1); // *intentional*
+            buffer.slice();
         } return buffer.flip();
     }
 

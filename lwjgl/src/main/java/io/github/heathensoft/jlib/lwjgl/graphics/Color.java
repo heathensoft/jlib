@@ -264,6 +264,7 @@ public class Color {
      * @see #toString() */
     public static Color valueOf (String hex, Color color) {
         hex = hex.charAt(0) == '#' ? hex.substring(1) : hex;
+        if (hex.length() < 6) return color.set(Color.WHITE);
         color.r = Integer.parseInt(hex.substring(0, 2), 16) / 255f;
         color.g = Integer.parseInt(hex.substring(2, 4), 16) / 255f;
         color.b = Integer.parseInt(hex.substring(4, 6), 16) / 255f;
@@ -509,21 +510,20 @@ public class Color {
     public static Texture paletteSampler3D(List<Color> paletteColors, int texture_size) { // texture size 64
         int num_palette_colors = paletteColors.size();
         List<Vector3f> paletteLAB = new ArrayList<>(num_palette_colors);
-        for (int i = 0; i < num_palette_colors; i++) {
-            Color color = paletteColors.get(i);
-            paletteLAB.set(i, color.toLAB(new Vector3f()));
-        } final int S = texture_size;
-        Color sampleColor = new Color();
+        for (Color color : paletteColors) {
+            paletteLAB.add(color.toLAB(new Vector3f()));
+        } Color sampleColor = new Color();
         Color closestColor = new Color();
         Vector3f sampleRGB = new Vector3f();
         Vector3f sampleLAB = new Vector3f();
-        Vector3f size = new Vector3f(S,S,S);
-        ByteBuffer pixels = MemoryUtil.memAlloc(S * S * S * 3);
-        for (int r = 0; r < S; r++) {
-            for (int g = 0; g < S; g++) {
-                for (int b = 0; b < S; b++) {
+        Vector3f size = new Vector3f(texture_size);
+        int bytes = texture_size * texture_size * texture_size * 3;
+        ByteBuffer pixels = MemoryUtil.memAlloc(bytes);
+        for (int r = 0; r < texture_size; r++) {
+            for (int g = 0; g < texture_size; g++) {
+                for (int b = 0; b < texture_size; b++) {
                     //int idx = 3 * ((r * S * S) + (g * S) + b);
-                    sampleRGB.set(r,g,b).div(size);
+                    sampleRGB.set(b,g,r).div(size); // invert (rgb -> bgr)
                     sampleColor.set(sampleRGB.x,sampleRGB.y,sampleRGB.z,1f);
                     sampleLAB = sampleColor.toLAB(sampleLAB);
                     float d_min = Float.MAX_VALUE;
@@ -537,7 +537,7 @@ public class Color {
                 }
             }
         }
-        Texture texture = Texture.generate3D(S,S,S);
+        Texture texture = Texture.generate3D(texture_size, texture_size, texture_size);
         texture.bindToActiveSlot();
         texture.filter(GL_NEAREST,GL_NEAREST);
         texture.clampToEdge();

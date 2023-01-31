@@ -24,7 +24,8 @@ public class WorkingDirectory {
     protected final Set<String> validFiles;
     protected final Set<String> subFolders;
     protected final Set<String> fileTypes;
-    
+
+
     public WorkingDirectory(String location) throws Exception {
         this(location,null);
     }
@@ -72,7 +73,47 @@ public class WorkingDirectory {
            }
        } else throw new Exception("working directory not a directory");
     }
-    
+
+    public void newFolder(String name) throws Exception {
+        if (name == null) {
+            name = "folder";
+        } else {
+            name = name.replace(" ","");
+            name = name.length() == 0 ? "folder" : name;
+        } External folder = new External(path.resolve(name));
+        folder.createDirectories();
+        refresh();
+    }
+
+    /**
+     * This will delete the folder and all its contents
+     * @param folderName name of the folder
+     * @return true if the folder was deleted successfully
+     * @throws Exception If an io exception occurred
+     */
+    public boolean deleteFolder(String folderName) throws Exception {
+        if (subFolders.contains(folderName)) {
+            External folder = new External(path.resolve(folderName));
+            folder.delete();
+            refresh();
+            return true;
+        } return false;
+    }
+
+    /**
+     * This will delete the folder and all its contents
+     * @param fileName name of the folder
+     * @return true if the folder was deleted successfully
+     * @throws Exception If an io exception occurred
+     */
+    public boolean deleteFile(String fileName) throws Exception {
+        if (validFiles.contains(fileName)) {
+            External file = new External(path.resolve(fileName));
+            file.delete();
+            refresh();
+            return true;
+        } return false;
+    }
     
     public void clearValidFileTypes() throws Exception {
         if (!fileTypes.isEmpty()) {
@@ -271,6 +312,18 @@ public class WorkingDirectory {
     
     public boolean containsValidFile(String filename) {
         return validFiles.contains(filename);
+    }
+
+    public Path resolveFile(String filename) {
+        if (containsValidFile(filename)) {
+            return path.resolve(filename);
+        } return null;
+    }
+
+    public Path resolveFolder(String folderName) {
+        if (subFolders.contains(folderName)) {
+            return path.resolve(folderName);
+        } return null;
     }
     
     public Path path() {

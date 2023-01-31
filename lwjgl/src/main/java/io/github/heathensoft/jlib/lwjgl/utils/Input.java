@@ -65,7 +65,8 @@ public class Input extends InputProcessor {
 
     @Override
     protected void on_mouse_press(int button, boolean press) {
-        mouse.on_mouse_press(button, press);
+        if (button >= 0 && button <= 3) // left, right, middle only
+            mouse.on_mouse_press(button, press);
     }
 
     @Override

@@ -62,7 +62,15 @@ public class Canvas implements Disposable {
         }
     }
 
+    public void undo() {
+        // save backbuffer area (the size of undo area) as a redo-object
+        //
+    }
+
     public void endEdit() {
+        // save backbuffer area as an undo-object
+        // draw edit directly to backbuffer
+        // then draw backbuffer to front-buffer
         if (editing) {
             freeHandCoordinates.clear();
             editing = false;

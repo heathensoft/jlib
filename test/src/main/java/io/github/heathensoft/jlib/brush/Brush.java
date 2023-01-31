@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 /**
  * @author Frederik Dahl
@@ -23,7 +24,7 @@ public class Brush implements Disposable {
     public static final int SIZE_MAX = TEXTURE_SIZE;
     public static final int SIZE_MIN = 1;
 
-    private final Color contourColor;
+
     private final Texture texture;
     private BrushShape shape;
     private int size;
@@ -35,7 +36,6 @@ public class Brush implements Disposable {
         this.shape = shape;
         this.size = size;
         this.color = 255;
-        this.contourColor = Color.GREEN.cpy();
         this.texture = new Texture(GL_TEXTURE_2D);
         try (MemoryStack stack = MemoryStack.stackPush()){
             ByteBuffer pixels = stack.malloc(SIZE_MAX * SIZE_MAX);
@@ -73,7 +73,7 @@ public class Brush implements Disposable {
             texture.wrapST(GL_CLAMP_TO_EDGE);
             texture.filter(GL_NEAREST);
             texture.R8_2D(pixels.flip(),TEXTURE_SIZE,TEXTURE_SIZE);
-            //stbi_write_png("brush.png", TEXTURE_SIZE, TEXTURE_SIZE,1,pixels, TEXTURE_SIZE);
+            stbi_write_png("brush.png",TEXTURE_SIZE,TEXTURE_SIZE,1,pixels,TEXTURE_SIZE);
         }
     }
 
@@ -113,7 +113,7 @@ public class Brush implements Disposable {
             texture.bindToActiveSlot();
             glTexSubImage2D(GL_TEXTURE_2D,0,0,0,
             TEXTURE_SIZE,TEXTURE_SIZE,GL_RED,GL_UNSIGNED_BYTE,pixels.flip());
-            //stbi_write_png("brush.png",TEXTURE_SIZE,TEXTURE_SIZE,1,pixels,TEXTURE_SIZE);
+
         }
     }
 
@@ -153,10 +153,6 @@ public class Brush implements Disposable {
 
     public BrushShape shape() {
         return shape;
-    }
-
-    public Color contourColor() {
-        return contourColor;
     }
 
     public int depthColor() {

@@ -39,16 +39,15 @@ public class DepthMap8 {
             }
         }
     }
-    
-    public DepthMap8(Image img) {
-        this.cols = img.width();
-        this.rows = img.height();
+
+    public DepthMap8(int width, int height, int channels, ByteBuffer data) {
+        this.cols = width;
+        this.rows = height;
         this.map = new byte[cols * rows];
-        int c = img.format().channels;
+        int c = channels;
         float avg = 0;
         float alpha;
         int length = size();
-        ByteBuffer data = img.data();
         switch (c) {
             case 1: case 2: case 3:
                 for (int i = 0; i < length; i++) {
@@ -70,8 +69,12 @@ public class DepthMap8 {
                     map[i] = (byte) (Math.round(avg) & 0xff);
                     avg = 0;
                 }
-            break;
+                break;
         }
+    }
+    
+    public DepthMap8(Image img) {
+        this(img.width(),img.height(),img.format().channels,img.data());
     }
     
     public Texture toTexture(int wrap, int min_filter, int max_filter, boolean mipmap) {

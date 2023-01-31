@@ -1,23 +1,27 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
+import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ *
+ * Eventually replace with
+ * // https://github.com/classgraph/classgraph
+ *
  * @author Frederik Dahl
  * 29/10/2022
  */
@@ -34,6 +38,45 @@ public class Resources {
     
     public Resources() {
         clazz = getClass();
+    }
+
+    public List<String> getResourceFiles(String dir) throws IOException {
+        List<String> filenames = new ArrayList<>();
+        try (InputStream is = clazz.getClassLoader().getResourceAsStream(dir)){
+            if (is == null) throw new IOException("unable to locate resource: " + dir);
+            BufferedReader br = new BufferedReader(new InputStreamReader(is));
+            String resource;
+            while ((resource = br.readLine()) != null) {
+                filenames.add(resource);
+            }
+        } return filenames;
+    }
+
+    /**
+     * Read external file. Remember to free the buffer:
+     * MemoryUtil.memFree(buffer) after use.
+     * @param path path to external file
+     * @return bytebuffer
+     * @throws IOException if the file is not a file
+     */
+    public ByteBuffer toBufferExternal(Path path) throws IOException {
+        External file = new External(path);
+        if (file.isFile()) {
+            InputStream inputStream = null;
+            try { long byte_size = file.size();
+                inputStream = new FileInputStream(path.toFile());
+                ByteBuffer buffer = MemoryUtil.memAlloc((int) byte_size);
+                int data = inputStream.read();
+                while (data != -1) {
+                    buffer.put((byte) data);
+                    data = inputStream.read();
+                } buffer.flip();
+                return buffer;
+            } finally {
+                if (inputStream != null)
+                    inputStream.close();
+            }
+        } else throw new IOException("argument not path to file: " + path.toString());
     }
     
     public ByteBuffer toBuffer(String file, int byteSize) throws IOException {
@@ -98,6 +141,15 @@ public class Resources {
     
     public String asString(String file) throws IOException {
         return asString(file,StandardCharsets.UTF_8);
+    }
+
+    private InputStream getResourceAsStream(String resource) {
+        final InputStream is = getContextClassLoader().getResourceAsStream(resource);
+        return is == null ? getClass().getResourceAsStream(resource) : is;
+    }
+
+    private ClassLoader getContextClassLoader() {
+        return Thread.currentThread().getContextClassLoader();
     }
     
 }

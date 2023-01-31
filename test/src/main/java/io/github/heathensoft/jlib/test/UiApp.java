@@ -69,6 +69,10 @@ public class UiApp extends Application  {
 
          */
 
+
+        Brush brush = new Brush(BrushShape.CIRCLE,64);
+        brush.dispose();
+
         GUI = new GUI(resolution.width(),resolution.height());
         renderer = new Renderer(GUI);
         controls = new Controls(GUI);
@@ -122,8 +126,7 @@ public class UiApp extends Application  {
         scrollBox.content().addElements(67);
 
 
-        Brush brush = new Brush(BrushShape.CIRCLE,16);
-        brush.dispose();
+
 
 
     }
