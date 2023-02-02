@@ -1,51 +1,60 @@
 package io.github.heathensoft.jlib.common.utils;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.storage.generic.Stack;
+import io.github.heathensoft.jlib.common.storage.generic.FixedStack;
 
 /**
  * @author Frederik Dahl
- * 03/01/2023
+ * 02/02/2023
  */
 
 
 public class UndoRedo<T> implements Disposable {
 
-    private final Stack<T> redoObjects;
-    private final Stack<T> undoObjects;
+    private final FixedStack<T> undoObjects;
+    private final FixedStack<T> redoObjects;
 
-    public UndoRedo() {
-        redoObjects = new Stack<>(1);
-        undoObjects = new Stack<>(1);
+
+    public UndoRedo(final int capacity) {
+        undoObjects = new FixedStack<>(capacity);
+        redoObjects = new FixedStack<>(capacity);
     }
 
     /**
      * Any redo objects will be disposed
-     * @param preEditState state prior to edit
+     * @param state state prior to edit
      */
-    public void edit(T preEditState) {
+    public void onEdit(T state) {
         redoObjects.dispose();
-        undoObjects.push(preEditState);
+        undoObjects.push(state);
     }
 
     /**
-     * @param currentState current state
+     * @param state current state
      * @return prior to state
      */
-    public T undo(T currentState) {
+    public T undo(T state) {
         T previousState = undoObjects.pop();
-        redoObjects.push(currentState);
+        redoObjects.push(state);
         return previousState;
     }
 
     /**
-     * @param currentState current state
+     * @param state current state
      * @return prior to state
      */
-    public T redo(T currentState) {
+    public T redo(T state) {
         T previousState = redoObjects.pop();
-        undoObjects.push(currentState);
+        undoObjects.push(state);
         return previousState;
+    }
+
+    public T peakUndo() {
+        return undoObjects.peak();
+    }
+
+    public T peakRedo() {
+        return redoObjects.peak();
     }
 
     public boolean canUndo() {
@@ -56,9 +65,17 @@ public class UndoRedo<T> implements Disposable {
         return !redoObjects.isEmpty();
     }
 
-    @Override
+    public int undoCount() {
+        return undoObjects.size();
+    }
+
+    public int redoCount() {
+        return redoObjects.size();
+    }
+
     public void dispose() {
         undoObjects.dispose();
         redoObjects.dispose();
     }
+
 }
