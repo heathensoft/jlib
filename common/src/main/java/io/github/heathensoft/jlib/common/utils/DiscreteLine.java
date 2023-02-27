@@ -31,12 +31,21 @@ public class DiscreteLine implements Iterable<Coordinate> {
 
     public void set(Coordinate p0, Coordinate p1) {
         Coordinate start = points.get(0);
-        Coordinate end = points.get(size() - 1);
-        if (p0.equals(start)) {
-            if (p1.equals(end)) return;
-        } else if (p0.equals(end)) {
-            if (p1.equals(start)) return;
-        } points.clear();
+        if (size() > 1) {
+            Coordinate end = points.get(size() - 1);
+            if (p0.equals(start)) {
+                if (p1.equals(end)) return;
+            } else if (p0.equals(end)) {
+                if (p1.equals(start)) return;
+            }
+        } else {
+            if (p0.equals(p1)) {
+                if (p0.equals(start)) {
+                    return;
+                }
+            }
+        }
+        points.clear();
         build(p0, p1);
     }
 
@@ -87,21 +96,26 @@ public class DiscreteLine implements Iterable<Coordinate> {
         return result;
     }
 
-    private void build(Coordinate p0, Coordinate p1) {
-        final int x0 = p0.x;
-        final int y0 = p0.y;
-        final int x1 = p1.x;
-        final int y1 = p1.y;
-        final int dx = x1 - x0;
-        final int dy = y1 - y0;
-        int D = 2*dy - dx;
-        int y = y0;
-        for (int x = x0; x <= x1; x++) {
-            points.add(new Coordinate(x,y));
-            if (D > 0) {
-                y = y + 1;
-                D = D - 2*dx;
-            } D = D + 2*dy;
+    public void build(Coordinate p0, Coordinate p1) {
+        int x0 = p0.x; int y0 = p0.y;
+        int x1 = p1.x; int y1 = p1.y;
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx-dy;
+        int e2;
+        while (true)  {
+            points.add(new Coordinate(x0,y0));
+            if (x0 == x1 && y0 == y1) break;
+            e2 = 2 * err;
+            if (e2 > -dy) {
+                err = err - dy;
+                x0 = x0 + sx;
+            } if (e2 < dx) {
+                err = err + dx;
+                y0 = y0 + sy;
+            }
         }
     }
 }

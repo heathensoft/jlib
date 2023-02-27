@@ -1,5 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
+
 import io.github.heathensoft.jlib.common.thread.ThreadService;
 import org.lwjgl.Version;
 import org.tinylog.Logger;
@@ -19,7 +20,7 @@ public final class Engine {
 
     private static Engine instance;
     private static final int service_core_pool_size = 4;
-    private static final int service_max_pool_size = 16;
+    private static final int service_max_pool_size = 24;
     private static final int service_keep_alive_time_ms = 3000;
     
     private Engine() {}
@@ -27,7 +28,7 @@ public final class Engine {
     private Time time;
     private Window window;
     private Application app;
-    private ThreadService service;
+    private ThreadService threadPool;
     
     public void run(Application app, String[] args) {
         if (this.app == null) {
@@ -71,6 +72,8 @@ public final class Engine {
                     frameTime = time.frameTime();
                     accumulator += frameTime;
                     while (accumulator >= delta) {
+                        if (threadPool != null)
+                            threadPool.update();
                         if (!window.isMinimized()) {
                             window.processInput(delta);
                         } app.on_update(delta);
@@ -103,14 +106,14 @@ public final class Engine {
             } catch (Exception e) {
                 Logger.error(e);
             } finally {
-                Logger.info("exiting application");
+                if (threadPool != null) {
+                    Logger.info("thread pool shutdown");
+                    threadPool.dispose();
+                } Logger.info("exiting application");
                 app.on_exit();
                 Logger.info("terminating window");
                 window.terminate();
-                if (service != null) {
-                    Logger.info("thread pool shutdown");
-                    service.dispose();
-                }
+
             }
         }
     }
@@ -138,13 +141,13 @@ public final class Engine {
         } return clazz.cast(app);
     }
     
-    public ThreadService service() {
-        if (service == null) {
-            service = new ThreadService(
+    public ThreadService threadPool() {
+        if (threadPool == null) {
+            threadPool = new ThreadService(
             service_core_pool_size,
             service_max_pool_size,
             service_keep_alive_time_ms);
-        } return service;
+        } return threadPool;
     }
     
     

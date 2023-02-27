@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import org.joml.*;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
@@ -140,6 +141,54 @@ public class BufferObject implements Disposable {
     
     public int usage() {
         return usage;
+    }
+
+
+    public static void putPadding(int elements, FloatBuffer buffer) {
+        for (int i = 0; i < elements; i++) {
+            buffer.put(0);
+        }
+    }
+
+    public static void putPadding(int elements, IntBuffer buffer) {
+        for (int i = 0; i < elements; i++) {
+            buffer.put(0);
+        }
+    }
+
+    public static void put(Matrix4f mat4, FloatBuffer buffer) {
+        mat4.get(buffer.position(),buffer);
+        buffer.position(buffer.position() + 16);
+    }
+
+    public static void put(Vector4f vec4, FloatBuffer buffer) {
+        vec4.get(buffer.position(),buffer);
+        buffer.position(buffer.position() + 4);
+    }
+
+    public static void put(Vector3f vec3, FloatBuffer buffer) {
+        vec3.get(buffer.position(),buffer);
+        buffer.position(buffer.position() + 3);
+    }
+
+    public static void put(Vector2f vec2, FloatBuffer buffer) {
+        vec2.get(buffer.position(),buffer);
+        buffer.position(buffer.position() + 2);
+    }
+
+    public static void put(Vector4i vec4, IntBuffer buffer) {
+        vec4.get(buffer.position(),buffer);
+        buffer.position(buffer.position() + 4);
+    }
+
+    public static void put(Vector3i vec3, IntBuffer buffer) {
+        vec3.get(buffer.position(),buffer);
+        buffer.position(buffer.position() + 3);
+    }
+
+    public static void put(Vector2i vec2, IntBuffer buffer) {
+        vec2.get(buffer.position(),buffer);
+        buffer.position(buffer.position() + 2);
     }
     
     public static void bindZERO(int target) {

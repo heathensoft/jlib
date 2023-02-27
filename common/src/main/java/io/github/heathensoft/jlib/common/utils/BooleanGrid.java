@@ -8,13 +8,13 @@ import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
  */
 
 
-public class BoolArea {
+public class BooleanGrid {
 
     private final BitSet bits;
     private final Area area;
 
 
-    public BoolArea(Area area) {
+    public BooleanGrid(Area area) {
         this.area = new Area(area);
         this.bits = new BitSet(area.size());
     }
@@ -53,6 +53,12 @@ public class BoolArea {
         }
     }
 
+    public void setUnsafe(int x, int y) {
+        int local_x = x - area.minX();
+        int local_y = y - area.minY();
+        bits.setUnsafe(local_x + local_y * area.cols());
+    }
+
     public void set(int x, int y) {
         if (area.contains(x, y)) {
             int local_x = x - area.minX();
@@ -69,6 +75,12 @@ public class BoolArea {
         }
     }
 
+    public boolean getUnsafe(int x, int y) {
+        int local_x = x - area.minX();
+        int local_y = y - area.minY();
+        return bits.getUnsafe(local_x + local_y * area.cols());
+    }
+
     public boolean get(int x, int y) {
         if (area.contains(x, y)) {
             int local_x = x - area.minX();
@@ -77,6 +89,14 @@ public class BoolArea {
         } return false;
     }
 
+    public Area area() {
+        return area;
+    }
+
+    public Area area(Area dest) {
+        dest.set(area);
+        return dest;
+    }
 
     public void clear() {
         bits.clear();

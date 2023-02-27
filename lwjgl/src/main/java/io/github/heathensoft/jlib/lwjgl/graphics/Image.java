@@ -21,7 +21,9 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 
 
 public class Image implements Disposable {
-    
+
+    public static boolean SRGB_TO_LINEAR_CONVERSION = false;
+
     private final int width;
     private final int height;
     private ByteBuffer data;
@@ -49,8 +51,8 @@ public class Image implements Disposable {
             switch (c.get(0)) {
                 case 1  -> format = TextureFormat.R8_UNSIGNED_NORMALIZED;
                 case 2  -> format = TextureFormat.RG8_UNSIGNED_NORMALIZED;
-                case 3  -> format = TextureFormat.RGB8_UNSIGNED_NORMALIZED;
-                case 4  -> format = TextureFormat.RGBA8_UNSIGNED_NORMALIZED;
+                case 3  -> format = SRGB_TO_LINEAR_CONVERSION ? TextureFormat.SRGB8_UNSIGNED_NORMALIZED : TextureFormat.RGB8_UNSIGNED_NORMALIZED;
+                case 4  -> format = SRGB_TO_LINEAR_CONVERSION ? TextureFormat.SRGBA8_UNSIGNED_NORMALIZED : TextureFormat.RGBA8_UNSIGNED_NORMALIZED;
                 default -> format = TextureFormat.INVALID;
             }
         }

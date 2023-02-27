@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import org.joml.Math;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.*;
@@ -66,6 +67,7 @@ public class Texture implements Disposable {
         texture.bindToActiveSlot();
         texture.allocate(image.format(),mipmap);
         texture.uploadData(image.data());
+        Texture.unbindActiveSlot(texture.target());
         return texture;
     }
 
@@ -515,5 +517,22 @@ public class Texture implements Disposable {
 
     private int calculateMipmapLevels() {
         return MathLib.log2(Math.min(width,height)) + 1;
+    }
+
+    public static void setActiveSlot(int slot) {
+        slot = Math.clamp(0,31, slot);
+        if (slot != active_slot) {
+            glActiveTexture(slot + GL_TEXTURE0);
+            active_slot = slot;
+        }
+    }
+
+    public static void unbindActiveSlot(int target) {
+        glBindTexture(target,0);
+    }
+
+    public static void unbind(int slot, int target) {
+        setActiveSlot(slot);
+        unbindActiveSlot(target);
     }
 }

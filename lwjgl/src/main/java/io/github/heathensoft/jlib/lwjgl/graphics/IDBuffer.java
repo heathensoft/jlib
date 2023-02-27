@@ -66,6 +66,7 @@ public class IDBuffer extends Framebuffer {
         pbo.bind();
         pbo.bufferData((long) width * height * Integer.BYTES);
         BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER);
+        Texture.unbindActiveSlot(uid_texture.target());
     }
 
     public void readID(Vector2f mouseViewport) {

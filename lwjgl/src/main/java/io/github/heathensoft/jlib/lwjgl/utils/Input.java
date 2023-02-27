@@ -1,5 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
+import io.github.heathensoft.jlib.common.storage.generic.Queue;
+import io.github.heathensoft.jlib.common.storage.generic.Reader;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.InputProcessor;
 import io.github.heathensoft.jlib.lwjgl.window.Keyboard;
@@ -16,12 +18,15 @@ import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 
 public class Input extends InputProcessor {
 
+    public static final int DROPPED_FILES_CAP = 32;
     private static Input instance;
 
     private final Mouse mouse;
     private final Keyboard keyboard;
+    private final Queue<String> fileDropQueue;
 
     private Input() {
+        this.fileDropQueue = new Queue<>(4);
         this.keyboard = new Keyboard();
         this.mouse = new Mouse();
     }
@@ -41,6 +46,14 @@ public class Input extends InputProcessor {
 
     public Mouse mouse() {
         return mouse;
+    }
+
+    public void collectDroppedFiles(Reader<String> collector) {
+        fileDropQueue.collect(collector);
+    }
+
+    public boolean anyFilesDropped() {
+        return !fileDropQueue.isEmpty();
     }
 
     @Override
@@ -77,6 +90,13 @@ public class Input extends InputProcessor {
     @Override
     protected void on_mouse_enter(boolean enter) {
         mouse.on_mouse_enter(enter);
+    }
+
+    @Override
+    protected void on_file_drop(String path) {
+        if (fileDropQueue.size() == DROPPED_FILES_CAP) {
+            fileDropQueue.dequeue();
+        } fileDropQueue.enqueue(path);
     }
 
     @Override

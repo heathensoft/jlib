@@ -20,6 +20,7 @@ import static org.lwjgl.opengl.GL11.GL_NEAREST;
 public class Color {
 
 
+    public static final Color ERROR = Color.valueOf("FF69B4FF");
     public static final Color EMPTY = new Color(0x00000000);
     public static final Color BLACK = new Color(0x000000FF);
     public static final Color WHITE = new Color(0xFFFFFFFF);
@@ -187,64 +188,6 @@ public class Color {
         return ((int)(255 * a) << 24) | ((int)(255 * b) << 16) | ((int)(255 * g) << 8) | ((int)(255 * r));
     }
 
-    /**
-     * The color in Cie-L*ab format (color space)
-     * Used for calculations to do with how "far apart" two colors are visually.
-     * @param dest the destination for lab-color
-     * @return the destination converted to lab-color
-     */
-    public Vector3f toLAB(Vector3f dest) {
-        return toCIE_LAB(toXYZ(dest));
-    }
-
-    /**
-     * D65/2° standard illuminant
-     * @param rgb the (rgb normalized) destination vec3
-     * @return the destination vec3
-     */
-    private Vector3f toXYZ(Vector3f rgb) {
-        float r = this.r;
-        float g = this.g;
-        float b = this.b;
-        if (r > 0.04045) r = (float) Math.pow( ((r + 0.055f) / 1.055f ), 2.4f);
-        else r /= 12.92f;
-        if (g > 0.04045) g = (float) Math.pow( ((g + 0.055f) / 1.055f ), 2.4f);
-        else g /= 12.92f;
-        if (b > 0.04045) b = (float) Math.pow( ((b + 0.055f) / 1.055f ), 2.4f);
-        else b /= 12.92f;
-        r *= 100;
-        g *= 100;
-        b *= 100;
-        return rgb.set(
-                r * 0.4124 + g * 0.3576 + b * 0.1805,
-                r * 0.2126 + g * 0.7152 + b * 0.0722,
-                r * 0.0193 + g * 0.1192 + b * 0.9505
-        );
-    }
-
-    // reference below http://www.easyrgb.com/en/math.php#text2
-    private static final Vector3f CIE_1964_DAYLIGHT_sRGB = new Vector3f(95.047f,100.000f,108.883f);
-
-    private Vector3f toCIE_LAB(Vector3f xyz) {
-        xyz.div(CIE_1964_DAYLIGHT_sRGB);
-        float x = xyz.x;
-        float y = xyz.y;
-        float z = xyz.z;
-        float a = 1/3f;
-        float b = 16/116f;
-        if(x > 0.008856) x = (float) Math.pow(x,a);
-        else x = ( 7.787f * x ) + b;
-        if(y > 0.008856) y = (float) Math.pow(y,a);
-        else y = ( 7.787f * y ) + b;
-        if(z > 0.008856) z = (float) Math.pow(z,a);
-        else z = ( 7.787f * z ) + b;
-        return xyz.set(
-                ( 116f * y ) - 16,
-                500f * ( x - y ),
-                200f * ( y - z )
-        );
-    }
-    
     /** Returns the color encoded as hex string with the format RRGGBBAA. */
     public String toString () {
         String value = Integer
@@ -497,79 +440,5 @@ public class Color {
         return new Color(this);
     }
 
-    /**
-     * Creates a 3D RGB-8 texture of size: texture_size ^3 where rgb values
-     * are set to the visually most similar palette color.
-     * The size of the texture should be in the power of 2.
-     * You can look at the size as sampler precision.
-     * A size of 64 should be good for a 256 color palette.
-     * @param paletteColors colors in the palette
-     * @param texture_size the dimensions you want for the sampler texture
-     * @return sampler texture used to convert any rgb value to a visually similar palette color
-     */
-    public static Texture paletteSampler3D(List<Color> paletteColors, int texture_size) { // texture size 64
-        int num_palette_colors = paletteColors.size();
-        List<Vector3f> paletteLAB = new ArrayList<>(num_palette_colors);
-        for (Color color : paletteColors) {
-            paletteLAB.add(color.toLAB(new Vector3f()));
-        } Color sampleColor = new Color();
-        Color closestColor = new Color();
-        Vector3f sampleRGB = new Vector3f();
-        Vector3f sampleLAB = new Vector3f();
-        Vector3f size = new Vector3f(texture_size);
-        int bytes = texture_size * texture_size * texture_size * 3;
-        ByteBuffer pixels = MemoryUtil.memAlloc(bytes);
-        for (int r = 0; r < texture_size; r++) {
-            for (int g = 0; g < texture_size; g++) {
-                for (int b = 0; b < texture_size; b++) {
-                    //int idx = 3 * ((r * S * S) + (g * S) + b);
-                    sampleRGB.set(b,g,r).div(size); // invert (rgb -> bgr)
-                    sampleColor.set(sampleRGB.x,sampleRGB.y,sampleRGB.z,1f);
-                    sampleLAB = sampleColor.toLAB(sampleLAB);
-                    float d_min = Float.MAX_VALUE;
-                    for (int i = 0; i < num_palette_colors; i++) {
-                        float d = paletteLAB.get(i).distance(sampleLAB);
-                        if (d < d_min) {
-                            closestColor.set(paletteColors.get(i));
-                            d_min = d;
-                        }
-                    } closestColor.getRGB(pixels);
-                }
-            }
-        }
-        Texture texture = Texture.generate3D(texture_size, texture_size, texture_size);
-        texture.bindToActiveSlot();
-        texture.filter(GL_NEAREST,GL_NEAREST);
-        texture.clampToEdge();
-        texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
-        texture.uploadData(pixels.flip());
-        MemoryUtil.memFree(pixels);
-        return texture;
-    }
-
-
-    /*
-Observer	2° (CIE 1931)	10° (CIE 1964)	Note
-Illuminant	X2	Y2	Z2	X10	Y10	Z10
-A	109.850	100.000	35.585	111.144	100.000	35.200	Incandescent/tungsten
-B	99.0927	100.000	85.313	99.178;	100.000	84.3493	Old direct sunlight at noon
-C	98.074	100.000	118.232	97.285	100.000	116.145	Old daylight
-D50	96.422	100.000	82.521	96.720	100.000	81.427	ICC profile PCS
-D55	95.682	100.000	92.149	95.799	100.000	90.926	Mid-morning daylight
-D65	95.047	100.000	108.883	94.811	100.000	107.304	Daylight, sRGB, Adobe-RGB
-D75	94.972	100.000	122.638	94.416	100.000	120.641	North sky daylight
-E	100.000	100.000	100.000	100.000	100.000	100.000	Equal energy
-F1	92.834	100.000	103.665	94.791	100.000	103.191	Daylight Fluorescent
-F2	99.187	100.000	67.395	103.280	100.000	69.026	Cool fluorescent
-F3	103.754	100.000	49.861	108.968	100.000	51.965	White Fluorescent
-F4	109.147	100.000	38.813	114.961	100.000	40.963	Warm White Fluorescent
-F5	90.872	100.000	98.723	93.369	100.000	98.636	Daylight Fluorescent
-F6	97.309	100.000	60.191	102.148	100.000	62.074	Lite White Fluorescent
-F7	95.044	100.000	108.755	95.792	100.000	107.687	Daylight fluorescent, D65 simulator
-F8	96.413	100.000	82.333	97.115	100.000	81.135	Sylvania F40, D50 simulator
-F9	100.365	100.000	67.868	102.116	100.000	67.826	Cool White Fluorescent
-F10	96.174	100.000	81.712	99.001	100.000	83.134	Ultralume 50, Philips TL85
-F11	100.966	100.000	64.370	103.866	100.000	65.627	Ultralume 40, Philips TL84
-F12	108.046	100.000	39.228	111.428	100.000	40.353	Ultralume 30, Philips TL83
-     */
+    
 }

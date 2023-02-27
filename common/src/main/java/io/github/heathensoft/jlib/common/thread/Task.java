@@ -1,7 +1,10 @@
 package io.github.heathensoft.jlib.common.thread;
 
 /**
- * Task executed by runnable Worker
+ *
+ * NO CALLS TO OpenGL!
+ *
+ * Task executed by Callable Worker
  *
  * note: total time = wait + runtime
  *
@@ -11,29 +14,26 @@ package io.github.heathensoft.jlib.common.thread;
 
 
 public interface Task {
-    
+
     /**
-     * run() called in worker
-     * @param thread task running thread
-     * @param waited_ms time spent in queue milliseconds
-     * @throws Exception You can safely throw exceptions in method
-     *         throwing an exception exits with the exception and status: -1
-     */
-    void start(long thread, long waited_ms) throws Exception;
-    
-    /**
-     * Equivalent to runnable run()
+     * Worker Thread
      * @return status of process. Could be whatever you want.
+     * @param queue_time_ms spent in queue milliseconds
      * @throws Exception You can safely throw exceptions in method
-     *         throwing an exception exits with the exception and status: -1
+     *         throwing an exception here completes with this exception and status: -1
      */
-    int process() throws Exception;
+    int process(long queue_time_ms) throws Exception;
     
     /**
-     *
-     * @param e exception thrown by start() and process()
-     * @param status status returned by process
+     * Super Thread
+     * @param e any exception thrown by process() or RejectedExecutionException
+     *          if the task got rejected (Thread pool full)
+     * @param status completion status. -1 if the process threw an exception
+     *               or if the task got rejected (Thread pool full)
      * @param runtime_ms time spent processing milliseconds
      */
-    void exit(Exception e, int status, long runtime_ms);
+    void onCompletion(Exception e, int status, long runtime_ms);
+
+
+
 }

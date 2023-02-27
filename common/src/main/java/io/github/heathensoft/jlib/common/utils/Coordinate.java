@@ -25,6 +25,22 @@ public class Coordinate {
     }
     
     public void set(int x, int y) { this.x = x; this.y = y; }
+
+    public void sub(Coordinate c) {
+        sub(c.x,c.y);
+    }
+
+    public void sub(int x, int y) {
+        this.x -= x; this.y -= y;
+    }
+
+    public void add(Coordinate c) {
+        add(c.x,c.y);
+    }
+
+    public void add(int x, int y) {
+        this.x += x; this.y += y;
+    }
     
     /**
      * @param o coordinata

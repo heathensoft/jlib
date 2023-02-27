@@ -103,6 +103,7 @@ public class NormalMap {
         texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED,mipmap);
         if (mipmap) texture.generateMipmap();
         texture.uploadData(get());
+        Texture.unbindActiveSlot(texture.target());
         return texture;
     }
     

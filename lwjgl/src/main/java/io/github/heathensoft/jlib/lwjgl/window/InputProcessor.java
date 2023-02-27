@@ -43,9 +43,13 @@ public abstract class InputProcessor {
     protected void on_mouse_scroll(float amount) {}
     
     protected void on_mouse_enter(boolean enter) {}
-    
+
+    protected void on_file_drop(String path) {}
+
     protected void controller_connect(int id, boolean connect) {}
-    
+
     protected void process_input(float delta) {}
+
+
     
 }

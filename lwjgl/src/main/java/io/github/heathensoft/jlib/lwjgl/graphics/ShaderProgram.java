@@ -244,7 +244,7 @@ public class ShaderProgram implements Disposable {
     public void setUniform4iv(String name, int[] array) {
         glUniform4iv(uniforms.get(name),array);
     }
-    
+
     public void setUniform1iv(String name, IntBuffer buffer) {
         glUniform1iv(uniforms.get(name),buffer);
     }
@@ -331,6 +331,59 @@ public class ShaderProgram implements Disposable {
     
     public void setUniform4fv(String name, FloatBuffer buffer) {
         glUniform1fv(uniforms.get(name),buffer);
+    }
+
+    public void setUniformSampler(String name, int v0) {
+        setUniform1i(name,v0);
+    }
+
+    public void setUniformSamplers(String name, int v0, int v1) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(2);
+            setUniform1iv(name,buffer.put(v0).put(v1).flip());
+        }
+    }
+
+    public void setUniformSamplers(String name, int v0, int v1, int v2) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(3);
+            setUniform1iv(name,buffer.put(v0).put(v1).put(v2).flip());
+        }
+    }
+
+    public void setUniformSamplers(String name, int v0, int v1, int v2, int v3) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(4);
+            setUniform1iv(name,buffer.put(v0).put(v1).put(v2).put(v3).flip());
+        }
+    }
+
+    public void setUniformSamplers(String name, int v0, int v1, int v2, int v3, int v4) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(5);
+            setUniform1iv(name,buffer.put(v0).put(v1).put(v2).put(v3).put(v4).flip());
+        }
+    }
+
+    public void setUniformSamplers(String name, int v0, int v1, int v2, int v3, int v4, int v5) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(6);
+            setUniform1iv(name,buffer.put(v0).put(v1).put(v2).put(v3).put(v4).put(v5).flip());
+        }
+    }
+
+    public void setUniformSamplers(String name, int v0, int v1, int v2, int v3, int v4, int v5, int v6) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(7);
+            setUniform1iv(name,buffer.put(v0).put(v1).put(v2).put(v3).put(v4).put(v5).put(v6).flip());
+        }
+    }
+
+    public void setUniformSamplers(String name, int v0, int v1, int v2, int v3, int v4, int v5, int v6, int v7) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(8);
+            setUniform1iv(name,buffer.put(v0).put(v1).put(v2).put(v3).put(v4).put(v5).put(v6).put(v7).flip());
+        }
     }
     
     public void use() {

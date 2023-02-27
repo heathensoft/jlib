@@ -343,6 +343,7 @@ public class Window extends AbstractWindow {
     
     @Override
     protected void setInputCallbacks() {
+        glfwSetDropCallback(window,drop_callback);
         glfwSetKeyCallback(window,key_callback);
         glfwSetCharCallback(window,char_callback);
         glfwSetCursorEnterCallback(window,cursor_enter_callback);
@@ -370,6 +371,7 @@ public class Window extends AbstractWindow {
     @Override
     protected void freeInputCallbacks() {
         List<Callback> list = new ArrayList<>();
+        list.add(glfwSetDropCallback(window,null));
         list.add(glfwSetKeyCallback(window,null));
         list.add(glfwSetCharCallback(window,null));
         list.add(glfwSetCursorEnterCallback(window,null));
@@ -686,6 +688,14 @@ public class Window extends AbstractWindow {
             return Optional.empty();
         }
     }
+
+    private final GLFWDropCallback drop_callback = new GLFWDropCallback() {
+        public void invoke(long window, int count, long names) {
+            for (int i = 0; i < count; i++) {
+                current_processor.on_file_drop(GLFWDropCallback.getName(names,i));
+            }
+        }
+    };
 
     private final GLFWMonitorCallback monitor_callback = new GLFWMonitorCallback() {
         public void invoke(long monitor, int event) {

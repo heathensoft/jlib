@@ -113,6 +113,10 @@ public class Area {
         maxX = Math.max(maxX, o.maxX);
         maxY = Math.max(maxY, o.maxY);
     }
+
+    public void translate(Coordinate c) {
+        translate(c.x,c.y);
+    }
     
     public void translate(int x, int y) {
         minX += x;

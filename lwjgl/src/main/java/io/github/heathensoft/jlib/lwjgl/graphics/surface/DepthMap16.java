@@ -42,6 +42,7 @@ public class DepthMap16 {
         texture.allocate(TextureFormat.R16_UNSIGNED_NORMALIZED,mipmap);
         if (mipmap) texture.generateMipmap();
         texture.uploadData(get());
+        Texture.unbindActiveSlot(texture.target());
         return texture;
     }
     

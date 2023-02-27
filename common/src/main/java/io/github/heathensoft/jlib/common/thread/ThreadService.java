@@ -1,8 +1,9 @@
 package io.github.heathensoft.jlib.common.thread;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.storage.generic.Pool;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -14,57 +15,93 @@ import java.util.concurrent.*;
 public class ThreadService implements Disposable {
     
     private final ExecutorService executor;
-    private final Pool<Worker> workerPool;
-    private final Object lock = new Object();
+    private final List<Future<Worker>> futures;
     
     public ThreadService() {
-        this(4,16,3000);
+        this(4,24,3000);
     }
     
     public ThreadService(int core_pool_size, int max_pool_size, int keep_alive_time) {
+        futures = new ArrayList<>();
         executor = new ThreadPoolExecutor(
                 core_pool_size,
                 max_pool_size,
                 keep_alive_time,
                 TimeUnit.MILLISECONDS,
-                new PriorityBlockingQueue<>()
-        );
-        workerPool = new Pool<>(max_pool_size) {
-            @Override
-            protected Worker newObject() {
-                return new Worker();
+                new ArrayBlockingQueue<>(512));
+    }
+
+    public void update() {
+        if (!executor.isShutdown()) {
+            for (int i = futures.size() - 1; i >= 0; i--) {
+                if (futures.get(i).isDone()) {
+                    Worker worker = null;
+                    try { futures.remove(i).get().finish();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-        }; workerPool.fill(max_pool_size);
+        }
     }
-    
+
     public void handle(Task task) {
-        handle(task,0);
-    }
-    
-    public void handle(Task task, int priority) {
-        Worker worker;
-        synchronized (lock) {
-            worker = workerPool.obtain();
-        } worker.set(this, task, priority);
-        worker.onEnqueue();
-        executor.submit(worker);
-    }
-    
-    public static void handleDirect(Task task) {
-        Worker worker = new Worker();
-        worker.set(null, task, 0);
-        worker.onEnqueue();
-        worker.run();
-    }
-    
-    final void free(Worker worker) {
-        synchronized (lock) {
-            workerPool.free(worker);
+        try { futures.add(executor.submit(new Worker(task)));
+        } catch (RejectedExecutionException e) {
+            task.onCompletion(e,-1,0);
         }
     }
     
-    @Override
+    public static void handleDirect(Task task) {
+        new Worker(task).call().finish();
+    }
+
+    public ThreadPoolExecutor executor() {
+        return ((ThreadPoolExecutor)executor);
+    }
+
     public void dispose() {
         executor.shutdown();
+        try {
+            if (!executor.awaitTermination(30,TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+                if (!executor.awaitTermination(30,TimeUnit.SECONDS)) {
+                    System.err.println("Thread-Pools failed to terminate after 60 seconds");
+                }
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private static final class Worker implements Callable<Worker> {
+
+        private Exception exception;
+        private final Task task;
+        private int status;
+        private long time;
+
+        Worker(Task task) {
+            this.time = System.currentTimeMillis();
+            this.task = task;
+        }
+
+        public Worker call() {
+            long wait = System.currentTimeMillis() - time;
+            try { status = task.process(wait);
+            } catch (Exception e) {
+                exception = e;
+                status = -1;
+            } finally {
+                time = System.currentTimeMillis() - time - wait;
+            } return this;
+        }
+
+        void finish() {
+            task.onCompletion(exception, status, time);
+        }
+
+
     }
 }
