@@ -2,8 +2,3 @@
 SpriteBatch
 
     Make sure rotation is working correctly
-
-
-IO
-
-    remove file and folder

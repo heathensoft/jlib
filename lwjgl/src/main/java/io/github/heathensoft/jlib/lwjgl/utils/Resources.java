@@ -40,6 +40,7 @@ public class Resources {
         clazz = getClass();
     }
 
+
     public List<String> getResourceFiles(String dir) throws IOException {
         List<String> filenames = new ArrayList<>();
         try (InputStream is = clazz.getClassLoader().getResourceAsStream(dir)){

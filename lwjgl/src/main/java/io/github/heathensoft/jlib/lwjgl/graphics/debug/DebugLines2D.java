@@ -4,6 +4,7 @@ import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.graphics.*;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;
 import org.tinylog.Logger;
 
@@ -81,6 +82,17 @@ public class DebugLines2D {
             vertices.put(x0).put(y0).put(color).put(x1).put(y1).put(color);
             line_count++;
         }
+    }
+
+    public static void drawGrid(Vector2f center, Vector2f viewport, float zoom, int grid_size) {
+        float vp_x_half = viewport.x / 2f * zoom;
+        float vp_y_half = viewport.y / 2f * zoom;
+        int x0 = closestNumber((int) Math.ceil(center.x - vp_x_half),grid_size) - grid_size;
+        int x1 = closestNumber((int) Math.ceil(center.x + vp_x_half),grid_size) + grid_size;
+        int y0 = closestNumber((int) Math.ceil(center.y - vp_y_half),grid_size) - grid_size;
+        int y1 = closestNumber((int) Math.ceil(center.y + vp_y_half),grid_size) + grid_size;
+        for (int c = x0; c <= x1; c += grid_size) DebugLines2D.drawVertical(y0,y1,c);
+        for (int r = y0; r <= y1; r += grid_size) DebugLines2D.drawHorizontal(x0,x1,r);
     }
 
     public static void drawGrid(OrthographicCamera camera, int grid_size, boolean begin, boolean end) {

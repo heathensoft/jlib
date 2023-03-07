@@ -10,10 +10,12 @@ import java.nio.file.*;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ * Utility IO class
  * If you want to move files. You can copy them to the new path, then delete this.
  *
  * @author Frederik Dahl
@@ -155,6 +157,10 @@ public class External {
                 parent.createDirectories();
             } Files.createFile(path);
         }
+    }
+
+    public External resolve(String other) throws InvalidPathException {
+        return new External(path.resolve(other));
     }
 
     public void createDirectories() throws IOException {

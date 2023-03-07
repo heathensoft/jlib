@@ -28,6 +28,7 @@ public class Image implements Disposable {
     private final int height;
     private ByteBuffer data;
     private final TextureFormat format;
+
     
     public Image(ByteBuffer buffer) throws Exception {
         this(buffer,false);
