@@ -46,6 +46,7 @@ public class ThreadService implements Disposable {
     }
 
     public void handle(Task task) {
+        if (executor.isShutdown()) handleDirect(task);
         try { futures.add(executor.submit(new Worker(task)));
         } catch (RejectedExecutionException e) {
             task.onCompletion(e,-1,0);

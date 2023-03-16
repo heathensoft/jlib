@@ -32,7 +32,7 @@ public interface Task {
      *               or if the task got rejected (Thread pool full)
      * @param runtime_ms time spent processing milliseconds
      */
-    void onCompletion(Exception e, int status, long runtime_ms);
+    default void onCompletion(Exception e, int status, long runtime_ms) {}
 
 
 

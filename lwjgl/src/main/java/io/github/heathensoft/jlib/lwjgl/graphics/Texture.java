@@ -1,8 +1,13 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.io.Repository;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.Math;
+import org.lwjgl.stb.STBIWriteCallback;
+import org.lwjgl.stb.STBImageWrite;
+import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.*;
@@ -15,6 +20,7 @@ import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL42.*;
+import static org.lwjgl.stb.STBImageWrite.stbi_flip_vertically_on_write;
 
 /**
  * @author Frederik Dahl
@@ -458,6 +464,32 @@ public class Texture implements Disposable {
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag);
     }
 
+    public void toRepository(final Repository repository, String key, boolean replace) {
+        if (target == GL_TEXTURE_2D || target == GL_TEXTURE_1D) {
+            if (!replace && repository.contains(key)) return;
+            int w = width;
+            int h = height;
+            int c = format().channels;
+            int stride = w * c;
+            int raw_size = stride * h;
+            long window = Engine.get().window().handle();
+            ByteBuffer texture_data = MemoryUtil.memAlloc(raw_size);
+            bindToActiveSlot();
+            get(texture_data);
+            STBIWriteCallback callback = new STBIWriteCallback() {
+                public void invoke(long context, long data, int size) {
+                    ByteBuffer _native = STBIWriteCallback.getData(data, size);
+                    ByteBuffer _direct = ByteBuffer.allocateDirect(size);
+                    for (int i = 0; i < size; i++) {
+                        _direct.put(_native.get(i));
+                    } repository.put(key,_direct.flip(),replace);
+                }
+            }; stbi_flip_vertically_on_write(false);
+            STBImageWrite.stbi_write_png_to_func(callback,window,w,h,c,texture_data,stride);
+            MemoryUtil.memFree(texture_data);
+            Callback.free(callback.address());
+        }
+    }
 
     private ByteBuffer toByteBuffer(byte[] array) {
         ByteBuffer buffer = MemoryUtil.memAlloc(array.length);
@@ -517,6 +549,45 @@ public class Texture implements Disposable {
 
     private int calculateMipmapLevels() {
         return MathLib.log2(Math.min(width,height)) + 1;
+    }
+
+    /**
+     * Interleaves 2d-texture data into one singe packed buffer.
+     * The textures must be of equal width and height.
+     * The sum texture channels can exceed 4 (rgba).
+     * @param textures textures to interleave in order
+     * @return the combined texture data. Native malloc
+     */
+    public static ByteBuffer interleave(Texture ...textures) {
+        int channels = 0;
+        int width = textures[0].width();
+        int height = textures[0].height();
+        int pixels = width * height;
+        int count = textures.length;
+        for (Texture texture : textures) {
+            channels += texture.format().channels;
+        } ByteBuffer combined = MemoryUtil.memAlloc(pixels * channels);
+        ByteBuffer[] individual = new ByteBuffer[count];
+        for (int i = 0; i < count; i++) {
+            Texture texture = textures[i];
+            int size = width * height * texture.format().channels;
+            ByteBuffer texture_data = MemoryUtil.memAlloc(size);
+            texture.bindToActiveSlot();
+            texture.get(texture_data);
+            texture_data.position(0);
+            texture_data.limit(size);
+            individual[i] = texture_data;
+        }for (int i = 0; i < pixels; i++) {
+            for (int j = 0; j < count; j++) {
+                int c = textures[j].format().channels;
+                ByteBuffer buffer = individual[j];
+                for (int k = 0; k < c; k++) {
+                    combined.put(buffer.get());
+                }
+            }
+        }for (ByteBuffer buffer : individual) {
+            MemoryUtil.memFree(buffer.flip());
+        } return combined.flip();
     }
 
     public static void setActiveSlot(int slot) {

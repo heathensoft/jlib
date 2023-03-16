@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
@@ -28,7 +29,7 @@ import static org.lwjgl.opengl.GL32.glFramebufferTexture;
 
 public class Framebuffer implements Disposable {
 
-    private static final Color DEFAULT_CLEAR_COLOR = Color.EMPTY.cpy();
+    private static final Vector4f DEFAULT_CLEAR_COLOR = new Vector4f(0f,0f,0f,0f);
     private static int DEFAULT_CLEAR_MASK = GL_COLOR_BUFFER_BIT;
     private static Framebuffer readBuffer = null;
     private static Framebuffer drawBuffer = null;
@@ -37,7 +38,7 @@ public class Framebuffer implements Disposable {
     protected int width;
     protected int height;
     protected int clear_mask;
-    protected Color clear_color;
+    protected Vector4f clear_color;
     protected ColorAttachment[] colorAttachments;
     protected NonColorAttachment depthAttachment;
     protected NonColorAttachment stencilAttachment;
@@ -48,7 +49,7 @@ public class Framebuffer implements Disposable {
         this.width = width;
         this.height = height;
         this.clear_mask = GL_COLOR_BUFFER_BIT;
-        this.clear_color = Color.EMPTY.cpy();
+        this.clear_color = new Vector4f(DEFAULT_CLEAR_COLOR);
         this.colorAttachments = new ColorAttachment[16];
     }
 
@@ -246,13 +247,13 @@ public class Framebuffer implements Disposable {
     }
 
     public static void clear() {
-        int clearMask; Color c;
+        int clearMask; Vector4f c;
         if (usingDefaultDrawBuffer()) {
             c = DEFAULT_CLEAR_COLOR;
             clearMask = DEFAULT_CLEAR_MASK;
         } else { c = drawBuffer.clear_color;
             clearMask = drawBuffer.clear_mask;
-        } glClearColor(c.r,c.g,c.b,c.a);
+        } glClearColor(c.x,c.y,c.z,c.w);
         glClear(clearMask);
     }
 
@@ -274,13 +275,13 @@ public class Framebuffer implements Disposable {
         glClearBufferuiv(GL_COLOR,index,value);
     }
 
-    public static void clearColorBufferNormalized(int index, Color clearColor) {
+    public static void clearColorBufferNormalized(int index, Vector4f clearColor) {
         try (MemoryStack stack = MemoryStack.stackPush()){
             FloatBuffer color = stack.mallocFloat(4);
-            color.put(clearColor.r);
-            color.put(clearColor.g);
-            color.put(clearColor.b);
-            color.put(clearColor.a);
+            color.put(clearColor.x);
+            color.put(clearColor.y);
+            color.put(clearColor.z);
+            color.put(clearColor.w);
             clearColorBufferNormalized(index,color.flip());
         }
     }

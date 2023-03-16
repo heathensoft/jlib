@@ -106,14 +106,21 @@ public final class Engine {
             } catch (Exception e) {
                 Logger.error(e);
             } finally {
-                if (threadPool != null) {
-                    Logger.info("thread pool shutdown");
-                    threadPool.dispose();
-                } Logger.info("exiting application");
+                Logger.info("exiting application");
                 app.on_exit();
                 Logger.info("terminating window");
                 window.terminate();
-
+                if (threadPool != null) {
+                    try {
+                        for (int i = 0; i < 60; i++) {
+                            Thread.sleep(16);
+                            threadPool.update();
+                        } Logger.info("thread pool, shutdown");
+                        threadPool.dispose();
+                    } catch (Exception e) {
+                        Logger.error(e);
+                    }
+                }
             }
         }
     }

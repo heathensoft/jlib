@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.tiles.physics;
 
 
 import io.github.heathensoft.jlib.common.utils.Coordinate;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color;
+import io.github.heathensoft.jlib.lwjgl.graphics.Color32;
 import org.joml.Vector2f;
 
 import java.nio.FloatBuffer;
@@ -26,12 +26,12 @@ public class Light2D {
     private final Geometry context;
     private final List<Ray2D> rays;
     private final Vector2f origin;
-    private final Color color;
+    private final Color32 color;
     private float intensity;
     private float radius;
     private float height;
     
-    public Light2D(Geometry context, Vector2f origin, Color color, float radius, float height) {
+    public Light2D(Geometry context, Vector2f origin, Color32 color, float radius, float height) {
         this.rays = new ArrayList<>();
         this.context = context;
         this.origin = origin;
@@ -40,12 +40,12 @@ public class Light2D {
         this.height = height;
     }
     
-    public Light2D(Geometry context, Vector2f origin, Color color, float radius) {
+    public Light2D(Geometry context, Vector2f origin, Color32 color, float radius) {
         this(context,origin,color,radius,1f);
     }
     
     public Light2D(Geometry context, Vector2f origin, float radius) {
-        this(context,origin,new Color(),radius);
+        this(context,origin,new Color32(),radius);
     }
     
     public void get(FloatBuffer buffer) {
@@ -107,11 +107,11 @@ public class Light2D {
         intensity += amount;
     }
     
-    public Color color() {
+    public Color32 color() {
         return color;
     }
     
-    public void setColor(Color c) {
+    public void setColor(Color32 c) {
         color.set(c);
     }
     

@@ -36,7 +36,8 @@ public class Sprite {
     public static final int VERTEX_SIZE = POS_SIZE + UV_SIZE + COLOR_SIZE + ID_SIZE;
     public static final int SIZE = VERTICES * VERTEX_SIZE;
     
-    public static final Color DEFAULT_COLOR = Color.WHITE;
+
+    public static final Color32 DEFAULT_COLOR = Color32.WHITE;
     
     protected static final int X1 = 0;     // x
     protected static final int Y1 = 1;     // y + h
@@ -64,7 +65,7 @@ public class Sprite {
     protected static final int I4 = 23;
     
     private final float[] data = new float[SIZE];
-    private final Color color = Color.WHITE.cpy();
+    private final Color32 color = Color32.WHITE.cpy();
     private TextureRegion region;
     private float x;
     private float y;
@@ -360,9 +361,9 @@ public class Sprite {
         data[I4] = id;
     }
     
-    public void setColor(Color color) {
+    public void setColor(Color32 color) {
         this.color.set(color);
-        float floatBits = color.toFloatBits();
+        float floatBits = color.floatBits();
         data[C1] = floatBits;
         data[C2] = floatBits;
         data[C3] = floatBits;
@@ -371,7 +372,7 @@ public class Sprite {
     
     public void setColorDefault() {
         this.color.set(DEFAULT_COLOR);
-        float floatBits = color.toFloatBits();
+        float floatBits = color.floatBits();
         data[C1] = floatBits;
         data[C2] = floatBits;
         data[C3] = floatBits;
@@ -379,8 +380,8 @@ public class Sprite {
     }
     
     public void setAlpha (float a) {
-        color.a = a;
-        float floatBits = color.toFloatBits();
+        color.setAlpha(a);
+        float floatBits = color.floatBits();
         data[C1] = floatBits;
         data[C2] = floatBits;
         data[C3] = floatBits;
@@ -514,7 +515,7 @@ public class Sprite {
         return rotation;
     }
     
-    public Color colorReadOnly() {
+    public Color32 colorReadOnly() {
         return color;
     }
     
@@ -531,7 +532,7 @@ public class Sprite {
     
     private void setData(float x, float y, float x2, float y2, float w, float h,
                          float u, float v, float u2, float v2) {
-        float floatBits = color.toFloatBits();
+        float floatBits = color.floatBits();
         data[X1] = x;
         data[Y1] = y2;
         data[U1] = u;
