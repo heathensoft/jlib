@@ -19,7 +19,7 @@ import static org.lwjgl.opengl.GL11.GL_NEAREST;
  */
 
 
-public class Palette32 implements Defined {
+public class Palette implements Defined {
 
     public static final int DEFAULT_TEXTURE_SIZE = 64;
     public static final String DEFAULT_NAME = "Untitled Palette";
@@ -28,25 +28,25 @@ public class Palette32 implements Defined {
     private String name;
     public ArrayList<Color32> colors;
 
-    public Palette32() {
+    public Palette() {
         this(DEFAULT_NAME);
     }
 
-    public Palette32(String name) {
+    public Palette(String name) {
         this.name = name;
         this.name_size = name.getBytes(StandardCharsets.US_ASCII).length;
         this.colors = new ArrayList<>();
     }
 
-    public Palette32(ByteBuffer buffer) {
+    public Palette(ByteBuffer buffer) {
         setProperties(buffer);
     }
 
-    public Palette32(List<String> hexList) {
+    public Palette(List<String> hexList) {
         this(DEFAULT_NAME,hexList);
     }
 
-    public Palette32(String name, List<String> hexList) {
+    public Palette(String name, List<String> hexList) {
         this.name = name;
         this.name_size = name.getBytes(StandardCharsets.US_ASCII).length;
         this.colors = new ArrayList<>(hexList.size());

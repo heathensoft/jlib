@@ -5,7 +5,6 @@ import io.github.heathensoft.jlib.graphicsOld.Framebuffer;
 import io.github.heathensoft.jlib.graphicsOld.ShaderProgram;
 import io.github.heathensoft.jlib.graphicsOld.SpriteBatch;
 import io.github.heathensoft.jlib.gui.GUI;
-import io.github.heathensoft.jlib.lwjgl.utils.ScreenQuad;
 import org.joml.Vector2f;
 
 

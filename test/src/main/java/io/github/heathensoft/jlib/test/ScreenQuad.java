@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.utils;
+package io.github.heathensoft.jlib.test;
 
 
 import io.github.heathensoft.jlib.common.Disposable;
