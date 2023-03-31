@@ -47,7 +47,8 @@ public class TextureAtlas implements Disposable {
     private final Texture texture;
     private final String filename;
     private final List<String> regionNames;
-    private final Map<String,TextureRegion> regions;
+    private final Map<String, TextureRegion> regions;
+    //private final Map<String,TextureRegion> regions;
     
     public TextureAtlas(Texture texture, List<String> layout) throws Exception {
         /* Todo: figure out proper size of map */
@@ -99,14 +100,13 @@ public class TextureAtlas implements Disposable {
             String key = keys.get(i);
             Vector2i xy = xyList.get(i);
             Vector2i wh = whList.get(i);
-            TextureRegion region = new TextureRegion(
-            texture, xy.x, xy.y, wh.x, wh.y);
+            TextureRegion region = new TextureRegion(xy.x, xy.y, wh.x, wh.y,texture.width(),texture.height());
             regions.put(key,region);
             regionNames.add(key);
         }
     }
     
-    public Map<String,TextureRegion> regions() {
+    public Map<String, TextureRegion> regions() {
         return regions;
     }
     

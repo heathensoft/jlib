@@ -27,7 +27,7 @@ import static org.lwjgl.opengl.GL30.glBindBufferRange;
 
 public class BufferObject implements Disposable {
     
-    protected final int target;
+    protected int target;
     protected final int usage;
     protected final int name;
     
@@ -130,7 +130,11 @@ public class BufferObject implements Disposable {
     public void bindBufferRange(int bindingPoint, long offset, long size) {
         glBindBufferRange(target, bindingPoint, name,offset,size);
     }
-    
+
+    public void setTarget(int target) {
+        this.target = target;
+    }
+
     public int name() {
         return name;
     }

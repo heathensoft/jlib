@@ -1,200 +1,112 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
-import org.joml.Vector2f;
-import org.joml.Vector4f;
+import java.nio.FloatBuffer;
 
 /**
  * @author Frederik Dahl
- * 11/12/2021
+ * 21/03/2023
  */
 
 
 public class TextureRegion {
     
-    private int w; // width pixels
-    private int h; // height pixels
-    private int r; // rows of sub-regions
-    private int c; // cols of sub-regions
-    private int e; // num sub-regions
+    private final int texture_width;
+    private final int texture_height;
+    private int x, y, width, height;
+    private float u, v, u2, v2;
     
-    private float sw; // sub-region w normalized
-    private float sh; // sub-region h normalized
-    
-    private float u;
-    private float v;
-    private float u2;
-    private float v2;
-    
-    private Texture texture;
-    
-    public TextureRegion(Texture texture) {
-        this(texture,0,0, texture.width(), texture.height());
+    public TextureRegion(int texture_size) {
+        this(texture_size,texture_size);
     }
     
-    public TextureRegion(Texture texture, int x, int y, int w, int h) {
-        this.texture = texture;
-        setRegion(x, y, w, h);
-        subDivide(1,1);
+    public TextureRegion(int texture_width, int texture_height) {
+        this(0,0, texture_width, texture_height, texture_width, texture_height);
     }
     
-    public TextureRegion(Texture texture, float u, float v, float u2, float v2) {
-        this.texture = texture;
-        setRegion(u, v, u2, v2);
-        subDivide(1,1);
+    public TextureRegion(int x, int y, int width, int height, int texture_width, int texture_height) {
+        this.width = width; this.texture_width = texture_width; this.x = x % texture_width;
+        this.height = height; this.texture_height = texture_height; this.y = y % texture_height;
+        this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
+        this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
+        this.u2 = (float) ((this.x + (width - 1) + 0.5d) / (double) this.texture_width);
+        this.v2 = (float) ((this.y + (height - 1) + 0.5d) / (double) this.texture_height);
+    }
+
+    public TextureRegion(TextureRegion region) {
+        this.texture_height = region.texture_height;
+        this.texture_width = region.texture_width;
+        this.height = region.height;
+        this.width = region.width;
+        this.x = region.x;
+        this.y = region.y;
+        this.u = region.u;
+        this.v = region.v;
+        this.u2 = region.u2;
+        this.v2 = region.v2;
     }
     
-    public void setRegion (int x, int y, int w, int h) {
-        
-        float invTexWidth = 1f / texture.width();
-        float invTexHeight = 1f / texture.height();
-        
-        setRegion(
-                x * invTexWidth,
-                y * invTexHeight,
-                (x + w) * invTexWidth,
-                (y + h) * invTexHeight);
-        
-        this.w = Math.abs(w);
-        this.h = Math.abs(h);
+    public TextureRegion[] subDivide(int rows, int cols, int element_width, int element_height) {
+        TextureRegion[] array = new TextureRegion[rows * cols];
+        for (int row = 0; row < rows; row++) {
+            int local_y = row * element_height;
+            for (int col = 0; col < cols; col++) {
+                int local_x = col * element_width;
+                array[row * cols + col] = subRegion(
+                        local_x,local_y,element_width,element_height);
+            }
+        } return array;
     }
     
-    public void setRegion (float u, float v, float u2, float v2) {
-        
-        int texWidth = texture.width();
-        int texHeight = texture.height();
-        
-        w = Math.round(Math.abs(u2 - u) * texWidth);
-        h = Math.round(Math.abs(v2 - v) * texHeight);
-        
-        if (w == 1 && h == 1) {
-            float adjustX = 0.20f / texWidth;
-            u += adjustX;
-            u2 -= adjustX;
-            float adjustY = 0.20f / texHeight;
-            v += adjustY;
-            v2 -= adjustY;
-        }
-        this.u = u;
-        this.v = v;
-        this.u2 = u2;
-        this.v2 = v2;
+    public TextureRegion[] subDivide(int rows, int cols, int element_size) {
+        return subDivide(rows,cols,element_size,element_size);
     }
     
-    public void set (TextureRegion region) {
-        texture = region.texture;
-        setRegion(region.u, region.v, region.u2, region.v2);
-        subDivide(region.r,region.c);
+    public TextureRegion subRegion(int local_x, int local_y, int w, int h) {
+        return new TextureRegion(x+local_x,y+local_y,w,h, texture_width, texture_height);
     }
     
-    public void subDivide(int x, int y) {
-        this.r = y;
-        this.c = x;
-        this.e = x * y;
-        this.sh = Math.abs(v2-v) / (float) r;
-        this.sw = Math.abs(u2-u) / (float) c;
+    public void scroll(int amount_x, int amount_y) {
+        setPosition(this.x + amount_x, this.y + amount_y);
     }
     
-    /**
-     * If you have the texture coordinates for a mesh in Texture space,
-     * you can use this to convert them to region-space if the prior
-     * texture now is refitted to a texture-atlas.
-     * @param texCoords the texture-coordinates to be adjusted
-     */
-    public void toRegionCoords(float[] texCoords) {
-        final float xRatio = (float) w / (float) texture.width();
-        final float yRatio = (float) h / (float) texture.height();
-        //final float u = isFlippedX() ? this.u2 : this.u;
-        //final float v = isFlippedX() ? this.v2 : this.v;
-        final int l = texCoords.length / 2;
-        int iX, iY;
-        for (int i = 0; i < l; i++) {
-            iX = 2 * i;
-            iY = iX + 1;
-            texCoords[iX] = texCoords[iX] * xRatio + u;
-            texCoords[iY] = texCoords[iY] * yRatio + v;
-        }
+    public void setPosition(int x, int y) {
+        this.x = x % texture_width;
+        this.y = y % texture_height;
+        recalculateUV();
     }
     
-    public void toRegionUVs(Vector4f texUVs) {
-        final float xRatio = (float) w / (float) texture.width();
-        final float yRatio = (float) h / (float) texture.height();
-        texUVs.x = texUVs.x * xRatio + u; // u
-        texUVs.y = texUVs.y * yRatio + v; // v
-        texUVs.z = texUVs.z * xRatio + u; // u2
-        texUVs.w = texUVs.w * yRatio + v; // v2
+    public void setSize(int w, int h) {
+        this.width = w;
+        this.height = h;
+        recalculateUV();
     }
     
-    /**
-     * @param index sub-region index
-     * @return the sub-region coordinates
-     */
-    public Vector4f subRegionUVs(int index) {
-        Vector4f v4 = MathLib.vec4();
-        subRegionUVs(index, v4);
-        return v4;
+    public void resize(int amount_x, int amount_y) {
+        setSize(this.width + amount_x, this.height + amount_y);
     }
     
-    public void subRegionUVs(int index, Vector4f dest) {
-        final int i = index % e;
-        final int col = i % c;
-        final int row = i / c;
-        final float x = u + col * sw;
-        final float y = v + row * sh;
-        dest.set(x,y,x+sw,y+sh);
+    public void flipX() {
+        float f = u;
+        u = u2;
+        u2 = f;
     }
     
-    /**
-     * If you have the uv-coordinates for the region at index 0,
-     * you can add them with the uvOffset for index n
-     * to get the uv-coordinates for the region at index n
-     *
-     * @param index sub-region index
-     * @return the offset from index 0 to index argument
-     */
-    public Vector2f uvOffset(int index) {
-        Vector2f v2 = MathLib.vec2();
-        final int i = index % e;
-        final int col = i % c;
-        final int row = i / c;
-        return v2.set(u + col * sw, v + row * sh);
-    }
-    
-    public TextureRegion subRegion(int index) {
-        Vector4f v = subRegionUVs(index);
-        return new TextureRegion(texture,v.x,v.y,v.z,v.w);
-    }
-    
-    public TextureRegion cpy() {
-        return new TextureRegion(texture,u,v,u2,v2);
-    }
-    
-    public void setTexture(Texture texture) {
-        this.texture = texture;
-    }
-    
-    public Texture texture() {
-        return texture;
-    }
-    
-    public int w() {
-        return w;
-    }
-    
-    public int h() {
-        return h;
+    public void flipY() {
+        float f = v;
+        v = v2;
+        v2 = f;
     }
     
     public float u() {
         return u;
     }
     
-    public float v() {
-        return v;
-    }
-    
     public float u2() {
         return u2;
+    }
+    
+    public float v() {
+        return v;
     }
     
     public float v2() {
@@ -202,84 +114,54 @@ public class TextureRegion {
     }
     
     public int x() {
-        return Math.round(u * texture.width());
+        return x;
     }
     
     public int y() {
-        return Math.round(v * texture.height());
+        return y;
     }
     
-    public int rows() {
-        return r;
+    public int w() {
+        return width;
     }
     
-    public int cols() {
-        return c;
+    public int h() {
+        return height;
     }
     
-    public void setW(int w) {
-        this.w = w;
+    public int textureWidth() {
+        return texture_width;
     }
     
-    public void setX (int x) {
-        setU(x / (float) texture.width());
+    public int textureHeight() {
+        return texture_height;
     }
     
-    public void setY (int y) {
-        setV(y / (float) texture.height());
+    public void getUVs(FloatBuffer buffer) {
+        buffer.put(u).put(v).put(u2).put(v2);
     }
     
-    public void setH(int h) {
-        this.h = h;
-    }
-    
-    public void setRows(int r) {
-        this.r = r;
-        this.e = r * c;
-        this.sh = Math.abs(v2-v) / (float) r;
-    }
-    
-    public void setCols(int c) {
-        this.c = c;
-        this.e = c * r;
-        this.sw = Math.abs(u2-u) / (float) c;
-    }
-    
-    public void setU(float u) {
-        w = Math.round(Math.abs(u2 - (this.u = u)) * texture.width());
-    }
-    
-    public void setV(float v) {
-        h = Math.round(Math.abs(v2 - (this.v = v)) * texture.height());
-    }
-    
-    public void setU2(float u2) {
-        w = Math.round(Math.abs((this.u2 = u2) - u) * texture.width());
-    }
-    
-    public void setV2(float v2) {
-        h = Math.round(Math.abs((this.v2 = v2) - v) * texture.height());
-    }
-    
-    public boolean isFlippedX () {
+    public boolean isFlippedX() {
         return u > u2;
     }
     
-    public boolean isFlippedY () {
+    public boolean isFlippedY() {
         return v > v2;
     }
-    
-    public void flipX() {
-        float temp = u;
-        u = u2;
-        u2 = temp;
+
+    public TextureRegion cpy() {
+        return new TextureRegion(this);
     }
     
-    public void flipY() {
-        float temp = v;
-        v = v2;
-        v2 = temp;
+    private void recalculateUV() {
+        boolean was_flipped_x = isFlippedX();
+        boolean was_flipped_y = isFlippedY();
+        u = (float) ((x + 0.5d) / (double) texture_width);
+        v = (float) ((y + 0.5d) / (double) texture_height);
+        u2 = (float) ((x + (width - 1) + 0.5d) / (double) texture_width);
+        v2 = (float) ((y + (height - 1) + 0.5d) / (double) texture_height);
+        if (was_flipped_x) flipX();
+        if (was_flipped_y) flipY();
     }
-    
     
 }

@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.ai.btree;
 
-import org.joml.Random;
+
+import java.util.Random;
 
 /**
  * @author Frederik Dahl

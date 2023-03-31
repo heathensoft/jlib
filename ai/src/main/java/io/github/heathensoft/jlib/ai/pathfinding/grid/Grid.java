@@ -50,9 +50,8 @@ public interface Grid {
     default int rows() {
         return area().rows();
     }
-    
+
     default int cols() {
         return area().cols();
     }
-    
 }

@@ -120,10 +120,10 @@ public class Rooms {
                 // atp. the set is NOT empty. So we have to find the largest room and flood fill
                 // its id into smaller adjacent rooms.
                 if (unique_rooms.size() == 1){
-                    for (var i : unique_rooms) room_id = i;
+                    for (var i : unique_rooms) room_id = i; // this is correct
                 } else { List<Integer> room_list = new ArrayList<>(unique_rooms);
                     room_list.sort((o1, o2) -> Integer.compare(rooms.get(o2),rooms.get(o1)));
-                    room_id = room_list.get(0);
+                    room_id = room_list.get(0); // room_id is the largest room
                 } int[][] adj = TileUtil.adjacent4;
                 BitSet visited = new BitSet(map_dim.tileCount());
                 IntQueue search_queue = new IntQueue(128);

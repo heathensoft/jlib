@@ -1,7 +1,6 @@
 package io.github.heathensoft.jlib.test;
 
-import io.github.heathensoft.jlib.brush.Brush;
-import io.github.heathensoft.jlib.brush.BrushShape;
+
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.graphicsOld.Color;
 import io.github.heathensoft.jlib.gui.GUI;
@@ -11,24 +10,15 @@ import io.github.heathensoft.jlib.gui.window.Spacing;
 import io.github.heathensoft.jlib.gui.window.VBoxContainer;
 import io.github.heathensoft.jlib.gui.window.window.DynamicWindow;
 import io.github.heathensoft.jlib.gui.window.window.ScrollableBox;
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
-import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
-import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Application;
 import io.github.heathensoft.jlib.lwjgl.window.BootConfiguration;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import org.joml.Vector2f;
-import org.lwjgl.system.MemoryUtil;
-
-import java.nio.ByteBuffer;
 import java.util.List;
 
 import static io.github.heathensoft.jlib.gui.GUI.*;
-import static org.lwjgl.stb.STBImage.stbi_set_flip_vertically_on_load;
-import static org.lwjgl.stb.STBImageWrite.stbi_flip_vertically_on_write;
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 
 /**
@@ -53,25 +43,7 @@ public class UiApp extends Application  {
     }
 
     @Override
-    protected void on_start(Resolution resolution) throws Exception {/*
-        Image img = new Resources().image("res/jlib/hud/background/bg_1.png",true);
-        Texture texture = Texture.image2D(img,true);
-        texture.generateMipmap();
-        int width = texture.width();
-        int height = texture.height();
-        int channels = texture.format().channels;
-        img.dispose();
-        ByteBuffer pixels = MemoryUtil.memAlloc(texture.width() / 2 * texture.height() / 2 * 4);
-        texture.get(pixels,1);
-        stbi_flip_vertically_on_write(true);
-        stbi_write_png("bg.png",width/2,height/2,channels,pixels,width*channels/2);
-        MemoryUtil.memFree(pixels);
-
-         */
-
-
-        Brush brush = new Brush(BrushShape.CIRCLE,64);
-        brush.dispose();
+    protected void on_start(Resolution resolution) throws Exception {
 
         GUI = new GUI(resolution.width(),resolution.height());
         renderer = new Renderer(GUI);

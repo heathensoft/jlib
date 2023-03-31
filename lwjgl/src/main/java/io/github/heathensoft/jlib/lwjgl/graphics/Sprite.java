@@ -1,7 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import org.joml.Math;
-import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 
 /**
@@ -89,15 +88,7 @@ public class Sprite {
         final float v2 = region.v2();
         setData(x,y,x2,y2,w,h,u,v,u2,v2);
     }
-    
-    public Sprite(TextureRegion region, float x, float y, float w, float h, int subRegion) {
-        this.region = region;
-        final float x2 = x + w;
-        final float y2 = y + h;
-        Vector4f uv = region.subRegionUVs(subRegion);
-        setData(x,y,x2,y2,w,h,uv.x,uv.y,uv.z,uv.w);
-    }
-    
+
     public void set(TextureRegion region, float x, float y, float w, float h) {
         this.region = region;
         final float x2 = x + w;
@@ -108,15 +99,7 @@ public class Sprite {
         final float v2 = region.v2();
         setData(x,y,x2,y2,w,h,u,v,u2,v2);
     }
-    
-    public void set(TextureRegion region, float x, float y, float w, float h, int subRegion) {
-        this.region = region;
-        final float x2 = x + w;
-        final float y2 = y + h;
-        Vector4f uv = region.subRegionUVs(subRegion);
-        setData(x,y,x2,y2,w,h,uv.x,uv.y,uv.z,uv.w);
-    }
-    
+
     public float[] data() {
         if (dirty) {
             dirty = false;
@@ -302,40 +285,7 @@ public class Sprite {
         data[Y3] += yAmount;
         data[Y4] += yAmount;
     }
-    
-    public void setRegion(int subRegion) {
-        Vector4f uvs = region.subRegionUVs(subRegion);
-        float u = uvs.x;
-        float v = uvs.y;
-        float u2 = uvs.z;
-        float v2 = uvs.w;
-        data[U1] = u;
-        data[V1] = v;
-        data[U2] = u;
-        data[V2] = v2;
-        data[U3] = u2;
-        data[V3] = v2;
-        data[U4] = u2;
-        data[V4] = v;
-    }
-    
-    public void setRegion(TextureRegion tr, int subRegion) {
-        Vector4f uvs = tr.subRegionUVs(subRegion);
-        float u = uvs.x;
-        float v = uvs.y;
-        float u2 = uvs.z;
-        float v2 = uvs.w;
-        data[U1] = u;
-        data[V1] = v;
-        data[U2] = u;
-        data[V2] = v2;
-        data[U3] = u2;
-        data[V3] = v2;
-        data[U4] = u2;
-        data[V4] = v;
-        region = tr;
-    }
-    
+
     public void setRegion(TextureRegion tr) {
         if (region != tr) {
             float u = tr.u();
@@ -519,7 +469,7 @@ public class Sprite {
         return color;
     }
     
-    public TextureRegion regionReadOnly() {
+    public TextureRegion region() {
         return region;
     }
     

@@ -32,6 +32,13 @@ public class PipelinePass implements Disposable {
         } return instance;
     }
 
+    public static void terminate() {
+        if (instance != null) {
+            instance.dispose();
+            instance = null;
+        }
+    }
+
     private PipelinePass() {
         vertices = MemoryUtil.memAllocFloat(16);
         indexBuffer = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);

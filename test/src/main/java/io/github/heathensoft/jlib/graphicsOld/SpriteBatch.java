@@ -18,7 +18,7 @@ import static io.github.heathensoft.jlib.lwjgl.graphics.Sprite.*;
 
 public class SpriteBatch implements Disposable {
 
-    public static final float DEFAULT_COLOR_BITS = DEFAULT_COLOR.toFloatBits();
+    public static final float DEFAULT_COLOR_BITS = DEFAULT_COLOR.floatBits();
     public static final int MAX_CAPACITY = Short.MAX_VALUE / 4;
     
     private final SpriteVertexData vertexData;

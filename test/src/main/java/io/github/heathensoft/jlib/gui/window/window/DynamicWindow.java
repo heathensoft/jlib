@@ -52,6 +52,7 @@ public class DynamicWindow extends GUIWindow {
         // We want the window to be smaller than the HUD.
         if (desiredW > context.WIDTH || desiredH > context.HEIGHT)
             throw new IllegalStateException("keep window smaller than HUD");
+        area();
         restore();
         center();
         focus();

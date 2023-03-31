@@ -157,8 +157,10 @@ public class GUI implements Disposable {
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         SHADER.prepare(this);
         batch.begin();
+        Debug.out("ffffffff");
         Debug.render(batch,this);
         GUIWindow.renderAll(batch);
+
         GUIHelp.render(batch);
         /*
         float c0 = new Color(1.0f,0,0,1).toFloatBits();

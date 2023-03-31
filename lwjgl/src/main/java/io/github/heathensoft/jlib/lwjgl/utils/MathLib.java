@@ -41,7 +41,7 @@ public class MathLib {
     private static final int rayCount;
     private static final int rayAbbCount;
     private static final int frustumCount;
-    
+
     private static int v4Idx;
     private static int v3Idx;
     private static int v2Idx;
@@ -129,7 +129,6 @@ public class MathLib {
         for (int i=2; i<256; i++) logTable[i] = 1 + logTable[i/2];
         logTable[0] = -1;
 
-
     }
 
     public static int log2(float f) {
@@ -164,7 +163,7 @@ public class MathLib {
             return n1;
         return n2;
     }
-    
+
     public static Vector4f vec4() {
         return vec4[++v4Idx % v4Count];
     }
