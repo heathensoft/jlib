@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.tiles.structure;
 
-import io.github.heathensoft.jlib.ai.pathfinding.grid.Grid;
 import io.github.heathensoft.jlib.common.storage.primitive.IntArray2D;
 import io.github.heathensoft.jlib.common.utils.Area;
 import io.github.heathensoft.jlib.tiles.physics.BlockType;
@@ -12,7 +11,7 @@ import io.github.heathensoft.jlib.tiles.terrain.TerrainType;
  */
 
 
-public abstract class TMap implements Grid {
+public abstract class TMap implements GridDeprecated {
     
     public static final int SECTION_SIZE = 32;
     

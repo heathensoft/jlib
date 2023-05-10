@@ -9,31 +9,6 @@ package io.github.heathensoft.jlib.common.utils;
 public class Rand {
 
 
-    private long instance_last;
-    private long instance_inc;
-
-    public Rand() {
-        this(System.currentTimeMillis());
-    }
-
-    public Rand(long seed) {
-        instance_last = seed | 1;
-        instance_inc = seed;
-    }
-
-    public float nextFloat() {
-        return (float) nextInt(0x2B2A_B5E9) / 0x2B2A_B5E9;
-    }
-
-    public int nextInt(int max) {
-        instance_last ^= (instance_last << 21);
-        instance_last ^= (instance_last >>> 35);
-        instance_last ^= (instance_last << 4);
-        instance_inc += 123456789123456789L;
-        int out = (int) ((instance_last + instance_inc) % max);
-        return (out < 0) ? -out : out;
-    }
-
     public static float noise(float x, float y, int seed, float fq) {
         final float fx = smooth(fract(x * fq));
         final float fy = smooth(fract(y * fq));
@@ -44,11 +19,19 @@ public class Rand {
         return mix(b,t,fy);
     }
 
+    public static float noise_layered(float x, float y, int seed, float fq) {
+        return noise_layered(x, y, seed, fq, 8);
+    }
+
     public static float noise_layered(float x, float y, int seed, float fq, int octaves) {
+        return noise_layered(x, y, seed, fq, octaves, 2.0f);
+    }
+
+    public static float noise_layered(float x, float y, int seed, float fq, int octaves, float lacunarity) {
         float n = 0.0f, amp = 1.0f, acc = 0.0f;
         for (int i = 0; i < octaves; i++) {
             n += noise(x,y,seed++,fq) * amp;
-            acc += amp; amp *= 0.5f; fq *= 2.0f;
+            acc += amp; amp *= 0.5f; fq *= lacunarity;
         } return acc == 0 ? 0 : n / acc;
     }
 
@@ -70,11 +53,19 @@ public class Rand {
         return (hash(x + (0x0BD4BCB5 * y), seed) & 0x7FFF_FFFF) / (float) 0x7FFF_FFFF;
     }
 
-    public static float white_noise(int x, int seed) {
-        return (hash(x,seed) & 0x7FFF_FFFF) / (float) 0x7FFF_FFFF;
+    public static float white_noise(int position, int seed) {
+        return next_int(position,seed) / (float) 0x7FFF_FFFF;
     }
 
-    public static int hash(int value, int seed) {
+    public static int next_int(int position, int seed, int max) {
+        return next_int(position, seed) % (max + 1);
+    }
+
+    public static int next_int(int position, int seed) {
+        return hash(position, seed) & 0x7FFF_FFFF;
+    }
+
+    public static int hash(int value, int seed) { // full range (32 bit)
         long m = (long) value & 0xFFFFFFFFL;
         m *= 0xB5297AAD;
         m += seed;
@@ -85,6 +76,31 @@ public class Rand {
         m ^= (m >> 8);
         return (int) m;
     }
+
+    // ------------------------------------------------------------------------------------
+    // If you don't care about state, you can use these:
+
+    private static long inc = System.currentTimeMillis();
+
+    private static long last = inc | 1;
+
+    public static float nextFloat() {
+        return (nextInt(0x2B2A_B5E9) / (float)0x2B2A_B5E9);
+    }
+
+    public static int nextInt() {
+        return nextInt(Integer.MAX_VALUE);
+    }
+
+    public static int nextInt(int max) {
+        last ^= (last << 21);
+        last ^= (last >>> 35);
+        last ^= (last << 4);
+        inc += 123456789123456789L;
+        int out = (int) ((last + inc) % max);
+        return (out < 0) ? -out : out;
+    }
+    // ------------------------------------------------------------------------------------
 
     private static float fract(double d) {
         return (float) (d - (long) d);

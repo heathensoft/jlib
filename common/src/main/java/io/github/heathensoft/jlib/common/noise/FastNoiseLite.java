@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.common.utils;
+package io.github.heathensoft.jlib.common.noise;
 
 // MIT License
 //

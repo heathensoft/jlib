@@ -26,8 +26,18 @@ public interface Defined {
         return size;
     }
 
+    /**
+     * Set properties of defined object.
+     * The buffer argument position will move by object size
+     * @param buffer the buffer to read from
+     */
     void setProperties(ByteBuffer buffer);
 
+    /**
+     * Get properties of defined object.
+     * The buffer argument position will move by object size
+     * @param buffer the buffer to read from
+     */
     void getProperties(ByteBuffer buffer);
 
     int sizeOfProperties();

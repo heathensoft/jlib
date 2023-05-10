@@ -1,7 +1,5 @@
 package io.github.heathensoft.jlib.tiles.neo;
 
-import io.github.heathensoft.jlib.ai.pathfinding.grid.Room;
-
 import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,7 +48,7 @@ public class Network {
                     if (connected.position() > 0) {
                         connected.flip();
                         while (connected.hasRemaining()) {
-                            tmp_set.add(Room.room_connection_key(room,connected.get()));
+                            tmp_set.add(Tile.room_connection_key(room,connected.get()));
                         } connected.limit(connected.capacity());
 
                     }

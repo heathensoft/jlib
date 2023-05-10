@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
+import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
 
 import java.io.IOException;
 import java.util.List;
@@ -120,7 +120,7 @@ interface PublicWindow {
      * @param hotspotY the cursor hotspot offset x
      * @return a cursor if nothing goes wrong. check the logs.
      */
-    Optional<CursorObject> createCursor(Image image, int hotspotX, int hotspotY);
+    Optional<CursorObject> createCursor(Bitmap image, int hotspotX, int hotspotY);
     
     /**
      * Creates a standard cursor object. Cursors are freed on window termination.

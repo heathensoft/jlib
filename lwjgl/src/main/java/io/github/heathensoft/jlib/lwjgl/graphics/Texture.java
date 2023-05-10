@@ -68,15 +68,6 @@ public class Texture implements Disposable {
         return new Texture(GL_TEXTURE_3D,width,height,depth);
     }
 
-    public static Texture image2D(Image image, boolean mipmap) {
-        Texture texture = generate2D(image.width(),image.height());
-        texture.bindToActiveSlot();
-        texture.allocate(image.format(),mipmap);
-        texture.uploadData(image.data());
-        Texture.unbindActiveSlot(texture.target());
-        return texture;
-    }
-
     public void allocate(TextureFormat format) { allocate(format,false); }
 
     public void allocate(TextureFormat format, boolean mipmap) {

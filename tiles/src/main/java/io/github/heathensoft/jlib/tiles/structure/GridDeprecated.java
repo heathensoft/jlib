@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.ai.pathfinding.grid;
+package io.github.heathensoft.jlib.tiles.structure;
 
 import io.github.heathensoft.jlib.common.utils.Area;
 import io.github.heathensoft.jlib.common.utils.Coordinate;
@@ -9,7 +9,7 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
  */
 
 
-public interface Grid {
+public interface GridDeprecated {
     
     Area area();
     

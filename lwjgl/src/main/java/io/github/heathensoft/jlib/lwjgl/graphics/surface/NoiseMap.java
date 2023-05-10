@@ -2,9 +2,9 @@ package io.github.heathensoft.jlib.lwjgl.graphics.surface;
 
 
 import io.github.heathensoft.jlib.common.storage.primitive.FloatArray2D;
-import io.github.heathensoft.jlib.common.utils.NoiseFunction;
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
+import io.github.heathensoft.jlib.common.noise.NoiseFunction;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
 
 /**
  * @author Frederik Dahl
@@ -15,7 +15,7 @@ import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 public class NoiseMap {
 
     
-    private final FloatArray2D map;
+    private FloatArray2D map;
     private float amplitude;
     private float baseline;
     
@@ -48,8 +48,8 @@ public class NoiseMap {
         }
     }
     
-    public NoiseMap(Image img, float amplitude, float baseline) {
-        this(new DepthMap8(img),amplitude,baseline);
+    public NoiseMap(Bitmap image, float amplitude, float baseline) {
+        this(new DepthMap8(image),amplitude,baseline);
     }
     
     public NoiseMap(NoiseFunction function, int rows, int cols, float amplitude) {
@@ -67,7 +67,37 @@ public class NoiseMap {
     public NoiseMap(DepthMap8 depthmap) {
         this(depthmap,1);
     }
-    
+
+    public void sharpen() {
+        int rows = map.rows();
+        int cols = map.cols();
+        float[][] m0 = this.map.get();
+        float[][] m1 = new float[rows][cols];
+        int[][] adj = new int[][] {
+                {-1, 1},{ 0, 1},{ 1, 1},
+                {-1, 0},{ 0, 0},{ 1, 0},
+                {-1,-1},{ 0,-1},{ 1,-1}};
+        float[] kernel = {
+                -0.250f, -1.000f, -0.250f,
+                -1.000f,  6.0000f,-1.000f,
+                -0.250f, -1.000f, -0.250f};
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                float original = m0[r][c];
+                float new_value = 0;
+                for (int i = 0; i < adj.length; i++) {
+                    float v;
+                    int nx = c + adj[i][0];
+                    int ny = r + adj[i][1];
+                    if (nx < 0 || nx == cols || ny < 0 || ny == rows) {
+                        v = original;
+                    } else v = m0[ny][nx];
+                    new_value += (v * kernel[i]);
+                } m1[r][c] = new_value;
+            }
+        } this.map = new FloatArray2D(m1);
+
+    }
     
     public void blend_add(NoiseMap h1) {
         float[][] m0 = this.map.get();

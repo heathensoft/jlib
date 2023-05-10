@@ -5,9 +5,7 @@ package io.github.heathensoft.jlib.common.storage.generic;
  *
  * read() iterates all non-null items.
  * collect() iterates all non-null items, and removes them.
- *
- * Readers can be created anonymously (lambda), but for continuous
- * iteration it's recommended to create and use the same reader.
+
  *
  * @author Frederik Dahl
  * 03/06/2022

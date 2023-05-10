@@ -1,11 +1,12 @@
 package io.github.heathensoft.jlib.common.storage.primitive;
 
+import java.nio.IntBuffer;
 import java.util.Arrays;
 
 import static java.lang.Long.*;
 
 /**
- * This class works very similar to the Java BitSet class, only slimmer and less safe.
+ * This class works very similar to the Java BitSet class, only slimmer and less safe...
  * Inspired by artemis-odb BitVector, which is a modified version of libgdx Bits.
  * It does not keep track over words in use. (Java Bitset does) There are advantages and disadvantages.
  * For setting and getting single flags, this should be more performant.
@@ -25,85 +26,77 @@ import static java.lang.Long.*;
 
 public class BitSet {
     
-    private final static int ADDRESS_BITS_PER_WORD = 6;
-    private final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
-    
     private long[] words;
     
     public BitSet() {
         words = new long[0];
     }
     
-    public BitSet(BitSet bits) {
-        if (bits == null) throw new IllegalArgumentException("bits == null");
-        words = Arrays.copyOf(bits.words, bits.words.length);
+    public BitSet(BitSet bitSet) {
+        words = Arrays.copyOf(bitSet.words, bitSet.words.length);
     }
     
-    public BitSet(int nbits) {
-        if (nbits < 0) throw new NegativeArraySizeException("nbits < 0: " + nbits);
-        words = new long[((nbits-1) >>> ADDRESS_BITS_PER_WORD) + 1];
+    public BitSet(int bits) {
+        words = new long[(((Math.max(bits, 0))-1) >>> 6) + 1];
     }
     
-    public boolean get(int idx) {
-        final int word = idx >>> ADDRESS_BITS_PER_WORD;
-        return word < words.length && (words[word] & (1L << idx)) != 0L;
+    public boolean get(int index) {
+        final int word = index >>> 6;
+        return word < words.length && (words[word] & (1L << index)) != 0L;
     }
     
-    public boolean getUnsafe(int idx) {
-        return (words[idx >>> ADDRESS_BITS_PER_WORD] & (1L << idx)) != 0L;
-    }
-    
-    public void set(int idx) {
-        final int word = idx >>> ADDRESS_BITS_PER_WORD;
+    public void set(int index) {
+        final int word = index >>> 6;
         checkCapacity(word);
-        words[word] |= 1L << idx;
+        words[word] |= 1L << index;
     }
     
-    public void setUnsafe(int idx) {
-        words[idx >>> ADDRESS_BITS_PER_WORD] |= 1L << idx;
+    public void clear(int index) {
+        final int word = index >>> 6;
+        if (word < words.length) words[word] &= ~(1L << index);
     }
     
-    public void clear(int idx) {
-        final int word = idx >>> ADDRESS_BITS_PER_WORD;
-        if (word < words.length) words[word] &= ~(1L << idx);
-    }
-    
-    public void clearUnsafe(int idx) {
-        words[idx >>> ADDRESS_BITS_PER_WORD] &= ~(1L << idx);
-    }
-    
-    public void clear() {
-        Arrays.fill(words, 0L);
-    }
-    
-    public boolean getAndClear (int idx) {
-        final int word = idx >>> 6;
-        if (word >= words.length) return false;
-        long oldBits = words[word];
-        words[word] &= ~(1L << (idx & 0x3F));
-        return words[word] != oldBits;
-    }
-    
-    public boolean getAndSet (int idx) {
-        final int word = idx >>> 6;
+    public void flip(int index) {
+        final int word = index >>> 6;
         checkCapacity(word);
-        long oldBits = words[word];
-        words[word] |= 1L << (idx & 0x3F);
-        return words[word] == oldBits;
+        words[word] ^= 1L << index;
     }
     
-    public void flip(int idx) {
-        final int word = idx >>> ADDRESS_BITS_PER_WORD;
-        checkCapacity(word);
-        words[word] ^= 1L << idx;
+    public boolean getUnchecked(int index) {
+        return (words[index >>> 6] & (1L << index)) != 0L;
+    }
+    
+    public void setUnchecked(int index) {
+        words[index >>> 6] |= 1L << index;
+    }
+    
+    public void clearUnchecked(int index) {
+        words[index >>> 6] &= ~(1L << index);
     }
     
     public void flipUnsafe(int idx) {
-        words[idx >>> ADDRESS_BITS_PER_WORD] ^= 1L << idx;
+        words[idx >>> 6] ^= 1L << idx;
     }
     
-    public void ensureCapacity(int nbits) {
-        final int word = ((nbits-1) >>> ADDRESS_BITS_PER_WORD) + 1;
+    public boolean getAndClear (int index) {
+        final int word = index >>> 6;
+        if (word >= words.length) return false;
+        long oldBits = words[word];
+        words[word] &= ~(1L << (index & 0x3F));
+        return words[word] != oldBits;
+    }
+    
+    public boolean getAndSet (int index) {
+        final int word = index >>> 6;
+        checkCapacity(word);
+        long oldBits = words[word];
+        words[word] |= 1L << (index & 0x3F);
+        return words[word] == oldBits;
+    }
+    
+    
+    public void ensureCapacity(int bits) {
+        final int word = ((bits-1) >>> 6) + 1;
         if (word > words.length) {
             long[] tmp = new long[word + 1];
             System.arraycopy(words, 0, tmp, 0, words.length);
@@ -111,28 +104,31 @@ public class BitSet {
         }
     }
     
-    public void and(BitSet other) {
+    public void and(BitSet o) {
         final int l = words.length;
-        final int common = Math.min(l, other.words.length);
-        for (int i = 0; common > i; i++) words[i] &= other.words[i];
+        final int common = Math.min(l, o.words.length);
+        for (int i = 0; common > i; i++) words[i] &= o.words[i];
         if (l > common) for (int i = common; l > i; i++) words[i] = 0L;
     }
     
-    public void andNot(BitSet other) {
-        int common = Math.min(words.length, other.words.length);
+    public void andNot(BitSet o) {
+        int common = Math.min(words.length, o.words.length);
         for (int i = 0; common > i; i++) {
-            words[i] &= ~other.words[i];
+            words[i] &= ~o.words[i];
         }
     }
     
-    public void or(BitSet other) {
-        final int ol = other.words.length;
+    public void or(BitSet o) {
+        final int ol = o.words.length;
         final int common = Math.min(words.length, ol);
-        for (int i = 0; common > i; i++) words[i] |= other.words[i];
+        for (int i = 0; common > i; i++) words[i] |= o.words[i];
         if (common < ol) { checkCapacity(ol);
+            System.arraycopy(o.words, common, words, common, ol - common);
+            /*
             for (int i = common; ol > i; i++) {
-                words[i] = other.words[i];
+                words[i] = o.words[i];
             }
+             */
         }
     }
     
@@ -141,9 +137,12 @@ public class BitSet {
         final int common = Math.min(words.length, ol);
         for (int i = 0; common > i; i++) words[i] ^= other.words[i];
         if (common < ol) { checkCapacity(ol);
+            System.arraycopy(other.words, common, words, common, ol - common);
+            /*
             for (int i = common; ol > i; i++) {
                 words[i] = other.words[i];
             }
+             */
         }
     }
     
@@ -167,41 +166,23 @@ public class BitSet {
         } return true;
     }
     
+    public void clear() {
+        Arrays.fill(words, 0L);
+    }
+    
     public int cardinality() {
         int count = 0;
         for (long word : words) count += bitCount(word);
         return count;
     }
     
-    public void indicesUnchecked(IntBag out, int count) {
-        out.setSize(count);
-        int[] data = out.data();
+    public void indices(IntBuffer dst, int count) {
         for (int i = 0, idx = 0; count > idx; i++) {
             long word = words[i];
-            int wordBits = i << ADDRESS_BITS_PER_WORD;
+            int wordBits = i << 6;
             while (word != 0) {
                 long t = word & -word;
-                data[idx] = wordBits + bitCount(t - 1);
-                word ^= t;
-                idx++;
-            }
-        }
-    }
-    
-    public void indices(IntBag out) {
-        if (isEmpty()) {
-            out.setSize(0);
-            return;
-        } final int count = cardinality();
-        out.ensureCapacity(count);
-        out.setSize(count);
-        int[] data = out.data();
-        for (int i = 0, idx = 0; count > idx; i++) {
-            long word = words[i];
-            int wordBits = i << ADDRESS_BITS_PER_WORD;
-            while (word != 0) {
-                long t = word & -word;
-                data[idx] = wordBits + bitCount(t - 1);
+                dst.put( wordBits + bitCount(t - 1));
                 word ^= t;
                 idx++;
             }
@@ -213,41 +194,39 @@ public class BitSet {
         for (int word = bits.length - 1; word >= 0; --word) {
             long wordBits = bits[word];
             if (wordBits != 0)
-                return (word << ADDRESS_BITS_PER_WORD) + BITS_PER_WORD - numberOfLeadingZeros(wordBits);
+                return (word << 6) + 64 - numberOfLeadingZeros(wordBits);
         } return 0;
     }
     
     public boolean isEmpty() {
         final int l = words.length;
-        for (int i = 0; i < l; i++) {
-            if (words[i] != 0L) return false;
+        for (long word : words) {
+            if (word != 0L) return false;
         } return true;
     }
     
-    public long getWord(int idx) {
-        return idx < words.length ? words[idx] : 0L;
+    public long word(int index) {
+        return index < words.length ? words[index] : 0L;
     }
     
-    public long[] getWords() {
+    public long[] array() {
         return words;
     }
     
-    public void setWord(int idx, long word) {
-        if (idx >= words.length) {
-            long[] newWords = new long[idx + 1];
+    public void setWord(int index, long word) {
+        if (index >= words.length) {
+            long[] newWords = new long[index + 1];
             System.arraycopy(words, 0, newWords, 0, words.length);
             this.words = newWords;
-        } words[idx] = word;
+        } words[index] = word;
     }
     
-    @Override
     public int hashCode() {
         final int word = logicalLength() >>> 6; int hash = 0;
         for (int i = 0; word >= i; i++) { hash = 127 * hash + (int) (words[i] ^ (words[i] >>> 32));
         } return hash;
     }
     
-    @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null) return false;
@@ -261,7 +240,6 @@ public class BitSet {
         return logicalLength() == other.logicalLength();
     }
     
-    @Override
     public String toString() {
         int cardinality = cardinality();
         int end = Math.min(128, cardinality);
@@ -292,14 +270,14 @@ public class BitSet {
     /** Returns the index of the first bit that is set to true that occurs on or after the specified starting index. If no such bit
      * exists then -1 is returned. */
     private int nextSetBit(int fromIndex) {
-        final int word = fromIndex >>> ADDRESS_BITS_PER_WORD;
+        final int word = fromIndex >>> 6;
         if (word < words.length) {
             long bitmap = words[word] >>> fromIndex;
             if (bitmap == 0) {
                 for (int i = 1 + word; i < words.length; i++) {
                     bitmap = words[i];
                     if (bitmap != 0) {
-                        return i * BITS_PER_WORD + numberOfTrailingZeros(bitmap);
+                        return i * 64 + numberOfTrailingZeros(bitmap);
                     }
                 }
             } else return fromIndex + numberOfTrailingZeros(bitmap);

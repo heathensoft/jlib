@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.lwjgl.window;
 
 import io.github.heathensoft.jlib.common.io.OS;
 import io.github.heathensoft.jlib.common.io.Settings;
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
+import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Callback;
@@ -672,7 +672,7 @@ public class Window extends AbstractWindow {
     }
     
     @Override
-    public Optional<CursorObject> createCursor(Image image, int hotspotX, int hotspotY) {
+    public Optional<CursorObject> createCursor(Bitmap image, int hotspotX, int hotspotY) {
         try { return Optional.of(new CursorObject(image,window,hotspotX,hotspotY));
         } catch (Exception e) {
             Logger.warn(e,"unable to create cursor");

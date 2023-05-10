@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
+import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.system.MemoryStack;
 
@@ -49,11 +49,11 @@ public class CursorObject implements Disposable {
      * @param yH hotspot
      * @throws Exception caught and logged by Window.
      */
-    protected CursorObject(Image image, long window, int xH, int yH) throws Exception {
+    protected CursorObject(Bitmap image, long window, int xH, int yH) throws Exception {
         ByteBuffer rgba = image.data();
         int w = image.width();
         int h = image.height();
-        int c = image.format().channels;
+        int c = image.channels();
         if (c != 4) throw new Exception("image must have 4 color components");
         try (MemoryStack stack = stackPush()) {
             GLFWImage img = GLFWImage.malloc(stack).set(w,h,rgba);

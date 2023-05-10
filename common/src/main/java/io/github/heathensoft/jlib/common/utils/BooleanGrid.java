@@ -14,6 +14,10 @@ public class BooleanGrid {
     private final Area area;
 
 
+    public BooleanGrid(int width, int height) {
+        this(new Area(0,0,width-1,height-1));
+    }
+
     public BooleanGrid(Area area) {
         this.area = new Area(area);
         this.bits = new BitSet(area.size());
@@ -30,7 +34,7 @@ public class BooleanGrid {
                 for (int c = minX; c <= maxX; c++) {
                     int local_x = c - this.area.minX();
                     int local_y = r - this.area.minY();
-                    bits.setUnsafe(local_x + local_y * area.cols());
+                    bits.setUnchecked(local_x + local_y * area.cols());
                 }
             }
         }
@@ -47,7 +51,7 @@ public class BooleanGrid {
                 for (int c = minX; c <= maxX; c++) {
                     int local_x = c - this.area.minX();
                     int local_y = r - this.area.minY();
-                    bits.clearUnsafe(local_x + local_y * area.cols());
+                    bits.clearUnchecked(local_x + local_y * area.cols());
                 }
             }
         }
@@ -56,14 +60,14 @@ public class BooleanGrid {
     public void setUnsafe(int x, int y) {
         int local_x = x - area.minX();
         int local_y = y - area.minY();
-        bits.setUnsafe(local_x + local_y * area.cols());
+        bits.setUnchecked(local_x + local_y * area.cols());
     }
 
     public void set(int x, int y) {
         if (area.contains(x, y)) {
             int local_x = x - area.minX();
             int local_y = y - area.minY();
-            bits.setUnsafe(local_x + local_y * area.cols());
+            bits.setUnchecked(local_x + local_y * area.cols());
         }
     }
 
@@ -71,21 +75,21 @@ public class BooleanGrid {
         if (area.contains(x, y)) {
             int local_x = x - area.minX();
             int local_y = y - area.minY();
-            bits.clearUnsafe(local_x + local_y * area.cols());
+            bits.clearUnchecked(local_x + local_y * area.cols());
         }
     }
 
     public boolean getUnsafe(int x, int y) {
         int local_x = x - area.minX();
         int local_y = y - area.minY();
-        return bits.getUnsafe(local_x + local_y * area.cols());
+        return bits.getUnchecked(local_x + local_y * area.cols());
     }
 
     public boolean get(int x, int y) {
         if (area.contains(x, y)) {
             int local_x = x - area.minX();
             int local_y = y - area.minY();
-            return bits.getUnsafe(local_x + local_y * area.cols());
+            return bits.getUnchecked(local_x + local_y * area.cols());
         } return false;
     }
 

@@ -61,7 +61,7 @@ public class Container<E> implements Disposable, Readable<E> {
     }
     
     public void add(E item) {
-        if (item == null) throw new IllegalArgumentException("Adding null items not allowed. Use set");
+        if (item == null) throw new IllegalArgumentException("Adding null items not allowed. Use set()");
         if (peak == items.length) {
             grow(peak * 2 + 1);
         } items[peak++] = item;

@@ -3,6 +3,11 @@ package io.github.heathensoft.jlib.lwjgl.graphics.surface;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
 import org.joml.Math;
+import org.lwjgl.BufferUtils;
+
+import java.nio.ByteBuffer;
+
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 /**
  * 16-bit depth map
@@ -32,6 +37,15 @@ public class DepthMap16 {
                 map[idx++] = (short)(Math.round(n * 0xffff) & 0xffff);
             }
         }
+    }
+
+    public void toPNG(String path) {
+        ByteBuffer buffer = BufferUtils.createByteBuffer(sizeBytes());
+        for (int i = 0; i < size(); i++) {
+            int b1 = map[i] & 0xFF;
+            int b2 = (map[i] >> 8) & 0xFF;
+            buffer.put((byte)b1).put((byte)b2);
+        } stbi_write_png(path, cols, rows,1,buffer.flip(),cols * 2);
     }
 
     public Texture toTexture(int wrap, int min_filter, int max_filter, boolean mipmap) {

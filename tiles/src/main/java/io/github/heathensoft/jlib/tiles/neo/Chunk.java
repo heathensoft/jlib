@@ -1,25 +1,14 @@
 package io.github.heathensoft.jlib.tiles.neo;
 
-import io.github.heathensoft.jlib.ai.pathfinding.grid.Room;
 import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
 import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.storage.primitive.IntStack;
-import io.github.heathensoft.jlib.common.utils.NoiseFunction;
-import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
-import io.github.heathensoft.jlib.lwjgl.graphics.surface.DepthMap16;
-import io.github.heathensoft.jlib.lwjgl.graphics.surface.DepthMap8;
-import io.github.heathensoft.jlib.lwjgl.graphics.surface.NoiseMap;
-import io.github.heathensoft.jlib.lwjgl.window.Application;
-import io.github.heathensoft.jlib.lwjgl.window.BootConfiguration;
-import io.github.heathensoft.jlib.lwjgl.window.Engine;
-import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -37,19 +26,6 @@ public class Chunk {
      */
     private static final IntBuffer TMP_ROOMS = IntBuffer.allocate(256);
     private IntBuffer rooms; // in read-mode by default (set to read-mode on initialization)
-
-    public static void main(String[] args) {
-
-        NoiseMap noiseMap = new NoiseMap(new NoiseFunction() {
-            @Override
-            public float get(float x, float y) {
-                return Rand.noise(x,y,3253523,0.1013f);
-            }},1024,1024,1.0f);
-
-        DepthMap8 depthMap8 = new DepthMap8(noiseMap);
-        depthMap8.toPNG("noisemap.png");
-
-    }
 
 
 
@@ -157,11 +133,11 @@ public class Chunk {
                         int current_tile = tile_data[tile_y][tile_x];
                         if (Tile.tile_is_obstacle(current_tile)) {
                             // obstacle
-                            room_layout[tile_y][tile_x] = Room.room_obstacle();
+                            room_layout[tile_y][tile_x] = Tile.room_obstacle();
                         }
                         else if (Tile.tile_clearance_level(current_tile) > 0) {
                             // door
-                            int door = Room.room_create(local_id++,chunk_x,chunk_y,
+                            int door = Tile.room_create(local_id++,chunk_x,chunk_y,
                             Tile.tile_clearance_level(current_tile));
                             room_layout[tile_y][tile_x] = door;
                             doors.push(tile_y);
@@ -170,7 +146,7 @@ public class Chunk {
                             TMP_ROOMS.put(door);
                         } else {
                             // regular room
-                            int room = Room.room_create(
+                            int room = Tile.room_create(
                                     local_id++,chunk_x,chunk_y,0);
                             TMP_ROOMS.put(room);
 
@@ -193,11 +169,11 @@ public class Chunk {
                                             int tile = tile_data[adj_map_y][adj_map_x];
                                             if (Tile.tile_is_obstacle(tile)) {
                                                 // obstacle
-                                                room_layout[adj_map_y][adj_map_x] = Room.room_obstacle();
+                                                room_layout[adj_map_y][adj_map_x] = Tile.room_obstacle();
                                             }
                                             else if (Tile.tile_clearance_level(tile) > 0) {
                                                 // door
-                                                int door = Room.room_create(local_id++,chunk_x,chunk_y,
+                                                int door = Tile.room_create(local_id++,chunk_x,chunk_y,
                                                         Tile.tile_clearance_level(tile));
                                                 room_layout[adj_map_y][adj_map_x] = door;
                                                 doors.push(adj_map_y);

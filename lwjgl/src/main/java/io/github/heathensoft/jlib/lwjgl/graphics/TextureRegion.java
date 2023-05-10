@@ -3,6 +3,9 @@ package io.github.heathensoft.jlib.lwjgl.graphics;
 import java.nio.FloatBuffer;
 
 /**
+ *
+ * The UV-coordinates of a texture-region are always pixel-centered
+ *
  * @author Frederik Dahl
  * 21/03/2023
  */

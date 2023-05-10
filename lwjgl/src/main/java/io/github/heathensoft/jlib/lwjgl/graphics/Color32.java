@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.graphics;
 
 import io.github.heathensoft.jlib.common.Defined;
+import io.github.heathensoft.jlib.common.utils.Rand;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -115,22 +116,22 @@ public class Color32 implements Defined {
     }
 
     public Color32 setRedBits(int r) {
-        val |= (r & 0xFF);
+        val = ((val & 0xFFFFFF00) | (r & 0xFF));
         return this;
     }
 
     public Color32 setGreenBits(int g) {
-        val |= ((g & 0xFF) << 8);
+        val = ((val & 0xFFFF00FF) | ((g & 0xFF) << 8));
         return this;
     }
 
     public Color32 setBlueBits(int b) {
-        val |= ((b & 0xFF) << 16);
+        val = ((val & 0xFF00FFFF) | ((b & 0xFF) << 16));
         return this;
     }
 
     public Color32 setAlphaBits(int a) {
-        val |= ((a & 0xFF) << 24);
+        val = ((val & 0x00FFFFFF) | ((a & 0xFF) << 24));
         return this;
     }
 
@@ -274,6 +275,7 @@ public class Color32 implements Defined {
     public int hashCode() {
         return Objects.hash(val);
     }
+
 
     public static Vector4f rgba(int abgr8, Vector4f dest) {
         return dest.set(
@@ -508,8 +510,24 @@ public class Color32 implements Defined {
         return color;
     }
 
+
+    public static Color32 randomColor() {
+        return new Color32(
+                Rand.nextFloat(),
+                Rand.nextFloat(),
+                Rand.nextFloat()
+        );
+    }
+
+    public static Color32[] randomColors(int n) {
+        Color32[] result = new Color32[n];
+        for (int i = 0; i < n; i++) {
+            result[i] = randomColor();
+        } return result;
+    }
+
     public static int sizeOf() {
-        return Integer.BYTES;
+        return 4;
     }
 
     private static int fromNormalized(float component) {

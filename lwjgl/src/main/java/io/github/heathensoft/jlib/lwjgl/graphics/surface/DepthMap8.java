@@ -1,8 +1,8 @@
 package io.github.heathensoft.jlib.lwjgl.graphics.surface;
 
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import io.github.heathensoft.jlib.lwjgl.graphics.TextureFormat;
+import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
 import org.joml.Math;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
@@ -47,16 +47,15 @@ public class DepthMap8 {
         this.cols = width;
         this.rows = height;
         this.map = new byte[cols * rows];
-        int c = channels;
         float avg = 0;
         float alpha;
         int length = size();
-        switch (c) {
+        switch (channels) {
             case 1: case 2: case 3:
                 for (int i = 0; i < length; i++) {
-                    for (int j = 0; j < c; j++) {
-                        avg += (data.get(i*c+j) & 0xff);
-                    } avg = avg/c;
+                    for (int j = 0; j < channels; j++) {
+                        avg += (data.get(i* channels +j) & 0xff);
+                    } avg = avg/ channels;
                     map[i] = (byte) (Math.round(avg) & 0xff);
                     avg = 0;
                 }
@@ -65,10 +64,10 @@ public class DepthMap8 {
                 Vector3f luma = new Vector3f(0.2126f,0.7152f,0.0722f);
                 Vector3f color = new Vector3f();
                 for (int i = 0; i < length; i++) {
-                    float r = (data.get(i*c) & 0xff) / 255.0f;;
-                    float g = (data.get(i*c+1) & 0xff) / 255.0f;;
-                    float b = (data.get(i*c+2) & 0xff) / 255.0f;;
-                    float a = (data.get(i*c+3) & 0xff) / 255.0f;
+                    float r = (data.get(i* channels) & 0xff) / 255.0f;
+                    float g = (data.get(i* channels +1) & 0xff) / 255.0f;
+                    float b = (data.get(i* channels +2) & 0xff) / 255.0f;
+                    float a = (data.get(i* channels +3) & 0xff) / 255.0f;
                     float v = color.set(r,g,b).dot(luma) * a;
                     map[i] = (byte) (Math.round(v * 255.0f) & 0xff);
                 }
@@ -76,8 +75,8 @@ public class DepthMap8 {
         }
     }
     
-    public DepthMap8(Image img) {
-        this(img.width(),img.height(),img.format().channels,img.data());
+    public DepthMap8(Bitmap image) {
+        this(image.width(),image.height(),image.channels(),image.data());
     }
     
     public Texture toTexture(int wrap, int min_filter, int max_filter, boolean mipmap) {

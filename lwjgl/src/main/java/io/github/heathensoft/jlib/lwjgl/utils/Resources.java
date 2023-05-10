@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.io.External;
-import io.github.heathensoft.jlib.lwjgl.graphics.Image;
+import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryUtil;
 
@@ -98,24 +98,15 @@ public class Resources {
             }
         } return MemoryUtil.memSlice(result.flip());
     }
-    
-    public Image image(String file, int size, boolean flip) throws Exception {
-        return new Image(toBuffer(file,size),flip);
+
+    public Bitmap image(String file) throws Exception {
+        return new Bitmap(toBuffer(file,1024 * 16));
     }
-    
-    public Image image(String file, boolean flip) throws Exception {
-        int size = 1024 * 16; // 16kb default. It doesn't matter. Well it does, but it doesn't.
-        return image(file,size,flip);
+
+    public Bitmap image(String file, boolean flip_v) throws Exception {
+        return new Bitmap(toBuffer(file,1024 * 16),flip_v);
     }
-    
-    public Image image(String file,int size) throws Exception {
-        return image(file,size,false);
-    }
-    
-    public Image image(String file) throws Exception {
-        return image(file,false);
-    }
-    
+
     public List<String> asLines(String file, Charset charset) throws IOException {
         List<String> result;
         try (InputStream is = clazz.getClassLoader().getResourceAsStream(file)){
