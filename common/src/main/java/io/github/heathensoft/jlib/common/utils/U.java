@@ -150,7 +150,7 @@ public class U {
         return scale_array(src,target_size,target_size);
     }
 
-    private static int[][] scale_array(int[][] src, int rows, int cols) {
+    public static int[][] scale_array(int[][] src, int rows, int cols) {
         int src_rows = src.length;
         int src_cols = src[0].length;
         int[][] dst = new int[rows][cols];

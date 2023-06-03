@@ -1,9 +1,14 @@
 package io.github.heathensoft.jlib.noiseTest;
 
+import io.github.heathensoft.jlib.ai.wfc.WFC;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.noise.Noise;
 import io.github.heathensoft.jlib.common.utils.Rand;
+import io.github.heathensoft.jlib.common.utils.U;
+import io.github.heathensoft.jlib.graphicsOld.Color;
 import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.graphics.Color32;
+import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Application;
 import io.github.heathensoft.jlib.lwjgl.window.BootConfiguration;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
@@ -26,7 +31,7 @@ public class NoiseApp extends Application {
         Engine.get().run(new NoiseApp(),args);
     }
 
-    private MapGen mapGen;
+    //private MapGen mapGen;
 
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         supported.add(Resolution.R_1280x720);
@@ -38,6 +43,20 @@ public class NoiseApp extends Application {
     protected void on_start(Resolution resolution) throws Exception {
         //mapGen = new MapGen(32,32,"tileset.png", "water_tiles.png");
 
+        Bitmap src_colors = new Resources(NoiseApp.class).image("wfc_biomes.png");
+
+        WFC wfc = new WFC(src_colors.array(),Rand.nextInt(),true);
+
+        int[][] src_array = new int[9][9];
+
+        wfc.generate(src_array,Integer.MAX_VALUE,false);
+
+        int[][] dst_array = Biomes.grow(src_array,10,new int[]{5},Rand.nextInt());
+        Bitmap dst_colors = new Bitmap(dst_array);
+
+        dst_colors.toDisk("regions.png");
+
+        Disposable.dispose(src_colors,dst_colors);
 
         /*
         int seed = Rand.nextInt();
@@ -54,7 +73,7 @@ public class NoiseApp extends Application {
 
 
 
-
+        /*
         int size = 512;
         float[][] elevation = MapGenerator.elevation(Rand.nextInt());
         float[][] climate = MapGenerator.climate2(Rand.nextInt(),elevation);
@@ -62,6 +81,8 @@ public class NoiseApp extends Application {
         org.lwjgl.stb.STBImageWrite.stbi_write_png("climate.png",size,size,1,pixels,size);
         pixels = Noise.bytes(elevation, BufferUtils.createByteBuffer(size*size)).flip();
         org.lwjgl.stb.STBImageWrite.stbi_write_png("height.png",size,size,1,pixels,size);
+
+         */
 
 
 
@@ -78,7 +99,7 @@ public class NoiseApp extends Application {
     }
 
     protected void on_exit() {
-        Disposable.dispose(mapGen);
+        //Disposable.dispose(mapGen);
     }
 
     protected void resolution_request(Resolution resolution) throws Exception {

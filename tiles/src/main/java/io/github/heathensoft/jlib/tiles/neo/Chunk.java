@@ -3,11 +3,13 @@ package io.github.heathensoft.jlib.tiles.neo;
 import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
 import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.storage.primitive.IntStack;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,7 +31,24 @@ public class Chunk {
 
 
 
+    protected void update_terrain(Texture terrain_texture, int[][] tile_data, int chunk_x, int chunk_y) {
+        int chunk_origin_x = chunk_x * 16;
+        int chunk_origin_y = chunk_y * 16;
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            ShortBuffer buffer = stack.mallocShort(256);
+            for (int r = 0; r < 16; r++) {
+                int y = chunk_origin_y + r;
+                for (int c = 0; c < 16; c++) {
+                    int x = chunk_origin_x + c;
+                    buffer.put(Tile.tile_terrain_type(tile_data[y][x]).abgr4);
+                }
+            }
+            terrain_texture.bindToActiveSlot();
+            terrain_texture.uploadSubData(buffer.flip(),0,16,16,chunk_origin_x,chunk_origin_y);
+        }
+    }
 
+    /*
     protected void updateTerrain(Texture terrain, int[][] tile_data, int chunk_x, int chunk_y) {
         int[][] adj = Tile.adjacent8;
         int[] layer_masks = new int[4];
@@ -43,7 +62,7 @@ public class Chunk {
                 for (int r = 0; r < 16; r++) {
                     for (int c = 0; c < 16; c++) {
                         int tile = tile_data[r][c];
-                        int tile_layers = Tile.tile_terrain_layers(tile);
+                        int tile_layers = Tile.tile_terrain_layer_mask(tile);
                         int tile_variant = Tile.tile_terrain_layer_variation(tile);
                         if (tile_layers == 0) {
                             buffer.put((byte)0xFF);
@@ -66,7 +85,7 @@ public class Chunk {
                                     layer_masks[2] |= (1 << i);
                                     layer_masks[3] |= (1 << i);
                                 } else {
-                                    int adj_layers = Tile.tile_terrain_layers(tile_data[y][x]);
+                                    int adj_layers = Tile.tile_terrain_layer_mask(tile_data[y][x]);
                                     layer_masks[0] |= (adj_layers & 0b0001) == 0 ? 0 : (1 << i);
                                     layer_masks[1] |= (adj_layers & 0b0010) == 0 ? 0 : (1 << i);
                                     layer_masks[2] |= (adj_layers & 0b0100) == 0 ? 0 : (1 << i);
@@ -91,8 +110,10 @@ public class Chunk {
         }
     }
 
+     */
 
-    protected void updateLayout(Network network, int[][] room_layout, int[][] tile_data, int chunk_x, int chunk_y) {
+
+    protected void update_layout(Network network, int[][] room_layout, int[][] tile_data, int chunk_x, int chunk_y) {
 
         /*
             On Update:
@@ -116,7 +137,7 @@ public class Chunk {
 
         int chunk_origin_x = chunk_x * 16;
         int chunk_origin_y = chunk_y * 16;
-        int[][] adj = Tile.adjacent4;
+        int[][] adj = new int[][] {{-1, 0},{ 0,-1},{ 0, 1},{ 1, 0}};
         IntStack doors = new IntStack(16 * 3);
 
         {
@@ -279,7 +300,7 @@ public class Chunk {
             synchronized (this) {
                 rooms.clear();
                 if (rooms.capacity() < TMP_ROOMS.remaining()) {
-                    int size = Tile.nextPowerOfTwo(TMP_ROOMS.remaining());
+                    int size = U.nextPowerOfTwo(TMP_ROOMS.remaining());
                     rooms = IntBuffer.allocate(size);
                 } rooms.put(TMP_ROOMS);
                 rooms.flip();

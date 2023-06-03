@@ -1,11 +1,10 @@
-package io.github.heathensoft.jlib.tiles.neo;
+package io.github.heathensoft.jlib.noiseTest;
 
 import io.github.heathensoft.jlib.common.utils.Rand;
+import io.github.heathensoft.jlib.lwjgl.graphics.Color32;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 /**
  * @author Frederik Dahl
@@ -13,7 +12,7 @@ import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
  */
 
 
-public class MapGen {
+public class MapGen2 {
 
 
 
@@ -39,6 +38,7 @@ public class MapGen {
                 for (int r = 0; r < current_resolution; r++) {
                     for (int c = 0; c < current_resolution; c++) {
                         int value = sample[r][c];
+
                         Integer type = value_to_type_map.get(value);
                         if (type == null)
                         {
@@ -88,7 +88,8 @@ public class MapGen {
                                 int tr = current_terrain[r][c+1];
                                 float w1 = type_weights[tl];
                                 float w2 = type_weights[tr];
-                                int t = n < (0.5f + w1 - w2) ? tl : tr;
+                                int t = n < 0.5f ? tl : tr;
+                                //int t = n < (0.5f + w1 - w2) ? tl : tr;
                                 type_count[t]++;
                                 current_terrain[r][c] = t;
                             }
@@ -99,7 +100,8 @@ public class MapGen {
                                 int tt = current_terrain[r+1][c];
                                 float w1 = type_weights[tb];
                                 float w2 = type_weights[tt];
-                                int t = n < (0.5f + w1 - w2) ? tb : tt;
+                                int t = n < 0.5f ? tb : tt;
+                                //int t = n < (0.5f + w1 - w2) ? tb : tt;
                                 type_count[t]++;
                                 current_terrain[r][c] = t;
                             }
@@ -159,6 +161,17 @@ public class MapGen {
     private static float next_float(int[] position, int seed) {
         position[0]++;
         return Rand.white_noise(position[0],seed);
+    }
+
+    public static void main(String[] args) {
+
+        int[][] arr = new int[3][3];
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 3; c++) {
+                arr[r][c] = 1;
+            }
+        }
+        arr = expand_terrain(arr);
     }
     
     private static int[][] expand_terrain(int[][] terrain) {

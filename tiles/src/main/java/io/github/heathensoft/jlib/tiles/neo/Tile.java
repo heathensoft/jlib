@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.tiles.neo;
 
 /**
  *
+ *
  * TILE (READ / WRITE)
  *
  * 8 bit tile_block_mask
@@ -9,9 +10,8 @@ package io.github.heathensoft.jlib.tiles.neo;
  * 1 bit tile_block_sub_type
  * 2 bit tile_block_damage
  * 1 bit tile_has_block
- * 4 bit tile_terrain_layers
- * 4 bit tile_terrain_layer_variation
- * 5 bit tile_unused
+ * 4 bit tile_terrain_layer_mask
+ * 9 bit tile_unused
  * 2 bit tile_clearance_level (0 = no door, 1, 2, 3)
  * 1 bit tile_is_obstacle (sign bit)
  *
@@ -53,12 +53,8 @@ public class Tile {
         return (tile >> 15) & 0b01;
     }
 
-    public static int tile_terrain_layers(int tile) {
+    public static int tile_terrain_layer_mask(int tile) {
         return (tile >> 16) & 0x0F;
-    }
-
-    public static int tile_terrain_layer_variation(int tile) {
-        return (tile >> 20) & 0x0F;
     }
 
     public static int tile_clearance_level(int tile) {
@@ -91,6 +87,10 @@ public class Tile {
         return (index + (64 * tile_block_type(tile)));
     }
 
+    public static TerrainType tile_terrain_type(int tile) { // Top layer
+        return TerrainType.top_layer(tile_terrain_layer_mask(tile));
+    }
+
     public static int tile_set_block_mask(int tile, int mask) {
         return (tile &~ 0xFF) | (mask & 0xFF);
     }
@@ -111,12 +111,8 @@ public class Tile {
         return (tile &~ 0x8000) | ((bit & 0b01) << 15);
     }
 
-    public static int tile_set_terrain_layers(int tile, int layers) {
-        return (tile &~ 0x000F_0000) | ((layers & 0x0F) << 16);
-    }
-
-    public static int tile_set_terrain_layer_variation(int tile, int variation) {
-        return (tile &~ 0x00F0_0000) | ((variation & 0x0F) << 20);
+    public static int tile_set_terrain_layer_mask(int tile, int terrain_mask) {
+        return (tile &~ 0x000F_0000) | ((terrain_mask & 0x0F) << 16);
     }
 
     public static int tile_set_clearance_level(int tile, int clearance) {
@@ -125,6 +121,42 @@ public class Tile {
 
     public static int tile_set_obstacle_bit(int tile, int obstacle) {
         return (tile &~ 0x8000_0000) | ((obstacle & 0b01) << 31);
+    }
+
+    /*
+        When altering terrain:
+        It's the top layer that matters. If the top layer before the change stays the same,
+        then there is no need to refresh the terrain texture (But maybe just don't check and update regardless) (easier)
+     */
+    public static int tile_terrain_add_type(int tile, TerrainType type) {
+        if (type == TerrainType.T0) return tile;
+        int terrain_mask = tile_terrain_layer_mask(tile);
+        terrain_mask = TerrainType.place_terrain_type(terrain_mask,type);
+        return tile_set_terrain_layer_mask(tile,terrain_mask);
+    }
+
+    public static int tile_terrain_remove_type(int tile, TerrainType type) {
+        if (type == TerrainType.T0) return tile;
+        int terrain_mask = tile_terrain_layer_mask(tile);
+        terrain_mask = TerrainType.remove_terrain_type(terrain_mask,type);
+        return tile_set_terrain_layer_mask(tile,terrain_mask);
+    }
+
+    public static int tile_terrain_remove_top_layer(int tile) {
+        int terrain_mask = tile_terrain_layer_mask(tile);
+        if (terrain_mask == TerrainType.T0.mask) return tile;
+        else { TerrainType top_layer = TerrainType.top_layer(terrain_mask);
+            terrain_mask = TerrainType.remove_terrain_type(terrain_mask,top_layer);
+            return tile_set_terrain_layer_mask(tile,terrain_mask);
+        }
+    }
+
+    public static int tile_terrain_clear(int tile) { // Set the terrain to T0 (0x0000)
+        return tile_set_terrain_layer_mask(tile,0);
+    }
+
+    public static boolean tile_terrain_contains_type(int tile, TerrainType type) { // can't see any use for this
+        return TerrainType.contains(tile_terrain_layer_mask(tile),type); // T0 should always be true
     }
 
     public static int room_create(int local_id, int chunk_x, int chunk_y, int clearance) {
@@ -178,20 +210,6 @@ public class Tile {
     public static long room_connection_key(long room1, long room2) {
         return room1 > room2 ? (room1 | (room2 << 32)) : (room2 | (room1 << 32));
     }
-
-    public static int nextPowerOfTwo(int value) {
-        if (value-- == 0) return 1;
-        value |= value >>> 1;
-        value |= value >>> 2;
-        value |= value >>> 4;
-        value |= value >>> 8;
-        value |= value >>> 16;
-        return value + 1;
-    }
-
-    public static final int[][] adjacent4 = new int[][] {
-            {-1, 0},{ 0,-1},{ 0, 1},{ 1, 0}
-    };
 
     public static final int[][] adjacent8 = {
             {-1, 1},{ 0, 1},{ 1, 1},

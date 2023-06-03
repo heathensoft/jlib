@@ -27,6 +27,18 @@ public class Bitmap implements Disposable {
     private final int height;
     private final int channels;
 
+    public Bitmap(int[][] abgr8) {
+        width = abgr8[0].length;
+        height = abgr8.length;
+        channels = 4;
+        data = MemoryUtil.memAlloc(width * height * channels);
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                int idx = (r * width + c) * channels;
+                data.putInt(idx,abgr8[r][c]);
+            }
+        }
+    }
 
     public Bitmap(int width, int height, int channels) {
         if (channels < 0 || channels > 4) throw new RuntimeException("invalid channels: " + channels);
@@ -187,6 +199,15 @@ public class Bitmap implements Disposable {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             set_unchecked(x, y, color);
         }
+    }
+
+    public int[][] array() {
+        int[][] result = new int[height][width];
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                result[r][c] = get_unchecked(c,r);
+            }
+        } return result;
     }
 
     public int get(int x, int y) {

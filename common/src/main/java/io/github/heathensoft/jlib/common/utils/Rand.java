@@ -53,8 +53,26 @@ public class Rand {
         return (hash(x + (0x0BD4BCB5 * y), seed) & 0x7FFF_FFFF) / (float) 0x7FFF_FFFF;
     }
 
+    public static float white_noise(int[] position, int seed) {
+        float f = white_noise(position[0],seed);
+        position[0]++;
+        return f;
+    }
+
     public static float white_noise(int position, int seed) {
         return next_int(position,seed) / (float) 0x7FFF_FFFF;
+    }
+
+    public static int next_int(int[] position, int seed) {
+        int i = next_int(position[0],seed);
+        position[0]++;
+        return i;
+    }
+
+    public static int next_int(int[] position, int seed, int max) {
+        int i = next_int(position[0],seed,max);
+        position[0]++;
+        return i;
     }
 
     public static int next_int(int position, int seed, int max) {

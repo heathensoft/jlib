@@ -2,7 +2,6 @@ package io.github.heathensoft.jlib.common.noise;
 
 import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.utils.Rand;
-import io.github.heathensoft.jlib.common.utils.U;
 
 import java.nio.ByteBuffer;
 
