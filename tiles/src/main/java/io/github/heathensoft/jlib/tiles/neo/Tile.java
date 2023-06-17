@@ -2,6 +2,22 @@ package io.github.heathensoft.jlib.tiles.neo;
 
 /**
  *
+ *
+ *
+ * Short clarification of the difference between Tiles, Blocks, Obstacles and Doors:
+ *
+ * You can think of the Tile as the data container that defines the rest:
+ * A Tile can be treated as an Obstacle or not, and be a Block or not.
+ * A Block is not necessarily an obstacle and vice-versa.
+ * Obstacles have nothing to do with visuals. They divide the map into Rooms, and
+ * determine where entities can reach. Obstacles have to do with pathfinding only.
+ * Block on the other hand are visual. If the Tile is a block, it will be drawn as a Block.
+ * Doors are theoretically non-visual. Pathfinding related. Doors are not treated as Obstacles.
+ * Instead, they are treated as Rooms. Rooms with a certain "clearance". In practice
+ * They are obstacles for entities without a certain clearance. The "visual Door" is placed
+ * as a separate non-tile object.
+ *
+ *
  * TILE DATA (READ / WRITE)
  *
  * 12-bit: unused               Offset: 0

@@ -31,8 +31,8 @@ public class TextureRegion {
         this.height = height; this.texture_height = texture_height; this.y = y % texture_height;
         this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
         this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
-        this.u2 = (float) ((this.x + (width - 1) + 0.5d) / (double) this.texture_width);
-        this.v2 = (float) ((this.y + (height - 1) + 0.5d) / (double) this.texture_height);
+        this.u2 = (float) ((this.x + width - 0.5d) / (double) this.texture_width);
+        this.v2 = (float) ((this.y + height - 0.5d) / (double) this.texture_height);
     }
 
     public TextureRegion(TextureRegion region) {

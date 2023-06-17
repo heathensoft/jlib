@@ -44,11 +44,19 @@ public class Chunk {
 
 
 
-    protected void update_blocks(int[][] tile_data, int chunk_x, int chunk_y) {
 
+    // When to update:
+	// Block removed or added
+	// Block type is changed
+	// Block sub-type is changed
+	// Block visibly damaged flag has changed
+
+    protected void update_blocks(int[][] tile_data, int chunk_x, int chunk_y) {
         tile_vertices.update(tile_data, chunk_x, chunk_y);
     }
 
+    // When to update:
+    // Terrain has been altered
 
     protected void update_terrain(Texture terrain_texture, int[][] tile_data, int chunk_x, int chunk_y) {
         int chunk_origin_x = chunk_x * 16;
@@ -68,9 +76,14 @@ public class Chunk {
     }
 
 
-    // Layout should be updated when:
-    // * Obstacles are placed or removed
-    // * Doors are placed or removed
+    // When to update:
+    // Obstacles are placed or removed
+    // Doors are placed or removed (clearance changed to or from 0)
+
+    // No need to update:
+    // Obstacle replaced by another
+    // Clearance changed from non-zero to another non-zero clearance
+
     protected void update_layout(Network network, int[][] room_layout, int[][] tile_data, int chunk_x, int chunk_y) {
 
         /*
