@@ -1,17 +1,28 @@
 package io.github.heathensoft.jlib.tiles.neo;
 
+import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
 import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.storage.primitive.IntStack;
 import io.github.heathensoft.jlib.common.utils.U;
+import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.graphics.Texture;
+import io.github.heathensoft.jlib.lwjgl.graphics.Vao;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.HashSet;
 import java.util.Set;
+
+import static io.github.heathensoft.jlib.tiles.neo.Tile.*;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_POINTS;
+import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW;
+import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
+import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 /**
  * @author Frederik Dahl
@@ -21,14 +32,22 @@ import java.util.Set;
 
 public class Chunk {
 
-    /*
-        Shared temp-buffer, Main-Thread only.
-        256 is the maximum possible number of rooms that can be placed on a chunk.
-        (Theoretically you could place 256 doors)
-     */
-    private static final IntBuffer TMP_ROOMS = IntBuffer.allocate(256);
-    private IntBuffer rooms; // in read-mode by default (set to read-mode on initialization)
 
+    //Shared temp-buffer, Main-Thread only.
+    //256 is the maximum possible number of rooms that can be placed on a chunk.
+    //(Theoretically you could place 256 doors)
+    private static final IntBuffer TMP_ROOMS = IntBuffer.allocate(256);
+    // rooms: in read-mode by default (set to read-mode on initialization)
+    // initially allocate som small pow2 amount (it grows automatically)
+    private IntBuffer rooms;
+    private ChunkVertexData tile_vertices;
+
+
+
+    protected void update_blocks(int[][] tile_data, int chunk_x, int chunk_y) {
+
+        tile_vertices.update(tile_data, chunk_x, chunk_y);
+    }
 
 
     protected void update_terrain(Texture terrain_texture, int[][] tile_data, int chunk_x, int chunk_y) {
@@ -48,71 +67,10 @@ public class Chunk {
         }
     }
 
-    /*
-    protected void updateTerrain(Texture terrain, int[][] tile_data, int chunk_x, int chunk_y) {
-        int[][] adj = Tile.adjacent8;
-        int[] layer_masks = new int[4];
-        int map_across = tile_data.length;
-        int lim = map_across / 16 - 1;
-        int chunk_origin_x = chunk_x * 16;
-        int chunk_origin_y = chunk_y * 16;
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer buffer = stack.malloc(256 * 4);
-            if (chunk_x == 0 || chunk_x == lim || chunk_y == 0 || chunk_y == lim) {
-                for (int r = 0; r < 16; r++) {
-                    for (int c = 0; c < 16; c++) {
-                        int tile = tile_data[r][c];
-                        int tile_layers = Tile.tile_terrain_layer_mask(tile);
-                        int tile_variant = Tile.tile_terrain_layer_variation(tile);
-                        if (tile_layers == 0) {
-                            buffer.put((byte)0xFF);
-                            buffer.put((byte)0xFF);
-                            buffer.put((byte)0xFF);
-                            buffer.put((byte)0xFF);
-                        } else {
-                            layer_masks[0] = 0;
-                            layer_masks[1] = 0;
-                            layer_masks[2] = 0;
-                            layer_masks[3] = 0;
-                            int tile_x = chunk_origin_x + c;
-                            int tile_y = chunk_origin_y + r;
-                            for (int i = 0; i < 8; i++) {
-                                int x = adj[i][0] + tile_x;
-                                int y = adj[i][1] + tile_y;
-                                if (x < 0 || x >= map_across || y < 0 || y >= map_across) {
-                                    layer_masks[0] |= (1 << i);
-                                    layer_masks[1] |= (1 << i);
-                                    layer_masks[2] |= (1 << i);
-                                    layer_masks[3] |= (1 << i);
-                                } else {
-                                    int adj_layers = Tile.tile_terrain_layer_mask(tile_data[y][x]);
-                                    layer_masks[0] |= (adj_layers & 0b0001) == 0 ? 0 : (1 << i);
-                                    layer_masks[1] |= (adj_layers & 0b0010) == 0 ? 0 : (1 << i);
-                                    layer_masks[2] |= (adj_layers & 0b0100) == 0 ? 0 : (1 << i);
-                                    layer_masks[3] |= (adj_layers & 0b1000) == 0 ? 0 : (1 << i);
-                                }
-                            }
-                            for (int i = 0; i < 4; i++) {
-                                if((tile_layers & (1 << i)) == 0)
-                                    buffer.put((byte)0xFF);
-                                else {
-                                    int mask = layer_masks[i];
-                                    int idx = mask == 0xFF ? (48 + (tile_variant & 0x0F)) : Tile.terrain_mask_to_uv(mask);
-                                    buffer.put((byte)(idx + 64 * i)); // shader: idx += biome * 256
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            terrain.bindToActiveSlot();
-            terrain.uploadSubData(buffer.flip(),0,16,16,chunk_origin_x,chunk_origin_y);
-        }
-    }
 
-     */
-
-
+    // Layout should be updated when:
+    // * Obstacles are placed or removed
+    // * Doors are placed or removed
     protected void update_layout(Network network, int[][] room_layout, int[][] tile_data, int chunk_x, int chunk_y) {
 
         /*
@@ -311,7 +269,7 @@ public class Chunk {
 
             synchronized (this) {
                 rooms.clear();
-                rooms.flip();
+                rooms.flip(); // WHAT am I doing here?
             }
 
         }
@@ -327,6 +285,86 @@ public class Chunk {
             dst.put(rooms);
             rooms.rewind();
         } return num_rooms;
+    }
+
+
+
+    private static final class ChunkVertexData implements Disposable {
+
+        private final Vao vertexArrayObject;
+        private final BufferObject vertexBuffer;
+        private final IntBuffer vertexData;
+
+        ChunkVertexData() {
+            vertexData = MemoryUtil.memAllocInt(256);
+            vertexArrayObject = new Vao().bind();
+            vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW).bind();
+            vertexBuffer.bufferData((long) 256 * Integer.BYTES);
+            glVertexAttribPointer(0,1,GL_INT,false,Integer.BYTES,0);
+            glEnableVertexAttribArray(0);
+        }
+
+        void update(int[][] tile_data, int chunk_x, int chunk_y) {
+
+            vertexData.clear();
+            int lim = tile_data.length - 1;
+            int chunk_origin_x = chunk_x * 16;
+            int chunk_origin_y = chunk_y * 16;
+            for (int r = 0; r < 16; r++) {
+                int y = chunk_origin_y + r;
+                for (int c = 0; c < 4; c++) {
+                    int x = chunk_origin_x + c;
+                    int tile = tile_data[y][x];
+                    int block_uv_index = 0;
+                    boolean is_block = tile_is_block(tile);
+                    if (is_block) {
+                        int type = tile_block_type(tile);
+                        int mask = 0;
+                        for (int i = 0; i < 8; i++) {
+                            int[] offset = adjacent8[i];
+                            int nx = offset[0] + x;
+                            int ny = offset[1] + y;
+                            if (nx < 0 || nx > lim || ny < 0 || ny > lim) {
+                                mask += (1 << i);
+                            } else {
+                                int adj_tile = tile_data[ny][nx];
+                                if (tile_is_block(adj_tile)) {
+                                    if (tile_block_type(adj_tile) == type) {
+                                        mask += (1 << i);
+                                    }
+                                }
+                            }
+                        }
+                        block_uv_index = tile_block_uv_index(tile,mask);
+                    }
+
+                    // 10 bit x
+                    // 10 bit y
+                    // 10 bit uv_index
+                    // 1 bit damaged
+                    // 1 bit block
+
+                    int block_vertex_data = x & 0x3FF;
+                    block_vertex_data |= ((y & 0x3FF) << 0xA);
+                    block_vertex_data |= ((block_uv_index & 0x3FF) << 0x14);
+                    block_vertex_data |= ((tile_is_visibly_damaged(tile) ? 1 : 0) << 0x1E);
+                    block_vertex_data |= ((is_block ? 1 : 0) << 0x1F);
+                    vertexData.put(block_vertex_data);
+                }
+            } vertexArrayObject.bind();
+            vertexBuffer.bind().bufferData(vertexData.flip());
+        }
+
+        void render() {
+            vertexArrayObject.bind();
+            glDrawArrays(GL_POINTS,0,256);
+        }
+
+        public void dispose() {
+            if (vertexData != null) {
+                MemoryUtil.memFree(vertexData);
+            } Disposable.dispose(vertexArrayObject, vertexBuffer);
+        }
     }
 
 }

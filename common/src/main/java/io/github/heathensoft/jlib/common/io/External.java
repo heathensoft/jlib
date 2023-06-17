@@ -1,5 +1,5 @@
 package io.github.heathensoft.jlib.common.io;
-
+import io.github.heathensoft.jlib.common.io.OS;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.ByteBuffer;

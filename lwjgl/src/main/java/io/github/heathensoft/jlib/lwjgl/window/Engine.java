@@ -35,8 +35,10 @@ public final class Engine {
             this.app = app;
             this.window = new Window();
             this.time = new Time();
-            BootConfiguration config = new BootConfiguration();
             List<Resolution> app_res = new ArrayList<>();
+            BootConfiguration config = new BootConfiguration();
+            config.logger("writer","console");
+            config.logger("writer.format","{date: HH:mm:ss.SS} {level}: {message}");
             app.engine_init(app_res,config,args);
             Logger.info("logger configured, welcome");
             int memory = (int)(Runtime.getRuntime().maxMemory() / 1000000L);
