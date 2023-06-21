@@ -122,7 +122,7 @@ public class TileTest extends Application {
         tilemap[1][1] = Tile.tile_set_block_type(tilemap[1][1],14);
 
         test_chunk = new Chunk();
-        test_chunk.update_blocks(tilemap,0,0);
+        //test_chunk.update_blocks(tilemap,0,0);
         glDisable(GL_DEPTH_TEST);
 
     }

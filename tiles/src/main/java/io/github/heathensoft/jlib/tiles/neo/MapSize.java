@@ -14,6 +14,7 @@ public enum MapSize {
     LARGE(512,3,"Large"),     // 512 x 512
     HUGE(1024,4,"Huge");      // 1024 x 1024
 
+    public static final int CHUNK_SIZE = 16;
     public static final String DESCRIPTOR = "Map Size";
     public static final MapSize[] ALL = values();
     public static final int COUNT = ALL.length;
@@ -27,7 +28,7 @@ public enum MapSize {
 
     MapSize(int length_tiles, int id, String descriptor) {
         this.length_tiles = length_tiles;
-        this.length_chunks = length_tiles / 16;
+        this.length_chunks = length_tiles / CHUNK_SIZE;
         this.tiles_count = length_tiles * length_tiles;
         this.chunks_count = length_chunks * length_chunks;
         this.descriptor = descriptor;

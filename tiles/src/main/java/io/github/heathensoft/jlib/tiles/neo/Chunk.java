@@ -33,17 +33,13 @@ import static org.lwjgl.opengl.GL30.glVertexAttribIPointer;
 
 public class Chunk implements Disposable {
 
-
-    // rooms: in read-mode by default (set to read-mode on initialization)
-    // initially allocate som small pow2 amount (it grows automatically)
     private IntBuffer rooms;
     private final Vao gfx_tiles_vao;
     private final BufferObject gfx_tiles_vbo;
 
 
-
     public Chunk() {
-
+        rooms = IntBuffer.allocate(4).flip(); // Not allocating max (256). Auto-grows if needed. (read-mode on init)
         gfx_tiles_vao = new Vao().bind();
         gfx_tiles_vbo = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW).bind();
         gfx_tiles_vbo.bufferData((long) 256 * Integer.BYTES);
@@ -51,16 +47,14 @@ public class Chunk implements Disposable {
         glEnableVertexAttribArray(0);
     }
 
-
-
-
-    public void update_blocks(int[][] tile_data, int chunk_x, int chunk_y) {
+    public void update_blocks(TileMap tilemap, int chunk_x, int chunk_y) {
         // When to update:
         // Block removed or added
         // Block type is changed
         // Block sub-type is changed
         // Block visibly damaged flag has changed
         // Triggers when the chunk is in view. No need to update a chunk before you can see it
+        int[][] tile_data = tilemap.tiles();
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(256);
             int lim = tile_data.length - 1;
@@ -113,11 +107,13 @@ public class Chunk implements Disposable {
 
 
 
-    protected void update_terrain(Texture blend_map, int[][] tile_data, int chunk_x, int chunk_y) {
+    protected void update_terrain(TileMap tilemap, int chunk_x, int chunk_y) {
         // When to update:
         // Terrain has been altered
         // Triggers when the chunk is in view
         // No need to update a chunk before you can see it
+        int[][] tile_data = tilemap.tiles();
+        Texture blend_map = tilemap.terrain().blend_map();
         int chunk_origin_x = chunk_x * 16;
         int chunk_origin_y = chunk_y * 16;
         try (MemoryStack stack = MemoryStack.stackPush()){
@@ -131,7 +127,6 @@ public class Chunk implements Disposable {
             }
             blend_map.bindToActiveSlot();
             blend_map.uploadSubData(buffer.flip(),0,16,16,chunk_origin_x,chunk_origin_y);
-            blend_map.generateMipmap(); // TODO: Check if this is viable. It should be
         }
     }
 
@@ -139,10 +134,10 @@ public class Chunk implements Disposable {
     //Shared temp-buffer, Main-Thread only. 256 is the maximum possible number of rooms that can be placed on a chunk.
     private static final IntBuffer TMP_ROOMS = IntBuffer.allocate(256); //(Theoretically you could place 256 doors)
 
-    protected void update_layout(Network network, int[][] room_layout, int[][] tile_data, int chunk_x, int chunk_y) {
+    protected void update_layout(TileMap tilemap, int chunk_x, int chunk_y) {
         // When to update:
         // Obstacles are placed or removed
-        // Doors are placed or removed (clearance changed to or from 0)
+        // Doors are placed or removed (clearance changed)
         // No need to update:
         // Obstacle replaced by another
         // Has to be updated, even if not in view
@@ -151,6 +146,11 @@ public class Chunk implements Disposable {
         // 1. Synchronized network disconnect
         // 2. Rebuild layout
         // 3. Synchronized network connect
+
+        Network network = tilemap.network();
+        int[][] tile_data = tilemap.tiles();
+        int[][] room_layout = tilemap.layout();
+
         {
             // While rebuilding the chunk's room layout, the old layout is available to the pathfinding.
             if (getRooms(TMP_ROOMS.clear()) > 0) { // synchronized on this
@@ -317,8 +317,7 @@ public class Chunk implements Disposable {
         } else {
 
             synchronized (this) {
-                rooms.clear();
-                rooms.flip(); // WHAT am I doing here?
+                rooms.clear().flip(); // sets remaining to 0, instead of capacity
             }
         }
         TMP_ROOMS.clear();
