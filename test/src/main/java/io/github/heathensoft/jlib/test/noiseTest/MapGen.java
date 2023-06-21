@@ -1,6 +1,6 @@
 package io.github.heathensoft.jlib.test.noiseTest;
 
-import io.github.heathensoft.jlib.ai.pathfinding.Grid;
+import io.github.heathensoft.jlib.ai.pathfinding.AStarGrid;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.noise.Noise;
 import io.github.heathensoft.jlib.common.noise.NoiseFunction;
@@ -8,9 +8,9 @@ import io.github.heathensoft.jlib.common.utils.BooleanGrid;
 import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color32;
-import io.github.heathensoft.jlib.lwjgl.graphics.TextureRegion;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 
 /**
@@ -144,7 +144,7 @@ public class MapGen implements Disposable {
         Disposable.dispose(road_tiles_texture, map_output_texture, tile_set_texture);
     }
 
-    private static final class HeightMap implements Grid {
+    private static final class HeightMap implements AStarGrid {
 
         private final float[][] noise;
         private final int movement_penalty_factor;

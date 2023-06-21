@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import org.lwjgl.glfw.GLFWImage;
 import org.lwjgl.system.MemoryStack;
 

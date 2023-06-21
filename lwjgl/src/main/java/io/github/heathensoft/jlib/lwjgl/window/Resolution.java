@@ -45,6 +45,10 @@ public record Resolution(int width, int height) implements Comparable<Resolution
     public float aspect_ratio() {
         return (float) width / height;
     }
+
+    public Resolution cpy() {
+        return new Resolution(width,height);
+    }
     
     @Override
     public boolean equals(Object o) {

@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.test.graphicsOld;
+package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import org.joml.Math;
@@ -94,6 +94,14 @@ public class SpriteBatch implements Disposable {
     }
     
      */
+
+    public void draw() {
+        draw(0,0,1,1);
+    }
+
+    public void draw(float u, float v, float u2, float v2) {
+        draw(u,v,u2,v2,-1,-1,2,2,DEFAULT_COLOR_BITS,DEFAULT_ID);
+    }
     
     public void draw(float x, float y, float width, float height, float color, float id) {
         draw(0,0,1,1,x,y,width,height,color,id);

@@ -10,8 +10,8 @@ import io.github.heathensoft.jlib.common.utils.Area;
 import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.graphics.Color32;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
 
 import java.util.HashSet;
 import java.util.Set;

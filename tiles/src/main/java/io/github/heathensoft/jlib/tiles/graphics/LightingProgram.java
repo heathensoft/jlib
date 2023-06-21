@@ -1,6 +1,6 @@
 package io.github.heathensoft.jlib.tiles.graphics;
 
-import io.github.heathensoft.jlib.lwjgl.graphics.ShaderProgram;
+import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
 import io.github.heathensoft.jlib.tiles.physics.Light2D;
 
 /**

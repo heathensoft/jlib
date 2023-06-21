@@ -2,9 +2,7 @@ package io.github.heathensoft.jlib.lwjgl.utils;
 
 import org.joml.*;
 import org.joml.Math;
-import org.joml.primitives.AABBf;
-import org.joml.primitives.Planef;
-import org.joml.primitives.Rayf;
+import org.joml.primitives.*;
 
 
 /**
@@ -32,27 +30,31 @@ public class MathLib {
     
     public static final Vector3f UP_VECTOR;
     public static final Matrix4f BIAS_MATRIX;
-    
-    private static final int v4Count;
-    private static final int v3Count;
-    private static final int v2Count;
-    private static final int m4Count;
-    private static final int m3Count;
-    private static final int rayCount;
-    private static final int rayAbbCount;
-    private static final int frustumCount;
 
-    private static int v4Idx;
-    private static int v3Idx;
-    private static int v2Idx;
-    private static int m4Idx;
-    private static int m3Idx;
-    private static int rayIdx;
-    private static int rayAbbIdx;
-    private static int frustumIdx;
+    private static final byte rfCount = 4;
+    private static final byte riCount = 4;
+    private static final byte v4Count = 16;
+    private static final byte v3Count = 16;
+    private static final byte v2Count = 8;
+    private static final byte m4Count = 8;
+    private static final byte m3Count = 4;
+    private static final byte rayCount = 4;
+    private static final byte rayAbbCount = 4;
+    private static final byte frustumCount = 4;
 
-    private static final int[] logTable;
-    
+    private static byte rfIdx = -1;
+    private static byte riIdx = -1;
+    private static byte v4Idx = -1;
+    private static byte v3Idx = -1;
+    private static byte v2Idx = -1;
+    private static byte m4Idx = -1;
+    private static byte m3Idx = -1;
+    private static byte rayIdx = -1;
+    private static byte rayAbbIdx = -1;
+    private static byte frustumIdx = -1;
+
+    private static final Rectanglef[] rectf;
+    private static final Rectanglei[] recti;
     private static final Vector4f[] vec4;
     private static final Vector3f[] vec3;
     private static final Vector2f[] vec2;
@@ -66,93 +68,37 @@ public class MathLib {
     
     static {
         
-        lightSpace = new LightSpace();
         rayCast = new RayCast();
-    
+        lightSpace = new LightSpace();
         UP_VECTOR = new Vector3f(0,1,0);
         BIAS_MATRIX = new Matrix4f().translate(0.5f,0.5f,0.5f).scale(0.5f);
-        
-        v4Idx = -1;
-        v3Idx = -1;
-        v2Idx = -1;
-        m4Idx = -1;
-        m3Idx = -1;
-        rayIdx = -1;
-        rayAbbIdx = -1;
-        frustumIdx = -1;
-        
-        v4Count = 16;
-        v3Count = 16;
-        v2Count = 8;
-        m4Count = 8;
-        m3Count = 4;
-        rayCount = 4;
-        rayAbbCount = 2;
-        frustumCount = 2;
-        
+
+        rayAabIntersection = new RayAabIntersection[rayAbbCount];
+        frustum = new FrustumIntersection[frustumCount];
+        rectf = new Rectanglef[rfCount];
+        recti = new Rectanglei[riCount];
         vec4 = new Vector4f[v4Count];
         vec3 = new Vector3f[v3Count];
         vec2 = new Vector2f[v2Count];
         mat4 = new Matrix4f[m4Count];
         mat3 = new Matrix3f[m3Count];
         ray = new Rayf[rayCount];
-        rayAabIntersection = new RayAabIntersection[rayAbbCount];
-        frustum = new FrustumIntersection[frustumCount];
-    
-        for (int i = 0; i < vec4.length; i++)
-            vec4[i] = new Vector4f();
-    
-        for (int i = 0; i < vec3.length; i++)
-            vec3[i] = new Vector3f();
-    
-        for (int i = 0; i < vec2.length; i++)
-            vec2[i] = new Vector2f();
-    
-        for (int i = 0; i < mat4.length; i++)
-            mat4[i] = new Matrix4f();
-    
-        for (int i = 0; i < mat3.length; i++)
-            mat3[i] = new Matrix3f();
-    
-        for (int i = 0; i < ray.length; i++)
-            ray[i] = new Rayf();
-    
-        for (int i = 0; i < rayAabIntersection.length; i++)
-            rayAabIntersection[i] = new RayAabIntersection();
-    
-        for (int i = 0; i < frustum.length; i++) {
-            frustum[i] = new FrustumIntersection();
-        }
 
-        logTable = new int[256];
-        logTable[0] = logTable[1] = 0;
-        for (int i=2; i<256; i++) logTable[i] = 1 + logTable[i/2];
-        logTable[0] = -1;
+        for (int i = 0; i < rayAabIntersection.length; i++) rayAabIntersection[i] = new RayAabIntersection();
+        for (int i = 0; i < frustum.length; i++) frustum[i] = new FrustumIntersection();
+        for (int i = 0; i < rectf.length; i++) rectf[i] = new Rectanglef();
+        for (int i = 0; i < recti.length; i++) recti[i] = new Rectanglei();
+        for (int i = 0; i < vec4.length; i++) vec4[i] = new Vector4f();
+        for (int i = 0; i < vec3.length; i++) vec3[i] = new Vector3f();
+        for (int i = 0; i < vec2.length; i++) vec2[i] = new Vector2f();
+        for (int i = 0; i < mat4.length; i++) mat4[i] = new Matrix4f();
+        for (int i = 0; i < mat3.length; i++) mat3[i] = new Matrix3f();
+        for (int i = 0; i < ray.length; i++) ray[i] = new Rayf();
 
     }
 
-    public static int log2(float f) {
-        int x = Float.floatToIntBits(f);
-        int c = x >> 23;
-        if (c != 0) return c - 127; //Compute directly from exponent.
-        else { //Subnormal, must compute from mantissa.
-            int t = x >> 16;
-            if (t != 0) return logTable[t] - 133;
-            else return (x >> 8 != 0) ? logTable[t] - 141 : logTable[x] - 149;
-        }
-    }
 
-    public static int nextPow2(int value) {
-        if (value-- == 0) return 1;
-        value |= value >>> 1;
-        value |= value >>> 2;
-        value |= value >>> 4;
-        value |= value >>> 8;
-        value |= value >>> 16;
-        return value + 1;
-    }
-
-    public static int closestNumber(int n, int m) {
+    public static int closestNumber(int n, int m) { // WTF is this again?
         int q = n / m; // find the quotient
         int n1 = m * q; // 1st possible closest number
         // 2nd possible closest number
@@ -162,6 +108,26 @@ public class MathLib {
         if (java.lang.Math.abs(n - n1) < java.lang.Math.abs(n - n2))
             return n1;
         return n2;
+    }
+
+    public static Rectanglef rectf() {
+        return rectf[++rfIdx % rfCount];
+    }
+
+    public static Rectanglef rectf(float minX, float minY, float maxX, float maxY) {
+        Rectanglef rect = rectf[++rfIdx % rfCount];
+        rect.setMin(minX,minY);
+        return rect.setMax(maxX,maxY);
+    }
+
+    public static Rectanglei recti() {
+        return recti[++riIdx % riCount];
+    }
+
+    public static Rectanglei recti(int minX, int minY, int maxX, int maxY) {
+        Rectanglei rect = recti[++riIdx % riCount];
+        rect.setMin(minX,minY);
+        return rect.setMax(maxX,maxY);
     }
 
     public static Vector4f vec4() {

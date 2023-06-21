@@ -10,6 +10,15 @@ import io.github.heathensoft.jlib.common.noise.Noise;
 
 public class U {
 
+    private static final int[] logTable;
+
+    static {
+        logTable = new int[256];
+        logTable[0] = logTable[1] = 0;
+        for (int i=2; i<256; i++) logTable[i] = 1 + logTable[i/2];
+        logTable[0] = -1;
+    }
+
     public static int[][] adj_8 = new int[][] {{-1,0},{ 0,1},{ 1,0},{ 0,-1},{-1,1},{1,1},{-1,1},{-1,-1}};
 
     public static float clamp(float v) {
@@ -30,6 +39,14 @@ public class U {
 
     public static int floor(float v) {
         return (int) Math.floor(v);
+    }
+
+    public static int ceil(float v) {
+        return (int) Math.ceil(v);
+    }
+
+    public static int clamp(int v, int min, int max) {
+        return Math.max(min,Math.min(v,max));
     }
 
     public static float lerp(float a, float b, float f) {
@@ -65,6 +82,17 @@ public class U {
         value |= value >>> 8;
         value |= value >>> 16;
         return value + 1;
+    }
+
+    public static int log2(float f) {
+        int x = Float.floatToIntBits(f);
+        int c = x >> 23;
+        if (c != 0) return c - 127; //Compute directly from exponent.
+        else { //Subnormal, must compute from mantissa.
+            int t = x >> 16;
+            if (t != 0) return logTable[t] - 133;
+            else return (x >> 8 != 0) ? logTable[t] - 141 : logTable[x] - 149;
+        }
     }
 
     public static float[][] sharpen_array(float[][] src) {

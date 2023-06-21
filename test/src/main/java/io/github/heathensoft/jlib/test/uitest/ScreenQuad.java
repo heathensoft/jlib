@@ -2,8 +2,8 @@ package io.github.heathensoft.jlib.test.uitest;
 
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.graphics.BufferObject;
-import io.github.heathensoft.jlib.lwjgl.graphics.Vao;
+import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
+import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;

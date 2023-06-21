@@ -20,9 +20,9 @@ import static org.lwjgl.opengl.GL13.GL_CLAMP_TO_BORDER;
 public class GUIGraphics implements Disposable {
 
 
-    private static final String PRIMARY_ATLAS_PNG_PATH = "res/jlib/test/atlas/hud.png";
-    private static final String PRIMARY_ATLAS_TXT_PATH = "res/jlib/test/atlas/hud.atlas";
-    private static final String TINY_FONT_GLYPH_DATA_PATH = "res/jlib/test/glyphs/pixuf.txt";
+    private static final String PRIMARY_ATLAS_PNG_PATH = "res/jlib/test/gui/atlas/hud.png";
+    private static final String PRIMARY_ATLAS_TXT_PATH = "res/jlib/test/gui/atlas/hud.atlas";
+    private static final String TINY_FONT_GLYPH_DATA_PATH = "res/jlib/test/gui/glyphs/pixuf.txt";
 
     public static final String WINDOW_CLOSE_ICON = "window_close_icon";
     public static final String WINDOW_RESTORE_ICON = "window_restore_icon";

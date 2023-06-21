@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.io.External;
-import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryUtil;
 

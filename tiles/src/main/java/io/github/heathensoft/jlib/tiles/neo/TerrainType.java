@@ -1,6 +1,9 @@
 package io.github.heathensoft.jlib.tiles.neo;
 
 /**
+ *
+ * Terrain cannot count as obstacles. But there is no limit to movement penalty
+ *
  * @author Frederik Dahl
  * 11/05/2023
  */
@@ -8,11 +11,11 @@ package io.github.heathensoft.jlib.tiles.neo;
 
 public enum TerrainType {
 
-    T0(0x00,(short) 0x0000,0,"CLEAR"),  // Base Layer
+    T0(0x00,(short) 0x0000,0,"CLEAR"), // Base Layer
     T1(0x01,(short) 0x000F,1,"RED"),
     T2(0x02,(short) 0x00F0,2,"GREEN"),
     T3(0x04,(short) 0x0F00,3,"BLUE"),
-    T4(0x08,(short) 0xF000,4,"ALPHA");  // Top Layer
+    T4(0x08,(short) 0xF000,4,"ALPHA"); // Top Layer
 
     public static final String DESCRIPTOR = "Terrain Type";
     public static final TerrainType[] ALL = values();
@@ -22,13 +25,18 @@ public enum TerrainType {
         return ALL[id % COUNT];
     }
 
-    public final String channel_descriptor;
+    // Adjustable (i'm sure i'll add more)
+    public String name = "Terrain";
+    public int movement_penalty = 0;
+    public boolean flammable = false;
+
+    public final String color_channel;
     public final int id;
     public final int mask;
     public final short abgr4;
 
-    TerrainType(int mask, short abgr4, int id, String channel_descriptor) {
-        this.channel_descriptor = channel_descriptor;
+    TerrainType(int mask, short abgr4, int id, String color_channel) {
+        this.color_channel = color_channel;
         this.abgr4 = abgr4;
         this.mask = mask;
         this.id = id;

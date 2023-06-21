@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.test.noiseTest;
 
 import io.github.heathensoft.jlib.ai.pathfinding.AStarNode;
-import io.github.heathensoft.jlib.ai.pathfinding.Grid;
+import io.github.heathensoft.jlib.ai.pathfinding.AStarGrid;
 import io.github.heathensoft.jlib.ai.pathfinding.NodeChain;
 import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.storage.generic.HeapSet;
@@ -21,9 +21,9 @@ import java.util.Set;
 public class Roads {
 
 
-    public static int[] path(Coordinate start, Coordinate end, Grid grid) {
+    public static int[] path(Coordinate start, Coordinate end, AStarGrid astarGrid) {
         int distance = start.distance(end);
-        if (grid.contains(start) && grid.contains(end) && distance > 0) {
+        if (astarGrid.contains(start) && astarGrid.contains(end) && distance > 0) {
             int[][] adjacent = U.adj_8;
             int initial_cap = U.nextPowerOfTwo(distance * 4);
             HeapSet<AStarNode> open = new HeapSet<>(initial_cap);
@@ -42,8 +42,8 @@ public class Roads {
                     int[] offset = adjacent[i];
                     int adjacent_x = current_node.x + offset[0];
                     int adjacent_y = current_node.y + offset[1];
-                    if (grid.contains(adjacent_x,adjacent_y)) {
-                        int adj_move_penalty = grid.movementPenalty(adjacent_x,adjacent_y);
+                    if (astarGrid.contains(adjacent_x,adjacent_y)) {
+                        int adj_move_penalty = astarGrid.movementPenalty(adjacent_x,adjacent_y);
                         if (adj_move_penalty != Integer.MAX_VALUE) {
                             tmp_node.set(adjacent_x,adjacent_y);
                             if (!closed.contains(tmp_node)) {

@@ -3,7 +3,7 @@ package io.github.heathensoft.jlib.test.noiseTest;
 import io.github.heathensoft.jlib.ai.wfc.WFC;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Rand;
-import io.github.heathensoft.jlib.lwjgl.graphics.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Application;
 import io.github.heathensoft.jlib.lwjgl.window.BootConfiguration;
@@ -36,7 +36,7 @@ public class NoiseApp extends Application {
     protected void on_start(Resolution resolution) throws Exception {
         //mapGen = new MapGen(32,32,"tileset.png", "water_tiles.png");
 
-        Bitmap src_colors = new Resources(NoiseApp.class).image("wfc_biomes.png");
+        Bitmap src_colors = new Resources(NoiseApp.class).image("res/jlib/test/noise/wfc_biomes.png");
 
         WFC wfc = new WFC(src_colors.array(),Rand.nextInt(),true);
 
