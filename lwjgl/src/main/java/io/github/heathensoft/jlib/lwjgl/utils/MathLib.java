@@ -42,16 +42,16 @@ public class MathLib {
     private static final byte rayAbbCount = 4;
     private static final byte frustumCount = 4;
 
-    private static byte rfIdx = -1;
-    private static byte riIdx = -1;
-    private static byte v4Idx = -1;
-    private static byte v3Idx = -1;
-    private static byte v2Idx = -1;
-    private static byte m4Idx = -1;
-    private static byte m3Idx = -1;
-    private static byte rayIdx = -1;
-    private static byte rayAbbIdx = -1;
-    private static byte frustumIdx = -1;
+    private static int rfIdx = -1;
+    private static int riIdx = -1;
+    private static int v4Idx = -1;
+    private static int v3Idx = -1;
+    private static int v2Idx = -1;
+    private static int m4Idx = -1;
+    private static int m3Idx = -1;
+    private static int rayIdx = -1;
+    private static int rayAbbIdx = -1;
+    private static int frustumIdx = -1;
 
     private static final Rectanglef[] rectf;
     private static final Rectanglei[] recti;

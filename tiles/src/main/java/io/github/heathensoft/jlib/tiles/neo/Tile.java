@@ -45,7 +45,6 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
 
 
 
-
 public class Tile extends Coordinate {
 
     private final TileMap context;
@@ -130,6 +129,10 @@ public class Tile extends Coordinate {
         return (tile >> 24) & 0x0F;
     }
 
+    public static short tile_terrain_rgba4(int tile) {
+        return TerrainType.rgba4(tile_terrain_layer_mask(tile));
+    }
+
     public static int tile_clearance_level(int tile) {
         return (tile >> 28) & 0b11;
     }
@@ -153,6 +156,8 @@ public class Tile extends Coordinate {
     public static boolean tile_is_block(int tile) {
         return tile_is_block_bit(tile) == 1;
     }
+
+
 
     public static TerrainType tile_terrain_top_layer(int tile) {
         return TerrainType.top_layer(tile_terrain_layer_mask(tile));

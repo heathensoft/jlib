@@ -12,10 +12,10 @@ package io.github.heathensoft.jlib.tiles.neo;
 public enum TerrainType {
 
     T0(0x00,(short) 0x0000,0,"CLEAR"), // Base Layer
-    T1(0x01,(short) 0x000F,1,"RED"),
-    T2(0x02,(short) 0x00F0,2,"GREEN"),
-    T3(0x04,(short) 0x0F00,3,"BLUE"),
-    T4(0x08,(short) 0xF000,4,"ALPHA"); // Top Layer
+    T1(0x01,(short) 0x000F,1,"ALPHA"),
+    T2(0x02,(short) 0x00F0,2,"BLUE"),
+    T3(0x04,(short) 0x0F00,3,"GREEN"),
+    T4(0x08,(short) 0xF000,4,"RED"); // Top Layer
 
     public static final String DESCRIPTOR = "Terrain Type";
     public static final TerrainType[] ALL = values();
@@ -56,6 +56,15 @@ public enum TerrainType {
         if ((tile_terrain_layers & T2.mask) == T2.mask) return T2;
         if ((tile_terrain_layers & T1.mask) == T1.mask) return T1;
         return T0;
+    }
+
+    public static short rgba4(int tile_terrain_layers) {
+        int rgba4 = 0;
+        rgba4 |= ((tile_terrain_layers & T1.mask) == T1.mask ? T1.abgr4 : 0);
+        rgba4 |= ((tile_terrain_layers & T2.mask) == T2.mask ? T2.abgr4 : 0);
+        rgba4 |= ((tile_terrain_layers & T3.mask) == T3.mask ? T3.abgr4 : 0);
+        rgba4 |= ((tile_terrain_layers & T4.mask) == T4.mask ? T4.abgr4 : 0);
+        return (short) rgba4;
     }
 
     public static boolean contains(int tile_terrain_layers, TerrainType type) {

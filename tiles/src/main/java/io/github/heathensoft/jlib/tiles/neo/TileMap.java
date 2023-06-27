@@ -79,7 +79,7 @@ public class TileMap implements AStarGrid, Disposable {
             for (int c = 0; c < chunk_cols; c++) {
                 Chunk chunk = chunks[r][c];
                 chunk.update_blocks(this,c,r);
-                chunk.update_layout(this,c,r);
+                // chunk.update_layout(this,c,r);
                 chunk.update_terrain(this,c,r);
             }
         } terrain.blend_map().generateMipmap();
@@ -103,7 +103,7 @@ public class TileMap implements AStarGrid, Disposable {
             while (chunks_layout_queue.hasRemaining()) {
                 int chunk_x = chunks_layout_queue.get();
                 int chunk_y = chunks_layout_queue.get();
-                chunks[chunk_y][chunk_x].update_layout(this,chunk_x,chunk_y);
+                //chunks[chunk_y][chunk_x].update_layout(this,chunk_x,chunk_y);
                 chunk_update_layout_set.clearUnchecked(chunk_x + chunk_y * map_size.length_chunks);
             } chunks_layout_queue.clear();
         }
@@ -123,6 +123,7 @@ public class TileMap implements AStarGrid, Disposable {
 
         // UPDATE TERRAIN AND BLOCKS ONLY IF THE CHUNK IS IN VIEW
         int in_view_position = chunks_in_view.position();
+        boolean regenerate_blend_map_mipmap = false;
         if (in_view_position != 0) { // IF ANY CHUNKS ARE VISIBLE
             for (int i = 0; i < in_view_position; i += 2) { // BUFFER POSITION REMAINS THE SAME
                 int chunk_x = chunks_in_view.get(i);
@@ -131,6 +132,7 @@ public class TileMap implements AStarGrid, Disposable {
 
                 // UPDATE TERRAIN IF QUEUED FOR UPDATE
                 if (chunk_update_terrain_set.getUnchecked(chunk_index)) {
+                    regenerate_blend_map_mipmap = true;
                     chunks[chunk_y][chunk_x].update_terrain(this,chunk_x,chunk_y);
                     chunk_update_terrain_set.clearUnchecked(chunk_index);
                 }
@@ -141,11 +143,23 @@ public class TileMap implements AStarGrid, Disposable {
                 }
             }
         }
+
+        // REGENERATE BLEND MAP MIP MAP
+        if (regenerate_blend_map_mipmap) {
+            terrain.blend_map().generateMipmap();
+        }
     }
 
     public void draw() { // Own draw method for room view
-
-
+        int in_view_position = chunks_in_view.position();
+        if (in_view_position != 0) { // IF ANY CHUNKS ARE VISIBLE
+            for (int i = 0; i < in_view_position; i += 2) { // BUFFER POSITION REMAINS THE SAME
+                int chunk_x = chunks_in_view.get(i);
+                int chunk_y = chunks_in_view.get(i+1);
+                //if (chunk_x == 0 && chunk_y == 0)
+                    chunks[chunk_y][chunk_x].draw_tiles();
+            }
+        }
     }
 
     public Network network() {
@@ -265,6 +279,14 @@ public class TileMap implements AStarGrid, Disposable {
         } tiles[y][x] = tile_terrain_add_layer(tile,type);
     }
 
+    public void remove_terrain_layer_top(int x, int y) {
+        int tile = tiles[y][x];
+        TerrainType top_layer = tile_terrain_top_layer(tile);
+        if (top_layer == TerrainType.T0) return;
+        queue_chunk_update_terrain(x/16,y/16);
+        tiles[y][x] = tile_terrain_remove_layer(tile,top_layer);
+    }
+
     public void remove_terrain_layer(TerrainType type, int x, int y) {
         if (type == TerrainType.T0) return;
         int tile = tiles[y][x];
@@ -283,6 +305,7 @@ public class TileMap implements AStarGrid, Disposable {
 
     public void place_block(int type, int subtype, int x, int y) {
         int tile = tiles[y][x];
+        tile = tile_set_block_bit(tile,true);
         tile = tile_set_block_type(tile,type);
         tile = tile_set_block_subtype(tile,subtype);
         tiles[y][x] = tile_set_block_damage(tile,0);

@@ -265,6 +265,7 @@ public class Bitmap implements Disposable {
         } return color;
     }
 
+    // Do not use this anonymously. Bitmap must be disposed
     public Texture asTexture() {
         return asTexture(false);
     }

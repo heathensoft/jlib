@@ -1,19 +1,26 @@
 package io.github.heathensoft.jlib.test.tiles;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.noise.Noise;
+import io.github.heathensoft.jlib.common.noise.NoiseFunction;
+import io.github.heathensoft.jlib.common.utils.Rand;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import io.github.heathensoft.jlib.lwjgl.gfx.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
+import io.github.heathensoft.jlib.lwjgl.gfx.debug.DebugLines2D;
+import io.github.heathensoft.jlib.lwjgl.gfx.surface.DepthMap8;
+import io.github.heathensoft.jlib.lwjgl.gfx.surface.NormalMap;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.*;
-import io.github.heathensoft.jlib.tiles.neo.Chunk;
-import io.github.heathensoft.jlib.tiles.neo.Tile;
+import io.github.heathensoft.jlib.tiles.neo.*;
+import org.joml.Vector2f;
 
 import java.util.List;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 
 /**
@@ -31,25 +38,25 @@ public class TileTest extends Application {
     private static final String chunk_tiles_geom_path = "res/jlib/test/tiles/glsl/chunk-tiles.geom";
     private static final String chunk_tiles_frag_path = "res/jlib/test/tiles/glsl/chunk-tiles.frag";
     private static final String block_atlas_path = "res/jlib/test/tiles/img/block-atlas.png";
-    private static final String terrain_texture_path = "res/jlib/test/tiles/img/terrain-rock.png";
 
     private static final String UNIFORM_PROJ_VIEW = "u_proj_view";
-    private static final String UNIFORM_TILE_SIZE = "u_tile_size";
+    private static final String UNIFORM_TILE_SIZE = "u_tile_size_pixels";
     private static final String UNIFORM_BLOCK_ATLAS = "u_block_atlas";
-    private static final String UNIFORM_TERRAIN_TEXTURE = "u_terrain_texture";
+    private static final String UNIFORM_TERRAIN_BLEND_MAP = "u_terrain_blend_map";
+    private static final String UNIFORM_TERRAIN_TEXTURES = "u_terrain_textures";
 
     private static final Resolution TARGET_RESOLUTION = Resolution.R_1280x720;
-    private static final float TILE_SIZE = 16;
 
 
-    private int[][] tilemap = new int[16][16];
-
-    private Chunk test_chunk;
     private Texture block_atlas;
-    private Texture terrain_texture;
     private ShaderProgram tile_shader;
     private Resolution resolution;
     private OrthographicCamera camera;
+
+    private TileMap tilemap;
+    private static final MapSize MAP_SIZE = MapSize.HUGE;
+    private static final int TERRAIN_TEXTURE_SIZE = 256;
+    private static final float TILE_SIZE_PIXELS = 16;
 
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         supported.add(TARGET_RESOLUTION);
@@ -59,36 +66,39 @@ public class TileTest extends Application {
         config.auto_resolution = false;
         config.vsync_enabled = true;
         config.limit_fps = false;
-        config.resizable_window = true;
+        config.resizable_window = false;
     }
 
     protected void on_start(Resolution resolution) throws Exception {
         this.resolution = resolution.cpy();
         this.camera = new OrthographicCamera();
-        float cam_viewport_h = resolution.height() / (TILE_SIZE);
-        float cam_viewport_w = resolution.width() / (TILE_SIZE);
-        //float cam_viewport_w = cam_viewport_h * resolution.aspect_ratio();
+        float cam_viewport_h = resolution.height() / (TILE_SIZE_PIXELS);
+        float cam_viewport_w = resolution.width() / (TILE_SIZE_PIXELS);
         this.camera.viewport.set(cam_viewport_w,cam_viewport_h);
-        this.camera.zoom = 0.125f;
-        //this.camera.translateXY(8,8);
-
+        this.camera.translateXY(8,8);
         this.camera.refresh();
-
         Input.initialize();
 
         Resources io = new Resources(this.getClass());
-
-        // textures here
-
-        block_atlas = io.image(block_atlas_path).asTexture(); // will bind the texture
-        block_atlas.nearest();
+        Bitmap atlas_img = io.image(block_atlas_path);
+        block_atlas = atlas_img.asTexture(true); // will bind the texture
+        block_atlas.filter(GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR);
         block_atlas.clampToEdge();
-
-        terrain_texture = io.image(terrain_texture_path).asTexture(); // will bind the texture
-        terrain_texture.nearest();
-        terrain_texture.repeat();
+        block_atlas.generateMipmap();
+        atlas_img.dispose();
 
 
+        tilemap = new TileMap(MAP_SIZE,TERRAIN_TEXTURE_SIZE);
+        for (int i = 0; i < 5; i++) {
+            String path = "res/jlib/test/tiles/img/terrain/T" + i + ".png";
+            Bitmap layer = io.image(path);
+            tilemap.terrain().upload_layer_diffuse(layer, TerrainType.get(i));
+            layer.dispose();
+        } tilemap.terrain().generate_mipmaps();
+
+
+        generate_terrain(tilemap.tiles());
+        tilemap.initialize();
 
         tile_shader = new ShaderProgram(
                 io.asString(chunk_tiles_vert_path),
@@ -99,69 +109,152 @@ public class TileTest extends Application {
                 UNIFORM_TILE_SIZE,
                 UNIFORM_PROJ_VIEW,
                 UNIFORM_BLOCK_ATLAS,
-                UNIFORM_TERRAIN_TEXTURE
+                UNIFORM_TERRAIN_TEXTURES,
+                UNIFORM_TERRAIN_BLEND_MAP
         );
         tile_shader.use();
-        tile_shader.setUniform1f(UNIFORM_TILE_SIZE,TILE_SIZE);
+        tile_shader.setUniform1f(UNIFORM_TILE_SIZE, TILE_SIZE_PIXELS);
         tile_shader.setUniformSampler(UNIFORM_BLOCK_ATLAS,0);
-        tile_shader.setUniformSampler(UNIFORM_TERRAIN_TEXTURE,1);
+        tile_shader.setUniformSampler(UNIFORM_TERRAIN_TEXTURES,1);
+        tile_shader.setUniformSampler(UNIFORM_TERRAIN_BLEND_MAP,2);
         block_atlas.bindToSlot(0);
-        terrain_texture.bindToSlot(1);
+        tilemap.terrain().texture_layers_diffuse().bindToSlot(1);
+        tilemap.terrain().blend_map().bindToSlot(2);
+        DebugLines2D.initialize();
 
-        for (int r = 0; r < 16; r++) {
-            for (int c = 0; c < 16; c++) {
-                tilemap[r][c] = Tile.tile_set_block_bit(0,false);
-                tilemap[r][c] = Tile.tile_set_block_type(tilemap[r][c],3);
-                tilemap[r][c] = Tile.tile_set_block_damage(tilemap[r][c],15);
-            }
-        }
-        tilemap[0][0] = Tile.tile_set_block_bit(tilemap[0][0],true);
-        tilemap[1][0] = Tile.tile_set_block_bit(tilemap[1][0],true);
-        tilemap[0][1] = Tile.tile_set_block_bit(tilemap[0][1],true);
-        tilemap[1][1] = Tile.tile_set_block_bit(tilemap[1][1],true);
-        tilemap[1][1] = Tile.tile_set_block_type(tilemap[1][1],14);
-
-        test_chunk = new Chunk();
-        //test_chunk.update_blocks(tilemap,0,0);
         glDisable(GL_DEPTH_TEST);
-
     }
+
+    private TerrainType terrainType = TerrainType.T0;
+    private Vector2f mouse_press_wheel = new Vector2f();
+    private Vector2f mouse_position = new Vector2f();
+    private float zoom = 1.0f;
 
     protected void on_update(float delta) {
 
+        //System.out.println(Engine.get().time().fps());
         Keyboard keyboard = Input.get().keyboard();
         Mouse mouse = Input.get().mouse();
-
-
         if (keyboard.pressed(GLFW_KEY_ESCAPE)) {
             Engine.get().exit();
         }
 
-        //Vector2f mpos = new Vector2f();
-        //camera.unProject(mpos.set(mouse.ndc()));
-        //System.out.println(mpos.x + " , " + mpos.y);
+        if (keyboard.just_pressed(GLFW_KEY_0)) {
+            terrainType = TerrainType.T0;
+        } else if (keyboard.just_pressed(GLFW_KEY_1)) {
+            terrainType = TerrainType.T1;
+        } else if (keyboard.just_pressed(GLFW_KEY_2)) {
+            terrainType = TerrainType.T2;
+        } else if (keyboard.just_pressed(GLFW_KEY_3)) {
+            terrainType = TerrainType.T3;
+        } else if (keyboard.just_pressed(GLFW_KEY_4)) {
+            terrainType = TerrainType.T4;
+        }
+
+        boolean control = keyboard.pressed(GLFW_KEY_LEFT_CONTROL);
+
+
+        if (mouse.is_dragging(Mouse.WHEEL)) {
+            Vector2f drag_vec = mouse.delta_vector();
+            camera.position.x -= drag_vec.x * resolution.width() * camera.zoom / TILE_SIZE_PIXELS;
+            camera.position.y -= drag_vec.y * resolution.height() * camera.zoom / TILE_SIZE_PIXELS;
+        }
+        else if (mouse.button_pressed(Mouse.LEFT)) {
+            mouse_position.set(mouse.ndc());
+            camera.unProject(mouse_position);
+            int block_type = 0;
+            int mx = (int) mouse_position.x;
+            int my = (int) mouse_position.y;
+            int tile = tilemap.tile_data(mx,my);
+            if (Tile.tile_is_block(tile)) {
+                if (control) {
+                    tilemap.remove_block(mx,my);
+                }
+            } else {
+                if (!control) {
+                    tilemap.place_block(block_type,0,mx,my);
+                }
+
+            }
+        } else if (mouse.button_pressed(Mouse.RIGHT)) {
+            mouse_position.set(mouse.ndc());
+            camera.unProject(mouse_position);
+            int mx = (int) mouse_position.x;
+            int my = (int) mouse_position.y;
+            if (control) {
+                tilemap.remove_terrain_layer_top(mx,my);
+            } else {
+                tilemap.place_terrain_layer(terrainType,mx,my);
+            }
+
+        }
+
+        if (keyboard.just_pressed(GLFW_KEY_KP_ADD)) {
+            zoom -= 1;
+            camera.zoom = (float) Math.pow(2,zoom);
+            System.out.println(camera.zoom);
+        } else if (keyboard.just_pressed(GLFW_KEY_KP_SUBTRACT)) {
+            zoom += 1;
+            camera.zoom = (float) Math.pow(2,zoom);
+            System.out.println(camera.zoom);
+        }
 
         camera.refresh();
+        tilemap.refresh(camera.bounds);
     }
 
     protected void on_render(float frame_time, float alpha) {
-
         Framebuffer.bindDefault();
         Framebuffer.clear();
         tile_shader.use();
         tile_shader.setUniform(UNIFORM_PROJ_VIEW,camera.combined());
-        test_chunk.draw_tiles();
+        tilemap.draw();
+        //DebugLines2D.drawGrid(camera,16,true,true);
+    }
 
+    private void generate_terrain(int[][] terrain) {
+
+        int size = terrain.length;
+
+        NoiseFunction function = new NoiseFunction.Rigged(0.002f,Rand.nextInt());
+
+        float[][] base_noise = Noise.generate_amplified(function,size,size,33,33);
+
+        // T0
+        float t1_lim = 0.2f;
+        // T1
+        float t2_lim = 0.21f;
+        // T2
+        float t3_lim = 0.22f;
+        // T3
+        float t4_lim = 0.62f;
+        // T4
+
+        for (int r = 0; r < size; r++) {
+            for (int c = 0; c < size; c++) {
+                float n = base_noise[r][c];
+                int tile = terrain[r][c];
+                if (n > t1_lim) {
+                    tile = Tile.tile_terrain_add_layer(tile,TerrainType.T1);
+                } if (n > t2_lim) {
+                    tile = Tile.tile_terrain_add_layer(tile,TerrainType.T2);
+                } if (n > t3_lim) {
+                    tile = Tile.tile_terrain_add_layer(tile,TerrainType.T3);
+                } if (n > t4_lim) {
+                    tile = Tile.tile_terrain_add_layer(tile,TerrainType.T4);
+                } terrain[r][c] = tile;
+            }
+        }
 
     }
 
     protected void on_exit() {
         Disposable.dispose(
-                test_chunk,
-                terrain_texture,
+                tilemap,
                 block_atlas,
                 tile_shader
         );
+        DebugLines2D.dispose();
     }
 
     protected void resolution_request(Resolution resolution) throws Exception {

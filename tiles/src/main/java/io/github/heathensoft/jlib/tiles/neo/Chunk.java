@@ -93,6 +93,7 @@ public class Chunk implements Disposable {
                     // 4 bit damage
                     // 3 bit unused
                     // 1 bit block
+
                     int block_vertex_data = chunk_x & 0x3F;
                     block_vertex_data |= ((chunk_y & 0x3F) << 6);
                     block_vertex_data |= ((block_uv_index & 0xFFF) << 12);
@@ -122,7 +123,7 @@ public class Chunk implements Disposable {
                 int y = chunk_origin_y + r;
                 for (int c = 0; c < 16; c++) {
                     int x = chunk_origin_x + c;
-                    buffer.put(Tile.tile_terrain_top_layer(tile_data[y][x]).abgr4);
+                    buffer.put(Tile.tile_terrain_rgba4(tile_data[y][x]));
                 }
             }
             blend_map.bindToActiveSlot();
@@ -333,6 +334,7 @@ public class Chunk implements Disposable {
 
     public void draw_tiles() {
         gfx_tiles_vao.bind();
+        gfx_tiles_vbo.bind(); // should not matter
         glDrawArrays(GL_POINTS,0,256);
     }
 
