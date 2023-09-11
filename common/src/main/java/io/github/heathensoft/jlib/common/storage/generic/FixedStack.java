@@ -3,13 +3,15 @@ package io.github.heathensoft.jlib.common.storage.generic;
 
 import io.github.heathensoft.jlib.common.Disposable;
 
+import java.util.Iterator;
+
 /**
  * @author Frederik Dahl
  * 02/02/2023
  */
 
 @SuppressWarnings("unchecked")
-public class FixedStack<E> implements Disposable, Readable<E> {
+public class FixedStack<E> implements Disposable, Readable<E>, Iterable<E> {
 
     private final E[] items;
     private int idx;
@@ -88,12 +90,40 @@ public class FixedStack<E> implements Disposable, Readable<E> {
             reader.next(items[idx]);
             count--;
         }
-
     }
 
     public void collect(Reader<E> collector) {
         while (!isEmpty()) {
             collector.next(pop());
+        }
+    }
+
+    public Iterator<E> iterator() {
+        return new Itr<>(this);
+    }
+
+    private static class Itr<E> implements Iterator<E> {
+
+        private final FixedStack<E> stack;
+        private int count;
+        private int idx;
+
+        Itr(FixedStack<E> stack) {
+            this.stack = stack;
+            this.count = stack.size;
+            this.idx = stack.idx;
+        }
+        public boolean hasNext() {
+            return count != 0;
+        }
+        public E next() {
+            idx = idx == 0 ? (stack.length()- 1) : (idx - 1);
+            E item = stack.items[idx];
+            count--;
+            return item;
+        }
+        public void remove() {
+            throw new UnsupportedOperationException();
         }
     }
 }

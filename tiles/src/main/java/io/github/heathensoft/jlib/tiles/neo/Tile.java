@@ -25,7 +25,7 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
  * 1-bit: block-sub-type        Offset: 15 (2 sub-types)
  * 4-bit: block-sprite-variant  Offset: 16 (16 non-edge variations)
  * 4-bit: block-damage          Offset: 20 (0-15 / 15 "hp")
- * 4-bit: terrain-layer-mask    Offset: 24
+ * 4-bit: terrain-type          Offset: 24
  * 2-bit: clearance-level       Offset: 28 (0 = no door, 1, 2, 3)
  * 1-bit: is-block              Offset: 30
  * 1-bit: is-obstacle           Offset: 31 (sign bit)
@@ -47,13 +47,15 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
 
 public class Tile extends Coordinate {
 
-    private final TileMap context;
+    public static final int SIZE_PIXELS = 32;
 
-    public Tile(Coordinate coordinate, TileMap context) {
+    private final Tilemap context;
+
+    public Tile(Coordinate coordinate, Tilemap context) {
         this(coordinate.x,coordinate.y,context);
     }
 
-    public Tile(int x, int y, TileMap context) {
+    public Tile(int x, int y, Tilemap context) {
         super(x, y);
         this.context = context;
     }
@@ -78,12 +80,16 @@ public class Tile extends Coordinate {
         return tile_block_damage(data());
     }
 
+    public int terrain_type() {
+        return tile_terrain_type(data());
+    }
+
     public int clearance_level() {
         return tile_clearance_level(data());
     }
 
     public int movement_penalty() {
-        return terrain_type().movement_penalty;
+        return context.movementPenalty(x,y);
     }
 
     public boolean is_block() {
@@ -102,9 +108,7 @@ public class Tile extends Coordinate {
         return context.is_tile_in_view(x,y);
     }
 
-    public TerrainType terrain_type() {
-        return tile_terrain_top_layer(data());
-    }
+
 
 
 
@@ -125,12 +129,8 @@ public class Tile extends Coordinate {
         return (tile >> 20) & 0x0F;
     }
 
-    public static int tile_terrain_layer_mask(int tile) {
+    public static int tile_terrain_type(int tile) {
         return (tile >> 24) & 0x0F;
-    }
-
-    public static short tile_terrain_rgba4(int tile) {
-        return TerrainType.rgba4(tile_terrain_layer_mask(tile));
     }
 
     public static int tile_clearance_level(int tile) {
@@ -158,11 +158,6 @@ public class Tile extends Coordinate {
     }
 
 
-
-    public static TerrainType tile_terrain_top_layer(int tile) {
-        return TerrainType.top_layer(tile_terrain_layer_mask(tile));
-    }
-
     public static int tile_block_uv_index(int tile, int mask) {
         int block_type = tile_block_type(tile);
         int sub_type = tile_block_subtype(tile);
@@ -175,7 +170,7 @@ public class Tile extends Coordinate {
             x += (variant % 8);
             y += (6 + (variant / 8));
         } else {
-            int local_uv_index = map_mask_to_local_uv_index[mask & 0xFF];
+            int local_uv_index = block_uv_map[mask & 0xFF];
             x += (local_uv_index % 8);
             y += (local_uv_index / 8);
         } return (y * 64 + x);
@@ -197,8 +192,8 @@ public class Tile extends Coordinate {
         return (tile &~ 0xF0_0000) | ((damage & 0x0F) << 20);
     }
 
-    public static int tile_set_terrain_layer_mask(int tile, int terrain_mask) {
-        return (tile &~ 0x0F00_0000) | ((terrain_mask & 0x0F) << 24);
+    public static int tile_set_terrain_type(int tile, int type) {
+        return (tile &~ 0x0F00_0000) | ((type & 0x0F) << 24);
     }
 
     public static int tile_set_clearance_level(int tile, int clearance) {
@@ -221,37 +216,6 @@ public class Tile extends Coordinate {
         return (tile &~ 0x8000_0000) | ((bit ? 1 : 0) << 31);
     }
 
-    public static int tile_terrain_add_layer(int tile, TerrainType type) {
-        if (type == TerrainType.T0) return tile;
-        int terrain_mask = tile_terrain_layer_mask(tile);
-        terrain_mask = TerrainType.place_terrain_type(terrain_mask,type);
-        return tile_set_terrain_layer_mask(tile,terrain_mask);
-    }
-
-    public static int tile_terrain_remove_layer(int tile, TerrainType layer) {
-        if (layer == TerrainType.T0) return tile;
-        int terrain_mask = tile_terrain_layer_mask(tile);
-        terrain_mask = TerrainType.remove_terrain_type(terrain_mask,layer);
-        return tile_set_terrain_layer_mask(tile,terrain_mask);
-    }
-
-    public static int tile_terrain_remove_top_layer(int tile) {
-        int terrain_mask = tile_terrain_layer_mask(tile);
-        if (terrain_mask == TerrainType.T0.mask) return tile;
-        else { TerrainType top_layer = TerrainType.top_layer(terrain_mask);
-            terrain_mask = TerrainType.remove_terrain_type(terrain_mask,top_layer);
-            return tile_set_terrain_layer_mask(tile,terrain_mask);
-        }
-    }
-
-    public static int tile_terrain_clear(int tile) { // Sets the terrain to T0 (0x0000)
-        return tile_set_terrain_layer_mask(tile,0);
-    }
-
-    public static boolean tile_terrain_contains_layer(int tile, TerrainType type) { // can't see any use for this
-        return TerrainType.contains(tile_terrain_layer_mask(tile),type); // T0 should always be true
-    }
-
     public static void room_out(int room) {
         String tab1 = "\t";
         System.out.println("Room {");
@@ -264,7 +228,7 @@ public class Tile extends Coordinate {
     }
 
     public static void tile_out(int tile) {
-        int terrain_layer_mask = tile_terrain_layer_mask(tile);
+        int terrain_layer_mask = tile_terrain_type(tile);
         String tab1 = "\t";
         String tab2 = tab1 + tab1;
         System.out.println("Tile {");
@@ -279,9 +243,7 @@ public class Tile extends Coordinate {
         System.out.println(tab2 + "Damage: " + tile_block_damage(tile) + "/15");
         System.out.println(tab1 + "}");
         System.out.println(tab1 + "Terrain {");
-        System.out.println(tab2 + "Top-layer (Type): " + TerrainType.top_layer(terrain_layer_mask).name());
-        System.out.println(tab2 + "Layer-mask: 0b" + Integer.toBinaryString(terrain_layer_mask));
-        System.out.println(tab2 + "ABGR4: 0x" + Integer.toHexString(0xFFFF & (TerrainType.top_layer(terrain_layer_mask).abgr4)));
+        System.out.println(tab2 + "Type: " + tile_terrain_type(tile));
         System.out.println(tab1 + "}");
         System.out.println("}");
     }
@@ -344,7 +306,7 @@ public class Tile extends Coordinate {
             {-1,-1},{ 0,-1},{ 1,-1}
     };
 
-    public static final byte[] map_mask_to_local_uv_index = {
+    public static final byte[] block_uv_map = {
             47, 47, 1 , 1 , 47, 47, 1 , 1 , 2 , 2 , 3 , 4 , 2 , 2 , 3 , 4 ,
             5 , 5 , 6 , 6 , 5 , 5 , 7 , 7 , 8 , 8 , 9 , 10, 8 , 8 , 11, 12,
             47, 47, 1 , 1 , 47, 47, 1 , 1 , 2 , 2 , 3 , 4 , 2 , 2 , 3 , 4 ,

@@ -26,6 +26,7 @@ public class Color32 implements Defined {
     public static final Color32 BLACK = new Color32(0xFF000000);
     public static final Color32 EMPTY = new Color32(0x00000000);
     public static final Color32 ERROR = new Color32(0xFFB469FF);
+    public static final Color32 SHARED = new Color32();
 
     private int val;
 
@@ -192,7 +193,7 @@ public class Color32 implements Defined {
     }
 
     public int alphaBits() {
-        return bBits(val);
+        return aBits(val);
     }
 
     public Vector3f rgb(Vector3f dest) {
@@ -372,6 +373,7 @@ public class Color32 implements Defined {
         return Float.intBitsToFloat(abgr8 & 0xfeffffff);
     }
 
+    // TODO: prints FF if rgba = 0 0 0 1 etc. Fix that
     public static String toHex(int abgr8) {
         int r = rBits(abgr8);
         int g = gBits(abgr8);

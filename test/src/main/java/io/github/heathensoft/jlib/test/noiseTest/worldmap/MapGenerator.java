@@ -176,7 +176,7 @@ public class MapGenerator {
             float[] n1D = new float[SIZE];
             float delta_height = (1.0f / SIZE);
             for (int c = 0; c < SIZE; c++) {
-                float n = Rand.noise_layered(x0+c,seed,frequency,8);
+                float n = Rand.noise1D_layered(x0+c,seed,frequency,8);
                 n = clamp(n * n * (3 - 2 * n));
                 n1D[c] = baseline + (n * 2.0f - 1.0f) * noise_amplitude;
             } for (int r = 0; r < SIZE; r++) {
@@ -216,7 +216,7 @@ public class MapGenerator {
             float[] n1D = new float[SIZE];
             float delta_height = (1.0f / SIZE);
             for (int c = 0; c < SIZE; c++) {
-                float n = Rand.noise_layered(x0+c,seed,frequency,8);
+                float n = Rand.noise1D_layered(x0+c,seed,frequency,8);
                 n = clamp(n * n * (3 - 2 * n));
                 n1D[c] = baseline + (n * 2.0f - 1.0f) * amplitude;
             } for (int r = 0; r < SIZE; r++) {

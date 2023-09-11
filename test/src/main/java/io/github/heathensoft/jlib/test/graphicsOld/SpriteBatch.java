@@ -114,7 +114,7 @@ public class SpriteBatch implements Disposable {
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height) {
-        draw(region, x, y, width, height, DEFAULT_ID);
+        draw(region, x, y, width, height, DEFAULT_CUSTOM);
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height, int id) {
@@ -142,7 +142,7 @@ public class SpriteBatch implements Disposable {
     public void draw(TextureRegion region, float x, float y, float width, float height,
                      float originX, float originY, float scale) {
         draw(region, x, y, width, height, originX, originY, scale,
-                DEFAULT_ID, DEFAULT_COLOR_BITS);
+                DEFAULT_CUSTOM, DEFAULT_COLOR_BITS);
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height,
@@ -180,7 +180,7 @@ public class SpriteBatch implements Disposable {
     
     public void draw(TextureRegion region, float x, float y, float width, float height,
                      float originX, float originY, float scale, float rotation) {
-        draw(region,x,y,width,height, originX,originY,scale,rotation, DEFAULT_ID);
+        draw(region,x,y,width,height, originX,originY,scale,rotation, DEFAULT_CUSTOM);
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height,

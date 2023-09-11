@@ -28,10 +28,9 @@ import static io.github.heathensoft.jlib.tiles.neo.Tile.*;
  * 20/06/2023
  */
 
-/* TODO: when mixing terrain: noise lerp with the layer below */
 /* TODO: on region generation, use modulo to wrap the map */
 
-public class TileMap implements AStarGrid, Disposable {
+public abstract class Tilemap implements AStarGrid, Disposable {
 
     private final Rectanglei view_last_update;
     private final MapSize map_size;
@@ -44,11 +43,14 @@ public class TileMap implements AStarGrid, Disposable {
     private final Terrain terrain;
     private final Network network;
     private final Chunk[][] chunks;
-    private final int[][] room_layout;
+    private final int[][] room_layout; // own layout object
     private final int[][] tiles;
 
+    private final float[] chunk_timers;
+    private int current_chunk_to_update;
 
-    public TileMap(MapSize map_size, int terrain_texture_size) {
+
+    public Tilemap(MapSize map_size, int terrain_texture_size) {
         this.map_size = map_size;
         this.terrain = new Terrain(map_size,terrain_texture_size);
         this.view_last_update = new Rectanglei();
@@ -69,6 +71,7 @@ public class TileMap implements AStarGrid, Disposable {
                 chunks[r][c] = new Chunk();
             }
         }
+        this.chunk_timers = new float[map_size.chunks_count];
     }
 
     // REMEMBER TO SET UP TERRAIN
@@ -94,6 +97,21 @@ public class TileMap implements AStarGrid, Disposable {
         view_last_update.maxX = -1;
         view_last_update.maxY = -1;
     }
+
+    private void time_accumulate(float dt) {
+
+        for (int i = 0; i < chunk_timers.length; i++) {
+            chunk_timers[i] += dt;
+        }
+        int chunk_x = current_chunk_to_update % map_size.length_chunks;
+        int chunk_y = current_chunk_to_update / map_size.length_chunks;
+        float accumulated = chunk_timers[current_chunk_to_update];
+        chunk_timers[current_chunk_to_update] = 0.0f;
+        current_chunk_to_update = (current_chunk_to_update + 1) % map_size.chunks_count;
+        update_chunk(chunk_x,chunk_y,accumulated);
+    }
+
+    protected abstract void update_chunk(int chunk_x, int chunk_y, float dt);
 
     public void refresh(Rectanglef orthographic_view) {
 
@@ -190,10 +208,6 @@ public class TileMap implements AStarGrid, Disposable {
         return map_size.length_tiles;
     }
 
-    public int movementPenalty(int x, int y) {
-        return tile_terrain_top_layer(tiles[y][x]).movement_penalty;
-    }
-
     public boolean isObstacle(int x, int y) {
         return tile_is_obstacle(tile_data(x,y));
     }
@@ -209,10 +223,6 @@ public class TileMap implements AStarGrid, Disposable {
     public boolean is_chunk_in_view(int x, int y) {
         int index = x + y * map_size.length_chunks;
         return chunk_in_view_flags.getUnchecked(index);
-    }
-
-    public boolean contains_terrain_layer(TerrainType type, int x, int y) {
-        return tile_terrain_contains_layer(tile_data(x,y),type);
     }
 
     public MapSize map_size() {
@@ -271,6 +281,11 @@ public class TileMap implements AStarGrid, Disposable {
         queue_chunk_update_layout(x/16,y/16);
     }
 
+    public void set_terrain_type(int type) {
+        // TODO
+    }
+
+    /*
     public void place_terrain_layer(TerrainType type, int x, int y) {
         int tile = tiles[y][x];
         TerrainType current_top_layer = tile_terrain_top_layer(tile);
@@ -302,6 +317,8 @@ public class TileMap implements AStarGrid, Disposable {
         tiles[y][x] = tile_terrain_clear(tile);
         queue_chunk_update_terrain(x/16,y/16);
     }
+
+     */
 
     public void place_block(int type, int subtype, int x, int y) {
         int tile = tiles[y][x];

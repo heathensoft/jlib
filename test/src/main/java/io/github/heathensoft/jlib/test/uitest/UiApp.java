@@ -2,14 +2,24 @@ package io.github.heathensoft.jlib.test.uitest;
 
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.lwjgl.utils.Input;
+import io.github.heathensoft.jlib.test.graphicsOld.Color;
 import io.github.heathensoft.jlib.test.gui.GUI;
 import io.github.heathensoft.jlib.lwjgl.window.Application;
 import io.github.heathensoft.jlib.lwjgl.window.BootConfiguration;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
+import io.github.heathensoft.jlib.test.gui.window.HBoxContainer;
+import io.github.heathensoft.jlib.test.gui.window.Size;
+import io.github.heathensoft.jlib.test.gui.window.Spacing;
+import io.github.heathensoft.jlib.test.gui.window.VBoxContainer;
+import io.github.heathensoft.jlib.test.gui.window.window.DynamicWindow;
+import io.github.heathensoft.jlib.test.gui.window.window.ScrollableBox;
+import org.joml.Vector2f;
 
 import java.util.List;
 
+import static io.github.heathensoft.jlib.test.gui.GUI.*;
 import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
 
 
@@ -37,7 +47,7 @@ public class UiApp extends Application  {
     @Override
     protected void on_start(Resolution resolution) throws Exception {
 
-        /*
+
         GUI = new GUI(resolution.width(),resolution.height());
         renderer = new Renderer(GUI);
         controls = new Controls(GUI);
@@ -55,7 +65,7 @@ public class UiApp extends Application  {
         NAV_BTN_MAXIMIZE_HOVER_COLOR.set(Color.valueOf("819447"));
 
         Field field = new Field(16,elementSize,2,4);
-        ScrollableBox<Field> scrollBox = new ScrollableBox<Field>(
+        ScrollableBox<Field> scrollBox = new ScrollableBox<>(
                 field,
                 new Spacing(),
                 new Spacing(),
@@ -87,12 +97,11 @@ public class UiApp extends Application  {
         hBoxContainer.addContent(scrollBox);
         hBoxContainer.addContent(vBoxContainer);
 
-        DynamicWindow window2 = new DynamicWindow(GUI,hBoxContainer,"Character?");
+        //DynamicWindow window2 = new DynamicWindow(GUI,hBoxContainer,"Character?");
         //HudWindow window = new HudWindow(hud,scrollBox,"Inventory?");
-        scrollBox.content().addElements(67);
+        //scrollBox.content().addElements(67);
 
 
-         */
 
 
     }
@@ -111,15 +120,14 @@ public class UiApp extends Application  {
 
     @Override
     protected void on_update(float delta) {
-        Engine.get().exit();
-        //GUI.update(delta);
-        //controls.update(delta);
+        GUI.update(delta);
+        controls.update(delta);
     }
 
     @Override
     protected void on_render(float frame_time, float alpha) {
-        //Vector2f mouse = Input.get().mouse().position();
-        //renderer.render(frame_time,alpha,mouse);
+        Vector2f mouse = Input.get().mouse().position();
+        renderer.render(frame_time,alpha,mouse);
     }
 
     @Override
@@ -128,7 +136,7 @@ public class UiApp extends Application  {
     }
 
     @Override
-    protected void resolution_request(Resolution resolution) throws Exception {
+    protected void resolution_request(Resolution resolution) {
 
     }
 

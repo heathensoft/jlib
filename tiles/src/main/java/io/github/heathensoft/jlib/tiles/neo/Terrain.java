@@ -8,6 +8,8 @@ import io.github.heathensoft.jlib.lwjgl.gfx.TextureFormat;
 import static org.lwjgl.opengl.GL11.*;
 
 /**
+ * Terrain texture size = 512. (16 tiles)
+ *
  * @author Frederik Dahl
  * 21/06/2023
  */
@@ -47,10 +49,13 @@ public class Terrain implements Disposable {
         return texture_array_diffuse;
     }
 
+    /*
     public void upload_layer_diffuse(Bitmap layer_texture, TerrainType type) {
         texture_array_diffuse.bindToActiveSlot();
         texture_array_diffuse.uploadSubData(layer_texture.data(),0,terrain_texture_size,terrain_texture_size,1,0,0,type.id);
     }
+
+     */
 
     public void generate_mipmaps() {
         texture_array_diffuse.generateMipmap();

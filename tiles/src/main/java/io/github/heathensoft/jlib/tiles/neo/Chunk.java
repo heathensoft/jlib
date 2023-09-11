@@ -6,12 +6,10 @@ import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.storage.primitive.IntStack;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
-import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,7 +45,7 @@ public class Chunk implements Disposable {
         glEnableVertexAttribArray(0);
     }
 
-    public void update_blocks(TileMap tilemap, int chunk_x, int chunk_y) {
+    public void update_blocks(Tilemap tilemap, int chunk_x, int chunk_y) {
         // When to update:
         // Block removed or added
         // Block type is changed
@@ -108,11 +106,15 @@ public class Chunk implements Disposable {
 
 
 
-    protected void update_terrain(TileMap tilemap, int chunk_x, int chunk_y) {
+    protected void update_terrain(Tilemap tilemap, int chunk_x, int chunk_y) {
         // When to update:
         // Terrain has been altered
         // Triggers when the chunk is in view
         // No need to update a chunk before you can see it
+
+        // TODO:
+
+        /*
         int[][] tile_data = tilemap.tiles();
         Texture blend_map = tilemap.terrain().blend_map();
         int chunk_origin_x = chunk_x * 16;
@@ -129,13 +131,15 @@ public class Chunk implements Disposable {
             blend_map.bindToActiveSlot();
             blend_map.uploadSubData(buffer.flip(),0,16,16,chunk_origin_x,chunk_origin_y);
         }
+
+         */
     }
 
 
     //Shared temp-buffer, Main-Thread only. 256 is the maximum possible number of rooms that can be placed on a chunk.
     private static final IntBuffer TMP_ROOMS = IntBuffer.allocate(256); //(Theoretically you could place 256 doors)
 
-    protected void update_layout(TileMap tilemap, int chunk_x, int chunk_y) {
+    protected void update_layout(Tilemap tilemap, int chunk_x, int chunk_y) {
         // When to update:
         // Obstacles are placed or removed
         // Doors are placed or removed (clearance changed)

@@ -25,7 +25,7 @@ import org.joml.primitives.Rectanglef;
 
 public class Sprite {
     
-    public static final int DEFAULT_ID = 0;
+    public static final int DEFAULT_CUSTOM = 0;
     public static final int UV_SIZE = 2;
     public static final int POS_SIZE = 2;
     public static final int COLOR_SIZE = 1;
@@ -304,7 +304,7 @@ public class Sprite {
         }
     }
     
-    public void setID(int id) {
+    public void setCustom(int id) {
         data[I1] = id;
         data[I2] = id;
         data[I3] = id;
@@ -457,7 +457,7 @@ public class Sprite {
         return originY;
     }
     
-    public int id() {
+    public int custom() {
         return (int) data[I1];
     }
     
@@ -488,25 +488,25 @@ public class Sprite {
         data[U1] = u;
         data[V1] = v;
         data[C1] = floatBits;
-        data[I1] = DEFAULT_ID;
+        data[I1] = DEFAULT_CUSTOM;
         data[X2] = x;
         data[Y2] = y;
         data[U2] = u;
         data[V2] = v2;
         data[C2] = floatBits;
-        data[I2] = DEFAULT_ID;
+        data[I2] = DEFAULT_CUSTOM;
         data[X3] = x2;
         data[Y3] = y;
         data[U3] = u2;
         data[V3] = v2;
         data[C3] = floatBits;
-        data[I3] = DEFAULT_ID;
+        data[I3] = DEFAULT_CUSTOM;
         data[X4] = x2;
         data[Y4] = y2;
         data[U4] = u2;
         data[V4] = v;
         data[C4] = floatBits;
-        data[I4] = DEFAULT_ID;
+        data[I4] = DEFAULT_CUSTOM;
         width = w;
         height = h;
         originX = w / 2f;

@@ -71,65 +71,42 @@ public class SpriteBatch implements Disposable {
             Logger.warn("spriteBatch: call begin before draw");
         }
     }
-    
-    /*
-    public void draw(SpriteBuffer buffer) {
-        if (rendering && buffer.notEmpty()) {
-            int sprites = buffer.size();
-            if (count + sprites < capacity) {
-                vertexBuffer.put(buffer.vertexData());
-                instanceBuffer.put(buffer.instanceData());
-                count += sprites;
-            } else {
-                final float[] v_data = buffer.vertexData();;
-                final float[] i_data = buffer.instanceData();
-                for (int i = 0; i < sprites; i++) {
-                    if (count == capacity) flush();
-                    vertexBuffer.put(v_data,i * VERTICES_SIZE, VERTICES_SIZE);
-                    instanceBuffer.put(i_data,i * INSTANCE_DATA_SIZE, INSTANCE_DATA_SIZE);
-                    count++;
-                }
-            }
-        }
-    }
-    
-     */
 
     public void draw() {
         draw(0,0,1,1);
     }
 
     public void draw(float u, float v, float u2, float v2) {
-        draw(u,v,u2,v2,-1,-1,2,2,DEFAULT_COLOR_BITS,DEFAULT_ID);
+        draw(u,v,u2,v2,-1,-1,2,2,DEFAULT_COLOR_BITS, DEFAULT_CUSTOM);
     }
     
-    public void draw(float x, float y, float width, float height, float color, float id) {
-        draw(0,0,1,1,x,y,width,height,color,id);
+    public void draw(float x, float y, float width, float height, float color, int custom) {
+        draw(0,0,1,1,x,y,width,height,color,custom);
     }
     
-    public void draw(float u, float v, float u2, float v2, float x, float y, float width, float height, float color, float id) {
+    public void draw(float u, float v, float u2, float v2, float x, float y, float width, float height, float color, int custom) {
         if (rendering) {
             if (count == capacity) flush();
             final float x2 = x + width;
             final float y2 = y + height;
             vertexBuffer
-            .put(x).put(y2).put(u).put(v).put(color).put(id)
-            .put(x).put(y).put(u).put(v2).put(color).put(id)
-            .put(x2).put(y).put(u2).put(v2).put(color).put(id)
-            .put(x2).put(y2).put(u2).put(v).put(color).put(id);
+            .put(x).put(y2).put(u).put(v).put(color).put(custom)
+            .put(x).put(y).put(u).put(v2).put(color).put(custom)
+            .put(x2).put(y).put(u2).put(v2).put(color).put(custom)
+            .put(x2).put(y2).put(u2).put(v).put(color).put(custom);
             count++;
         }
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height) {
-        draw(region, x, y, width, height, DEFAULT_ID);
+        draw(region, x, y, width, height, DEFAULT_CUSTOM);
     }
     
-    public void draw(TextureRegion region, float x, float y, float width, float height, int id) {
-        draw(region, x, y, width, height, DEFAULT_COLOR_BITS, id);
+    public void draw(TextureRegion region, float x, float y, float width, float height, int custom) {
+        draw(region, x, y, width, height, DEFAULT_COLOR_BITS, custom);
     }
     
-    public void draw(TextureRegion region, float x, float y, float width, float height, float color, int id) {
+    public void draw(TextureRegion region, float x, float y, float width, float height, float color, int custom) {
         if (rendering) {
             if (count == capacity) flush();
             final float x2 = x + width;
@@ -139,10 +116,10 @@ public class SpriteBatch implements Disposable {
             final float u2 = region.u2();
             final float v2 = region.v2();
             vertexBuffer
-                    .put(x).put(y2).put(u).put(v).put(color).put(id)
-                    .put(x).put(y).put(u).put(v2).put(color).put(id)
-                    .put(x2).put(y).put(u2).put(v2).put(color).put(id)
-                    .put(x2).put(y2).put(u2).put(v).put(color).put(id);
+                    .put(x).put(y2).put(u).put(v).put(color).put(custom)
+                    .put(x).put(y).put(u).put(v2).put(color).put(custom)
+                    .put(x2).put(y).put(u2).put(v2).put(color).put(custom)
+                    .put(x2).put(y2).put(u2).put(v).put(color).put(custom);
             count++;
         }
     }
@@ -150,11 +127,11 @@ public class SpriteBatch implements Disposable {
     public void draw(TextureRegion region, float x, float y, float width, float height,
                      float originX, float originY, float scale) {
         draw(region, x, y, width, height, originX, originY, scale,
-                DEFAULT_ID, DEFAULT_COLOR_BITS);
+                DEFAULT_CUSTOM, DEFAULT_COLOR_BITS);
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height,
-                     float originX, float originY, float scale, int id, float color) {
+                     float originX, float originY, float scale, int custom, float color) {
         if (rendering) {
             if (count == capacity) flush();
             float localX = -originX;
@@ -178,32 +155,32 @@ public class SpriteBatch implements Disposable {
             final float u2 = region.u2();
             final float v2 = region.v2();
             vertexBuffer
-                    .put(x).put(y2).put(u).put(v).put(color).put(id)
-                    .put(x).put(y).put(u).put(v2).put(color).put(id)
-                    .put(x2).put(y).put(u2).put(v2).put(color).put(id)
-                    .put(x2).put(y2).put(u2).put(v).put(color).put(id);
+                    .put(x).put(y2).put(u).put(v).put(color).put(custom)
+                    .put(x).put(y).put(u).put(v2).put(color).put(custom)
+                    .put(x2).put(y).put(u2).put(v2).put(color).put(custom)
+                    .put(x2).put(y2).put(u2).put(v).put(color).put(custom);
             count++;
         }
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height,
                      float originX, float originY, float scale, float rotation) {
-        draw(region,x,y,width,height, originX,originY,scale,rotation, DEFAULT_ID);
+        draw(region,x,y,width,height, originX,originY,scale,rotation, DEFAULT_CUSTOM);
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height,
-                     float originX, float originY, float scale, float rotation, int id) {
-        draw(region,x,y,width,height,originX,originY,scale,rotation, DEFAULT_COLOR_BITS,id);
+                     float originX, float originY, float scale, float rotation, int custom) {
+        draw(region,x,y,width,height,originX,originY,scale,rotation, DEFAULT_COLOR_BITS,custom);
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height,
-                     float originX, float originY, float scale, float rotation, float color, int id) {
+                     float originX, float originY, float scale, float rotation, float color, int custom) {
         draw(region.u(),region.v(),region.u2(),region.v2(),x,y,
-                width,height,originX,originY,scale,rotation,color,id);
+                width,height,originX,originY,scale,rotation,color,custom);
     }
     
     public void draw(float u, float v, float u2, float v2, float x, float y, float width, float height,
-                     float originX, float originY, float scale, float rotation, float color, int id) {
+                     float originX, float originY, float scale, float rotation, float color, int custom) {
         if (rendering) {
             if (count == capacity) flush();
             float localX = -originX;
@@ -254,10 +231,10 @@ public class SpriteBatch implements Disposable {
                 y4 = y2;
             }
             vertexBuffer
-                    .put(x).put(y2).put(u).put(v).put(color).put(id)
-                    .put(x).put(y).put(u).put(v2).put(color).put(id)
-                    .put(x2).put(y).put(u2).put(v2).put(color).put(id)
-                    .put(x2).put(y2).put(u2).put(v).put(color).put(id);
+                    .put(x).put(y2).put(u).put(v).put(color).put(custom)
+                    .put(x).put(y).put(u).put(v2).put(color).put(custom)
+                    .put(x2).put(y).put(u2).put(v2).put(color).put(custom)
+                    .put(x2).put(y2).put(u2).put(v).put(color).put(custom);
             count++;
         }
     }

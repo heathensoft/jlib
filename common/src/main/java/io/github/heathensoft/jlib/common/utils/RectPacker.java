@@ -185,7 +185,6 @@ public class RectPacker {
         }
         bounds.put(pack_w_pow2).put(pack_h_pow2).flip();
         List<Rect> result = Strip.removeClosed();
-        System.out.println(result.size());
         rectangles.clear();
         for (Rect r : result) {
             rectangles.put(r.id);

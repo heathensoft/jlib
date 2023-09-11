@@ -220,8 +220,7 @@ public class Bitmap implements Disposable {
         int idx = y * width * channels + x * channels;
         if (channels == 4) data.putInt(idx,color);
         else { for (int i = 0; i < channels; i++) {
-            data.put(idx + i, (byte) ((color >> (i * 8)) & 0xFF));
-        }
+            data.put(idx + i, (byte) ((color >> (i * 8)) & 0xFF)); }
         }
     }
 

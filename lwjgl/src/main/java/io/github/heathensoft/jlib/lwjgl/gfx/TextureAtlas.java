@@ -1,137 +1,86 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import org.joml.Vector2i;
+import io.github.heathensoft.jlib.common.io.WorkingDirectory;
+import io.github.heathensoft.jlib.common.utils.RectPacker;
+import io.github.heathensoft.jlib.lwjgl.utils.Resources;
+import org.lwjgl.system.MemoryUtil;
 
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Creates TextureRegions from a .atlas file.
- * And stores them in a map with the region-name as key.
- * I am using gdx-texture-packer (I like it a lot)
- * https://github.com/crashinvaders/gdx-texture-packer-gui/releases
- * But you could also write a .atlas manually.
- * I am not using all the values in the .atlas.
- * The important values are the filename,
- * the x and y start of the region in pixels (y0 at top),
- * the regions width and height,
- * and the region name.
- * we skip the rest.
  *
- * the format:
- *
- * [file-name]
- * [region-name]
- * xy:[x],[y]
- * size:[w],[h]
- * [region-name]
- * xy:[x],[y]
- * size:[w],[h]
- * ...
- *
- * NOTE:
- *
- * When using texture arrays, i.e. one atlas-texture for each: diffuse, normals etc. it is assumed that
- * the atlas-regions match exactly for each texture. (the layouts should match)
+ * Opens a folder and creates an atlas of all it's .png images.
  *
  * @author Frederik Dahl
- * 23/06/2022
+ * 27/07/2023
  */
 
 
 public class TextureAtlas implements Disposable {
-    
-    private final Texture texture;
-    private final String filename;
-    private final List<String> regionNames;
-    private final Map<String, TextureRegion> regions;
-    //private final Map<String,TextureRegion> regions;
-    
-    public TextureAtlas(Texture texture, List<String> layout) throws Exception {
-        /* Todo: figure out proper size of map */
-        this.regionNames = new ArrayList<>();
-        this.regions = new HashMap<>();
-        this.texture = texture;
-        int p = 0;
-        while (layout.get(p).isBlank()) p++;
-        filename = layout.get(p++);
-        List<String> keys = new ArrayList<>();
-        List<Vector2i> xyList = new ArrayList<>();
-        List<Vector2i> whList = new ArrayList<>();
-        String[] tokens;
-        String[] sub;
-        for (int i = p; i < layout.size() ; i++, p++) {
-            String line = layout.get(i);
-            if (line.isBlank()) continue;
-            tokens = line.split(":");
-            if (tokens.length == 1) break;
-        }
-        try {
-            for (int i = p; i < layout.size(); i++) {
-                String line = layout.get(i).replace(" ", "");
-                tokens = line.split(":");
-                if (tokens[0].isBlank()) continue;
-                if (tokens.length == 1)
-                    keys.add(tokens[0]);
-                switch (tokens[0]){
-                    case "xy":
-                        sub = tokens[1].split(",");
-                        int x = Integer.parseInt(sub[0]);
-                        int y = Integer.parseInt(sub[1]);
-                        xyList.add(new Vector2i(x,y));
-                        break;
-                    case "size":
-                        sub = tokens[1].split(",");
-                        int w = Integer.parseInt(sub[0]);
-                        int h = Integer.parseInt(sub[1]);
-                        whList.add(new Vector2i(w,h));
-                        break;
-                }
-            }
-        } catch (IndexOutOfBoundsException e) {
-            throw new Exception(e);
-        }
-        if (keys.size() != xyList.size() && keys.size() != whList.size())
-            throw new Exception("Atlas formatting Error");
-        for (int i = 0; i < keys.size(); i++) {
-            String key = keys.get(i);
-            Vector2i xy = xyList.get(i);
-            Vector2i wh = whList.get(i);
-            TextureRegion region = new TextureRegion(xy.x, xy.y, wh.x, wh.y,texture.width(),texture.height());
-            regions.put(key,region);
-            regionNames.add(key);
-        }
-    }
-    
-    public Map<String, TextureRegion> regions() {
-        return regions;
-    }
-    
-    public TextureRegion get(String key) {
-        return regions.get(key);
+
+
+    private final Bitmap image;
+    private final List<String> region_names;
+    private final Map<String,TextureRegion> map;
+
+
+    public TextureAtlas(String directoryPath) throws Exception {
+        WorkingDirectory workingDirectory = new WorkingDirectory(directoryPath,".png");
+        if (workingDirectory.validFileCount() == 0) throw new Exception("No valid images in directory: " + directoryPath);
+        this.region_names = new ArrayList<>(workingDirectory.validFileCount());
+        workingDirectory.getValidFiles(region_names);
+        this.map = new HashMap<>((int)(region_count() * 1.75));
+        Bitmap[] images = new Bitmap[region_count()];
+        IntBuffer rectangles = IntBuffer.allocate(region_count() * 5);
+        Resources io = new Resources();
+        int channels = 0;
+        for (int i = 0; i < region_count(); i++) {
+            Path path = workingDirectory.resolveFile(region_names.get(i));
+            ByteBuffer image_data = io.toBufferExternal(path);
+            images[i] = new Bitmap(image_data);
+            channels = Math.max(channels,images[i].channels());
+            rectangles.put(i).put(images[i].width()).put(images[i].height());
+            MemoryUtil.memFree(image_data);
+        } IntBuffer bounds = IntBuffer.allocate(2);
+        RectPacker.pack(rectangles.flip(),bounds);
+        this.image = new Bitmap(bounds.get(),bounds.get(),channels);
+        for (int i = 0; i < region_count(); i++) {
+            int id = rectangles.get();
+            int w = rectangles.get();
+            int h = rectangles.get();
+            int x = rectangles.get();
+            int y = rectangles.get();
+            TextureRegion region = new TextureRegion(x,y,w,h,image.width(),image.height());
+            map.put(region_names.get(id),region);
+            image.draw_nearest_sampling(images[id],x,y,w,h,0,0,1,1);
+        } Disposable.dispose(images);
     }
 
-    public void put(String key, TextureRegion region) {
-        regions.put(key,region);
+
+    public TextureRegion region(String name) {
+        return map.get(name);
     }
-    
-    public List<String> regionNames() {
-        return regionNames;
+
+    public List<String> region_names() {
+        return region_names;
     }
-    
-    public String filename() {
-        return filename;
+
+    public Bitmap image() {
+        return image;
     }
-    
-    public Texture texture() {
-        return texture;
+
+    public int region_count() {
+        return region_names.size();
     }
-    
-    @Override
+
     public void dispose() {
-        Disposable.dispose(texture);
+        Disposable.dispose(image);
     }
 }

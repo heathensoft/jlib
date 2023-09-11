@@ -9,8 +9,6 @@ import io.github.heathensoft.jlib.lwjgl.gfx.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.debug.DebugLines2D;
-import io.github.heathensoft.jlib.lwjgl.gfx.surface.DepthMap8;
-import io.github.heathensoft.jlib.lwjgl.gfx.surface.NormalMap;
 import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
@@ -29,10 +27,10 @@ import static org.lwjgl.opengl.GL11.*;
  */
 
 
-public class TileTest extends Application {
+public class TileTest1 extends Application {
 
     public static void main(String[] args) {
-        Engine.get().run(new TileTest(),args);
+        Engine.get().run(new TileTest1(),args);
     }
     private static final String chunk_tiles_vert_path = "res/jlib/test/tiles/glsl/chunk-tiles.vert";
     private static final String chunk_tiles_geom_path = "res/jlib/test/tiles/glsl/chunk-tiles.geom";
@@ -90,11 +88,11 @@ public class TileTest extends Application {
 
         tilemap = new TileMap(MAP_SIZE,TERRAIN_TEXTURE_SIZE);
         for (int i = 0; i < 5; i++) {
-            String path = "res/jlib/test/tiles/img/terrain/T" + i + ".png";
+            String path = "res/jlib/test/tiles/img/elevation/T" + i + ".png";
             Bitmap layer = io.image(path);
-            tilemap.terrain().upload_layer_diffuse(layer, TerrainType.get(i));
+            tilemap.elevation().upload_layer_diffuse(layer, TerrainType.get(i));
             layer.dispose();
-        } tilemap.terrain().generate_mipmaps();
+        } tilemap.elevation().generate_mipmaps();
 
 
         generate_terrain(tilemap.tiles());
@@ -118,8 +116,8 @@ public class TileTest extends Application {
         tile_shader.setUniformSampler(UNIFORM_TERRAIN_TEXTURES,1);
         tile_shader.setUniformSampler(UNIFORM_TERRAIN_BLEND_MAP,2);
         block_atlas.bindToSlot(0);
-        tilemap.terrain().texture_layers_diffuse().bindToSlot(1);
-        tilemap.terrain().blend_map().bindToSlot(2);
+        tilemap.elevation().texture_layers_diffuse().bindToSlot(1);
+        tilemap.elevation().blend_map().bindToSlot(2);
         DebugLines2D.initialize();
 
         glDisable(GL_DEPTH_TEST);
@@ -212,9 +210,9 @@ public class TileTest extends Application {
         //DebugLines2D.drawGrid(camera,16,true,true);
     }
 
-    private void generate_terrain(int[][] terrain) {
+    private void generate_terrain(int[][] elevation) {
 
-        int size = terrain.length;
+        int size = elevation.length;
 
         NoiseFunction function = new NoiseFunction.Rigged(0.002f,Rand.nextInt());
 
@@ -233,7 +231,7 @@ public class TileTest extends Application {
         for (int r = 0; r < size; r++) {
             for (int c = 0; c < size; c++) {
                 float n = base_noise[r][c];
-                int tile = terrain[r][c];
+                int tile = elevation[r][c];
                 if (n > t1_lim) {
                     tile = Tile.tile_terrain_add_layer(tile,TerrainType.T1);
                 } if (n > t2_lim) {
@@ -242,7 +240,7 @@ public class TileTest extends Application {
                     tile = Tile.tile_terrain_add_layer(tile,TerrainType.T3);
                 } if (n > t4_lim) {
                     tile = Tile.tile_terrain_add_layer(tile,TerrainType.T4);
-                } terrain[r][c] = tile;
+                } elevation[r][c] = tile;
             }
         }
 

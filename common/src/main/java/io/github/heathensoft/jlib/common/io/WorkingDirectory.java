@@ -27,7 +27,11 @@ public class WorkingDirectory {
 
 
     public WorkingDirectory(String location) throws Exception {
-        this(location,null);
+        this(location,(List<String>) null);
+    }
+
+    public WorkingDirectory(String location, String validFileExtensions) throws Exception {
+        this(location,List.of(validFileExtensions.split(" ")));
     }
 
     public WorkingDirectory(String location, List<String> validFileExtensions) throws Exception {
@@ -332,6 +336,10 @@ public class WorkingDirectory {
     
     public Path parent() {
         return parent;
+    }
+
+    public int validFileCount() {
+        return validFiles.size();
     }
     
 }

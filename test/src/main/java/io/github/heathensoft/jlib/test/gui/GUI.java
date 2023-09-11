@@ -114,36 +114,6 @@ public class GUI implements Disposable {
         } GUIHelp.initialize(this);
     }
 
-    /*
-    public void repack() {
-        rectangles = IntBuffer.allocate(5 * num * 2);
-        Random random = new Random();
-        int max = 128;
-        int min = 4;
-        for (int i = 0; i < num; i++) {
-            int w = random.nextInt(max + 1 - min) + min;
-            int h = random.nextInt(max + 1 - min) + min;
-            rectangles.put(i).put(w).put(h);
-        }
-        max = 64;
-        min = 8;
-        for (int i = 0; i < num; i++) {
-            int w = random.nextInt(max + 1 - min) + min;
-            int h = random.nextInt(max + 1 - min) + min;
-            rectangles.put(i).put(w).put(h);
-        }
-
-        rectangles.flip();
-
-        try (MemoryStack stack = MemoryStack.stackPush()){
-            IntBuffer bounds = stack.mallocInt(2);
-            RectPacker.pack(rectangles,bounds);
-            System.out.println(bounds.get(0) + " , " + bounds.get(1));
-        }
-    }
-
-     */
-
     public void render(SpriteBatch batch, Vector2f mouseViewport) {
         Framebuffer.bindDraw(FRAMEBUFFER);
         Framebuffer.viewport();
@@ -153,38 +123,12 @@ public class GUI implements Disposable {
         glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
         SHADER.prepare(this);
         batch.begin();
-        Debug.out("ffffffff");
-        Debug.render(batch,this);
+        //Debug.out("ffffffff");
+        //Debug.render(batch,this);
         GUIWindow.renderAll(batch);
 
         GUIHelp.render(batch);
-        /*
-        float c0 = new Color(1.0f,0,0,1).toFloatBits();
-        float c1 = new Color(0,1.0f,0,1).toFloatBits();
-        float c2 = new Color(0,0,1.0f,1).toFloatBits();
-        float c3 = new Color(1.0f,1.0f,0,1).toFloatBits();
-        float c4 = new Color(0,1.0f,1.0f,1).toFloatBits();
-        float c5 = new Color(1.0f,0,1.0f,1).toFloatBits();
-        for (int i = 0; i < (num * 2); i++) {
-            int offset = i * 5;
-            int id = rectangles.get(offset);
-            int w = rectangles.get(offset + 1);
-            int h = rectangles.get(offset + 2);
-            int x = rectangles.get(offset + 3);
-            int y = rectangles.get(offset + 4);
-            float c;
-            switch (i % 6) {
-                case 1 -> {c = c1;}
-                case 2 -> {c = c2;}
-                case 3 -> {c = c3;}
-                case 4 -> {c = c4;}
-                case 5 -> {c = c5;}
-                default -> {c = c0;}
-            }
-            batch.draw(GRAPHICS.blank(),x,y,w,h,c,0);
-        }
 
-         */
         batch.end();
         ID_BUFFER.readID(mouseViewport);
     }

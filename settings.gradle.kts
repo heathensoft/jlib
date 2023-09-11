@@ -8,5 +8,6 @@ include(
     "common",
     "lwjgl",
     "tiles",
-    "test"
+    "test",
+    "gui"
 )

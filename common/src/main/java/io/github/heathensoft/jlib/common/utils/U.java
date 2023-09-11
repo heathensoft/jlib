@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.common.utils;
 
 import io.github.heathensoft.jlib.common.noise.Noise;
 
+
 /**
  * @author Frederik Dahl
  * 11/04/2023
@@ -49,6 +50,17 @@ public class U {
         return Math.max(min,Math.min(v,max));
     }
 
+
+
+    public static float pow(float v, float e) {
+        return (float)Math.pow(v,e);
+    }
+
+    /** Modulo for repeating patterns / maps etc. */
+    public static int mod_repeat(int v, int range) {
+        return v < 0 ? (range + (v % range)) % range : v % range;
+    }
+
     public static float lerp(float a, float b, float f) {
         return a+(b-a)*f;
     }
@@ -66,6 +78,28 @@ public class U {
         return a;
     }
 
+    public static float brighten(float v, float b) {
+        return (b == 0) ? v :  v * (1.f + b);
+    }
+
+    public static float raise(float v, float b) {
+        if (b == 0) return v;
+        if (b > 0) return lerp(clamp(v),1.0f,clamp(abs(b)));
+        else return lerp(clamp(v),0.0f,clamp(abs(b)));
+    }
+
+    public static float contrast(float v, float c) {
+        if (c == 0) return v;
+        float start = clamp(v);
+        float adjustment = clamp(pow(abs(c),3.0f));
+        float target;
+        if (c > 0) {
+            if (start < 0.5f) target = 0.0f;
+            else target = 1.0f;
+        } else { target = 0.5f;
+        } return lerp(start,target,adjustment);
+    }
+
     public static int round(float f) {
         return Math.round(f);
     }
@@ -73,6 +107,7 @@ public class U {
     public static float abs(float f) {
         return Math.abs(f);
     }
+
 
     public static int nextPowerOfTwo(int value) {
         if (value-- == 0) return 1;
@@ -93,6 +128,28 @@ public class U {
             if (t != 0) return logTable[t] - 133;
             else return (x >> 8 != 0) ? logTable[t] - 141 : logTable[x] - 149;
         }
+    }
+
+    public static float[][] copy_array(float[][] src) {
+        final int rows = src.length;
+        final int cols = src[0].length;
+        final float[][] dst = new float[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            float[] from = src[r];
+            float[] to = dst[r];
+            System.arraycopy(from, 0, to, 0, from.length);
+        } return dst;
+    }
+
+    public static int[][] copy_array(int[][] src) {
+        final int rows = src.length;
+        final int cols = src[0].length;
+        final int[][] dst = new int[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            int[] from = src[r];
+            int[] to = dst[r];
+            System.arraycopy(from, 0, to, 0, from.length);
+        } return dst;
     }
 
     public static float[][] sharpen_array(float[][] src) {
@@ -125,6 +182,12 @@ public class U {
 
     }
 
+    public static float[][] smoothen_array(float[][] src, int n) {
+        float[][] dst = src;
+        for (int i = 0; i < n; i++) {
+            dst = smoothen_array(dst);
+        } return dst;
+    }
 
     public static float[][] smoothen_array(float[][] src) {
         float[] kernel = new float[] {
@@ -239,4 +302,85 @@ public class U {
                 most_frequent = arr[i]; }
         } return most_frequent;
     }
+
+    /**
+     * "Growing biomes" (Procedural Generation)
+     * "http://mc-server.xoft.cz/docs/Generator.html"
+     * @param src array to grow. Must be of size: n * n
+     * @param target_size size of fully grown array
+     * @param rng random generator
+     * @return grown array
+     */
+    public static int[][] grow_biomes(int[][] src, int target_size, Rand rng) {
+        if (src[0].length != src.length) {
+            throw new IllegalArgumentException("argument array must be of size: n * n");
+        } int[][] dst = scale_array(src, next_valid_growing_size(src.length));
+        while(dst.length < target_size) {
+            dst = grow_biomes(dst,rng);
+        } return scale_array(dst,target_size);
+    }
+
+    private static int[][] grow_biomes(int[][] src, Rand rng) {
+        int[][] dst = prepare_for_growth(src);
+        int rows = dst.length;
+        int cols = dst[0].length;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                if (r % 2 == 0) {
+                    if (c % 2 == 1) {
+                        float n = rng.white_noise();
+                        int tl = dst[r][c-1];
+                        int tr = dst[r][c+1];
+                        dst[r][c] = n < 0.5f ? tl : tr;
+                    }
+                } else {
+                    if (c % 2 == 0) {
+                        float n = rng.white_noise();
+                        int tb = dst[r-1][c];
+                        int tt = dst[r+1][c];
+                        dst[r][c] = n < 0.5f ? tb : tt;
+                    }
+                }
+            }
+        }
+        for (int r = 1; r < rows; r += 2) {
+            for (int c = 1; c < cols; c += 2) {
+                int t1;
+                int t2;
+                {
+                    float n = rng.white_noise();
+                    int tl = dst[r][c-1];
+                    int tr = dst[r][c+1];
+                    t1 = n < 0.5f ? tl : tr;
+                }
+                {
+                    float n = rng.white_noise();
+                    int tb = dst[r-1][c];
+                    int tt = dst[r+1][c];
+                    t2 = n < 0.5f ? tb : tt;
+                }
+                float n = rng.white_noise();
+                dst[r][c] = n < 0.5f ? t1 : t2;
+            }
+        }
+        return dst;
+    }
+
+    private static int next_valid_growing_size(int size) {
+        int valid_size = 2;
+        while (valid_size < size) {
+            valid_size = valid_size * 2 - 1;
+        } return valid_size;
+    }
+
+    private static int[][] prepare_for_growth(int[][] region_map) {
+        int rows = region_map.length;
+        int cols = region_map[0].length;
+        int[][] result = new int[rows * 2 - 1][cols * 2 - 1];
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++)
+                result[r*2][c*2] = region_map[r][c];
+        return result;
+    }
+
 }

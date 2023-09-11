@@ -70,8 +70,8 @@ public class GUIShader extends ShaderProgram {
                 in vec4 color;
                 uniform sampler2D[NUM_TEXTURES] u_textures;
                 void main() {
-                    f_color = texture(u_textures[tex_slot],uv).rgba * color;
-                    f_id = id;
+                    f_color = (texture(u_textures[tex_slot],uv).rgba * color);
+                    f_id = id + 1;
                 }""";
     }
 }

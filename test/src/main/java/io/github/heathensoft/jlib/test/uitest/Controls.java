@@ -50,6 +50,7 @@ public class Controls {
             System.out.println(mouse.get_scroll());
 
         int id = idBuffer.pixelID();
+        //System.out.println(id);
 
         Interactable currentElement = Interactables.get().interactable(id);
 

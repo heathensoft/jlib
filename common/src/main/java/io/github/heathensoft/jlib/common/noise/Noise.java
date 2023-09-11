@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.common.noise;
 
 import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.utils.Rand;
+import io.github.heathensoft.jlib.common.utils.U;
 
 import java.nio.ByteBuffer;
 
@@ -79,7 +80,7 @@ public class Noise {
     public static float[] generate(int length, float frequency, float x0, int seed) {
         float[] dst = new float[length];
         for (int x = 0; x < length; x++) {
-            float n = Rand.noise_layered(x + x0,seed,frequency,8);
+            float n = Rand.noise1D_layered(x + x0,seed,frequency,8);
             dst[x] = clamp(n * n * (3 - 2 * n));
         } return dst;
     }
@@ -89,7 +90,7 @@ public class Noise {
         float min = Float.MAX_VALUE;
         float[] dst = new float[length];
         for (int x = 0; x < length; x++) {
-            float n = Rand.noise_layered(x + x0,seed,frequency,8);
+            float n = Rand.noise1D_layered(x + x0,seed,frequency,8);
             n = clamp(n * n * (3 - 2 * n));
             dst[x] = n;
             max = Math.max(max,n);
@@ -129,6 +130,8 @@ public class Noise {
             result[i] = q.dequeue();
         } return result;
     }
+
+
 
     public static float[][] generate_amplified(NoiseFunction noise, int rows, int cols, float x0, float y0) {
         float max = Float.MIN_VALUE;
@@ -231,31 +234,46 @@ public class Noise {
         } return dst;
     }
 
-    public static float[][] apply_contrast(float[][] dst, float amount) {
-        if (amount > 0) {
+    /** amount: [-1,1] */
+    public static float[][] brighten(float[][] dst, float amount) {
+        if (amount != 0.0) {
             int rows = dst.length;
             int cols = dst[0].length;
-            if (amount >= 1.0f) {
-                for (int r = 0; r < rows; r++) {
-                    for (int c = 0; c < cols; c++) {
-                        float n = dst[r][c];
-                        dst[r][c] = n < 0.5f ? 0 : 1;
-                    }
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    dst[r][c] = U.brighten(dst[r][c],amount);
                 }
             }
-            else { float b = amount / 2f;
-                float e = 1.0f - b;
-                for (int r = 0; r < rows; r++) {
-                    for (int c = 0; c < cols; c++) {
-                        dst[r][c] = map(dst[r][c],b,e);
-                    }
-                }
-            }
-        }
-        return dst;
+        } return dst;
     }
 
-    public static void apply_multiply(float[][] dst, NoiseFunction noise, float x0, float y0, float influence) {
+    /** amount: [-1,1] */
+    public static float[][] raise(float[][] dst, float amount) {
+        if (amount != 0.0) {
+            int rows = dst.length;
+            int cols = dst[0].length;
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    dst[r][c] = U.brighten(dst[r][c],amount);
+                }
+            }
+        } return dst;
+    }
+
+    /** amount: [-1,1] */
+    public static float[][] contrast(float[][] dst, float amount) {
+        if (amount != 0.0) {
+            int rows = dst.length;
+            int cols = dst[0].length;
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    dst[r][c] = U.contrast(dst[r][c],amount);
+                }
+            }
+        } return dst;
+    }
+
+    public static float[][] multiply(float[][] dst, NoiseFunction noise, float x0, float y0, float influence) {
         float rows = dst.length;
         float cols = dst[0].length;
         for (int r = 0; r < rows; r++) {
@@ -263,10 +281,10 @@ public class Noise {
                 float n = dst[r][c] * noise.get(x0 + c,y0 + r);
                 dst[r][c] = lerp(dst[r][c],n,influence);
             }
-        }
+        } return dst;
     }
 
-    public static void apply_multiply(float[][] dst, float[][] src, float influence) {
+    public static float[][] multiply(float[][] dst, float[][] src, float influence) {
         float rows = dst.length;
         float cols = dst[0].length;
         for (int r = 0; r < rows; r++) {
@@ -274,10 +292,10 @@ public class Noise {
                 float n = dst[r][c] * src[r][c];
                 dst[r][c] = lerp(dst[r][c],n,influence);
             }
-        }
+        } return dst;
     }
 
-    public static void apply_mix(float[][] dst, NoiseFunction noise, float x0, float y0, float influence) {
+    public static float[][] mix(float[][] dst, NoiseFunction noise, float x0, float y0, float influence) {
         float rows = dst.length;
         float cols = dst[0].length;
         for (int r = 0; r < rows; r++) {
@@ -285,21 +303,46 @@ public class Noise {
                 float n = noise.get(x0 + c,y0 + r);
                 dst[r][c] = lerp(dst[r][c],n,influence);
             }
-        }
+        } return dst;
     }
 
-    public static void apply_mix(float[][] dst, float[][] src, float influence) {
+    public static float[][] mix(float[][] dst, float[][] src, float influence) {
         float rows = dst.length;
         float cols = dst[0].length;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
                 dst[r][c] = lerp(dst[r][c],src[r][c],influence);
             }
+        } return dst;
+    }
+
+    public static float[][] amplify(float[][] dst) {
+        int rows = dst.length;
+        int cols = dst[0].length;
+        float max = Float.MIN_VALUE;
+        float min = Float.MAX_VALUE;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                float n = dst[r][c];
+                max = Math.max(max,n);
+                min = Math.min(min,n);
+            }
         }
+        if (max != min) {
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    dst[r][c] = map(dst[r][c],min,max);
+                }
+            }
+        } return dst;
     }
 
     public static float[][] smoothen(float[][] src) {
         return smoothen_array(src);
+    }
+
+    public static float[][] smoothen(float[][] src, int n) {
+        return smoothen_array(src,n);
     }
 
     public static float[][] sharpen(float[][] src) {
@@ -329,7 +372,7 @@ public class Noise {
         float[] n1D = new float[width];
         float delta_height = (1.0f / height);
         for (int c = 0; c < width; c++) {
-            float n = Rand.noise_layered(c,seed,frequency,8);
+            float n = Rand.noise1D_layered(c,seed,frequency,8);
             n = clamp(n * n * (3 - 2 * n));
             n1D[c] = baseline + (n * 2.0f - 1.0f) * amplitude;
         } for (int r = 0; r < height; r++) {

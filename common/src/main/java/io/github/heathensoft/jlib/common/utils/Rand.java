@@ -1,6 +1,13 @@
 package io.github.heathensoft.jlib.common.utils;
 
+import java.util.List;
+import java.util.ListIterator;
+import java.util.RandomAccess;
+
 /**
+ * Rand is position based. Using methods moves the internal position.
+ * You can set, save and load position.
+ *
  * @author Frederik Dahl
  * 31/03/2023
  */
@@ -8,8 +15,62 @@ package io.github.heathensoft.jlib.common.utils;
 
 public class Rand {
 
+    private static final int DEFAULT_POSITION = 1337;
+    private int mark = DEFAULT_POSITION;
+    private int seed;
+    private final int[] position = new int[] {mark};
 
-    public static float noise(float x, float y, int seed, float fq) {
+    public Rand(int seed) { this.seed = seed; }
+
+    public Rand() { this(Rand.nextInt()); }
+
+    public void reset() {
+        mark = DEFAULT_POSITION;
+        position[0] = mark;
+    }
+
+    public void reset(int seed) {
+        this.seed = seed;
+        mark = DEFAULT_POSITION;
+        position[0] = mark;
+    }
+
+    public int seed() { return seed; }
+
+    public int position() { return position[0]; }
+
+    public void load_position() { position[0] = mark; }
+
+    public void save_position() {
+        mark = position[0];
+    }
+
+    public void set_position(int position) {
+        this.position[0] = position;
+    }
+
+    public void set_seed(int seed) { this.seed = seed; }
+
+    /** next positive float [0,1] */
+    public float white_noise() {
+        return white_noise(position,seed);
+    }
+
+    /** next positive integer */
+    public int next_int() {
+        return next_int(position,seed);
+    }
+
+    /** next positive integer [0,max] */
+    public int next_int(int max) {
+        return next_int(position,seed,max);
+    }
+
+    public void shuffle_list(List<?> list) {
+        shuffle(list,position,seed);
+    }
+
+    public static float noise2D(float x, float y, int seed, float fq) {
         final float fx = smooth(fract(x * fq));
         final float fy = smooth(fract(y * fq));
         final int ix = floor(x * fq);
@@ -19,32 +80,32 @@ public class Rand {
         return mix(b,t,fy);
     }
 
-    public static float noise_layered(float x, float y, int seed, float fq) {
-        return noise_layered(x, y, seed, fq, 8);
+    public static float noise2D_layered(float x, float y, int seed, float fq) {
+        return noise2D_layered(x, y, seed, fq, 8);
     }
 
-    public static float noise_layered(float x, float y, int seed, float fq, int octaves) {
-        return noise_layered(x, y, seed, fq, octaves, 2.0f);
+    public static float noise2D_layered(float x, float y, int seed, float fq, int octaves) {
+        return noise2D_layered(x, y, seed, fq, octaves, 2.0f);
     }
 
-    public static float noise_layered(float x, float y, int seed, float fq, int octaves, float lacunarity) {
+    public static float noise2D_layered(float x, float y, int seed, float fq, int octaves, float lacunarity) {
         float n = 0.0f, amp = 1.0f, acc = 0.0f;
         for (int i = 0; i < octaves; i++) {
-            n += noise(x,y,seed++,fq) * amp;
+            n += noise2D(x,y,seed++,fq) * amp;
             acc += amp; amp *= 0.5f; fq *= lacunarity;
         } return acc == 0 ? 0 : n / acc;
     }
 
-    public static float noise(float x, int seed, float fq) {
+    public static float noise1D(float x, int seed, float fq) {
         final float fx = smooth(fract(x * fq));
         final int ix = floor(x * fq);
         return mix(white_noise(ix,seed),white_noise(ix+1,seed),fx);
     }
 
-    public static float noise_layered(float x, int seed, float fq, int octaves) {
+    public static float noise1D_layered(float x, int seed, float fq, int octaves) {
         float n = 0.0f, amp = 1.0f, acc = 0.0f;
         for (int i = 0; i < octaves; i++) {
-            n += noise(x,seed++,fq) * amp;
+            n += noise1D(x,seed++,fq) * amp;
             acc += amp; amp *= 0.5f; fq *= 2.0f;
         } return acc == 0 ? 0 : n / acc;
     }
@@ -95,6 +156,35 @@ public class Rand {
         return (int) m;
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void shuffle(List<?> list, int[] position, int seed) {
+        int size = list.size();
+        if (size < 5 || list instanceof RandomAccess) {
+            for (int i=size; i>1; i--)
+                swap(list, i-1, next_int(position,seed,i-1));
+        } else {
+            Object[] arr = list.toArray();
+            for (int i=size; i>1; i--) // Shuffle array
+                swap(arr, i-1, next_int(position,seed,i-1));
+            ListIterator it = list.listIterator();
+            for (Object e : arr) {
+                it.next();
+                it.set(e);
+            }
+        }
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public static void swap(List<?> list, int i, int j) {
+        ((List) list).set(i, ((List) list).set(j, ((List) list).get(i)));
+    }
+
+    private static void swap(Object[] arr, int i, int j) {
+        Object tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+
     // ------------------------------------------------------------------------------------
     // If you don't care about state, you can use these:
 
@@ -117,6 +207,10 @@ public class Rand {
         inc += 123456789123456789L;
         int out = (int) ((last + inc) % max);
         return (out < 0) ? -out : out;
+    }
+
+    public static void shuffle(List<?> list) {
+        shuffle(list,new int[] {nextInt()},nextInt());
     }
     // ------------------------------------------------------------------------------------
 
