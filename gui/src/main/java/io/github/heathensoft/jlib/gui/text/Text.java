@@ -1,9 +1,10 @@
 package io.github.heathensoft.jlib.gui.text;
 
+
+import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author Frederik Dahl
@@ -11,55 +12,122 @@ import java.util.stream.Collectors;
  */
 
 
-public class Text extends ParagraphList {
+public abstract class Text implements Iterable<Paragraph> {
 
-    private final List<Paragraph> list;
-
-    public Text() {
-        list = new ArrayList<>();
+    public void add(String paragraph) {
+        add(Paragraph.create(paragraph));
     }
 
-    public Text(String text) {
-        list = parse(text);
+    public void add(Text text) {
+        for (Paragraph p : text) {
+            add(p);
+        }
     }
 
-    public boolean isBlank() {
-        return list.isEmpty();
+    public void addNewline() {
+        add(Paragraph.EMPTY_PARAGRAPH);
     }
 
-    public void add(Paragraph paragraph) {
-        list.add(paragraph);
+    public abstract void add(List<Paragraph> list);
+
+    public abstract void add(Paragraph paragraph);
+
+    public abstract void clear();
+
+    public abstract int size();
+
+    public abstract boolean isBlank();
+
+    public ParagraphList search(String string) {
+        return new ParagraphList(matching(string));
     }
 
-    public void clear() {
-        list.clear();
+    public int length() {
+        int length = 0;
+        for (Paragraph p : this) {
+            length += p.length();
+        } return length;
     }
 
-    public int size() {
-        return list.size();
+    public String toString() {
+        if (isBlank()) return "";
+        StringBuilder sb = new StringBuilder(length());
+        for (Paragraph p : this) {
+            Word[] words = p.words();
+            for (int i = 0; i < (words.length - 1); i++) {
+                sb.append(words[i]).append(' ');
+            } sb.deleteCharAt(sb.length()-1).append("\n");
+        } return sb.toString();
     }
 
-    public Iterator<Paragraph> iterator() {
-        return list.iterator();
-    }
-
-    private List<Paragraph> parse(String text) {
-        ArrayList<Paragraph> result;
-        if (text == null || text.isBlank()) {
-            result = new ArrayList<>(0);
-        } else { text = text.trim();
-            List<String> lines = text.lines().collect(Collectors.toList());
-            result = new ArrayList<>(lines.size());
-            for (String line : lines) {
-                result.add(Paragraph.parse(line));
-            } if (!result.isEmpty()) { // cutting out trailing new-lines:
-                while (result.size() > 0) {
-                    int num_paragraphs = result.size();
-                    Paragraph paragraph = result.get(num_paragraphs - 1);
-                    if (paragraph.isBlank()) {
-                        result.remove(num_paragraphs - 1);
-                    } else break; }
-            } result.trimToSize();
+    private List<Paragraph> matching(String string) {
+        List<Paragraph> result = new ArrayList<>();
+        if (!isBlank() && string != null && !string.isBlank()) {
+            String search_for = string.trim().toUpperCase();
+            for (Paragraph p : this) {
+                if (!p.isBlank()) {
+                    if (p.length() > search_for.length()) {
+                        String to_search = p.toString().toUpperCase();
+                        if (to_search.contains(search_for)) {
+                            result.add(p);
+                        }
+                    }
+                }
+            }
         } return result;
     }
+
+    public static String hexFormat(Color32 color) {
+        return "0x" + color;
+    }
+
+    public static String hexFormat(int i) {
+        return "0x" + Integer.toHexString(i).toUpperCase();
+    }
+
+    public static String wrapInlineComment(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "#" + string.trim().replaceAll("\\s+","_");
+    }
+
+    public static String wrapValue(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "0v" + string.trim().replaceAll("\\s+","_");
+    }
+
+    public static String wrapEntity(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "$" + string.trim().replaceAll("\\s+","_");
+    }
+
+    public static String wrapEntityFriendly(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "$$" + string.trim().replaceAll("\\s+","_");
+    }
+
+    public static String wrapEntityHostile(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "$$" + string.trim().replaceAll("\\s+","_");
+    }
+
+    public static String wrapKeyword(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "%" + string.trim().replaceAll("\\s+","_");
+    }
+
+    public static String wrapAction(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "&" + string.trim().replaceAll("\\s+","_");
+    }
+
+    public static String wrapActionSuccess(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "&&" + string.trim().replaceAll("\\s+","_");
+    }
+
+    static String wrapActionFailure(String string) {
+        if (string == null || string.isBlank()) return "";
+        return "&&&" + string.trim().replaceAll("\\s+","_");
+    }
+
 }

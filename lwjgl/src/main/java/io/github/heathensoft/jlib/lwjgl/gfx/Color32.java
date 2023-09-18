@@ -28,47 +28,52 @@ public class Color32 implements Defined {
     public static final Color32 ERROR = new Color32(0xFFB469FF);
     public static final Color32 SHARED = new Color32();
 
-    private int val;
+    private int i_bits;
+    private float f_bits;
 
     public Color32() {
         black();
     }
 
     public Color32(float r, float g, float b, float a) {
-        val = abgr8(r, g, b, a);
+        i_bits = abgr8(r, g, b, a);
+        f_bits = floatBits(i_bits);
     }
 
     public Color32(float r, float g, float b) {
-        val = abgr8(r, g, b);
+        i_bits = abgr8(r, g, b);
+        f_bits = floatBits(i_bits);
     }
 
     public Color32(Vector3f rgb) {
-        val = abgr8(rgb);
+        i_bits = abgr8(rgb);
+        f_bits = floatBits(i_bits);
     }
 
     public Color32(Vector4f rgba) {
-        val = abgr8(rgba);
+        i_bits = abgr8(rgba);
+        f_bits = floatBits(i_bits);
     }
 
     public Color32(String hex) {
-        val = abgr8(hex);
+        i_bits = abgr8(hex);
+        f_bits = floatBits(i_bits);
     }
 
     public Color32(int abgr8) {
-        val = abgr8;
-    }
-
-    public Color32(Color32 color) {
-        set(color.val);
+        i_bits = abgr8;
+        f_bits = floatBits(i_bits);
     }
 
     public Color32 set(float r, float g, float b, float a) {
-        val = abgr8(r, g, b, a);
+        i_bits = abgr8(r, g, b, a);
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 set(float r, float g, float b) {
-        val = abgr8(r, g, b, a());
+        i_bits = abgr8(r, g, b, a());
+        f_bits = floatBits(i_bits);
         return this;
     }
 
@@ -82,22 +87,25 @@ public class Color32 implements Defined {
     }
 
     public Color32 set(Vector4f rgba) {
-        val = abgr8(rgba);
+        i_bits = abgr8(rgba);
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 set(String hex) {
-        val = abgr8(hex);
+        i_bits = abgr8(hex);
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 set(int abgr8) {
-        val = abgr8;
+        i_bits = abgr8;
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 set(Color32 color) {
-        return set(color.val);
+        return set(color.i_bits);
     }
 
     public Color32 setRed(float r) {
@@ -117,42 +125,50 @@ public class Color32 implements Defined {
     }
 
     public Color32 setRedBits(int r) {
-        val = ((val & 0xFFFFFF00) | (r & 0xFF));
+        i_bits = ((i_bits & 0xFFFFFF00) | (r & 0xFF));
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 setGreenBits(int g) {
-        val = ((val & 0xFFFF00FF) | ((g & 0xFF) << 8));
+        i_bits = ((i_bits & 0xFFFF00FF) | ((g & 0xFF) << 8));
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 setBlueBits(int b) {
-        val = ((val & 0xFF00FFFF) | ((b & 0xFF) << 16));
+        i_bits = ((i_bits & 0xFF00FFFF) | ((b & 0xFF) << 16));
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 setAlphaBits(int a) {
-        val = ((val & 0x00FFFFFF) | ((a & 0xFF) << 24));
+        i_bits = ((i_bits & 0x00FFFFFF) | ((a & 0xFF) << 24));
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 zero() {
-        val = 0x00000000;
+        i_bits = 0x00000000;
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 black() {
-        val = 0xFF000000;
+        i_bits = 0xFF000000;
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 white() {
-        val = 0xFFFFFFFF;
+        i_bits = 0xFFFFFFFF;
+        f_bits = floatBits(i_bits);
         return this;
     }
 
     public Color32 premultiplyAlpha() {
-        val = premultiplyAlpha(val);
+        i_bits = premultiplyAlpha(i_bits);
+        f_bits = floatBits(i_bits);
         return this;
     }
 
@@ -173,51 +189,51 @@ public class Color32 implements Defined {
     }
 
     public float floatBits() {
-        return floatBits(val);
+        return f_bits;
     }
 
     public int intBits() {
-        return val;
+        return i_bits;
     }
 
     public int redBits() {
-        return rBits(val);
+        return rBits(i_bits);
     }
 
     public int greenBits() {
-        return gBits(val);
+        return gBits(i_bits);
     }
 
     public int blueBits() {
-        return bBits(val);
+        return bBits(i_bits);
     }
 
     public int alphaBits() {
-        return aBits(val);
+        return aBits(i_bits);
     }
 
     public Vector3f rgb(Vector3f dest) {
-        return rgb(val,dest);
+        return rgb(i_bits,dest);
     }
 
     public Vector3f rgb() {
-        return rgb(val,new Vector3f());
+        return rgb(i_bits,new Vector3f());
     }
 
     public Vector4f rgba(Vector4f dest) {
-        return rgba(val,dest);
+        return rgba(i_bits,dest);
     }
 
     public Vector4f rgba() {
-        return rgba(val,new Vector4f());
+        return rgba(i_bits,new Vector4f());
     }
 
     public Vector3f hsv(Vector3f dest) {
-        return hsv(val,dest);
+        return hsv(i_bits,dest);
     }
 
     public Vector3f hsv() {
-        return hsv(val,new Vector3f());
+        return hsv(i_bits,new Vector3f());
     }
 
     public Vector3f lab(Vector3f dest) {
@@ -229,7 +245,7 @@ public class Color32 implements Defined {
     }
 
     public Color32 cpy() {
-        return new Color32(val);
+        return new Color32(i_bits);
     }
 
     public void getRGB(FloatBuffer buffer) {
@@ -247,15 +263,15 @@ public class Color32 implements Defined {
     }
 
     public void getRGBA(ByteBuffer buffer) {
-        buffer.putInt(val);
+        buffer.putInt(i_bits);
     }
 
     public void setProperties(ByteBuffer buffer) {
-        val = buffer.getInt();
+        i_bits = buffer.getInt();
     }
 
     public void getProperties(ByteBuffer buffer) {
-        buffer.putInt(val);
+        buffer.putInt(i_bits);
     }
 
     public int sizeOfProperties() {
@@ -270,11 +286,11 @@ public class Color32 implements Defined {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Color32 color32 = (Color32) o;
-        return val == color32.val;
+        return i_bits == color32.i_bits;
     }
 
     public int hashCode() {
-        return Objects.hash(val);
+        return Objects.hash(i_bits);
     }
 
 
@@ -355,9 +371,9 @@ public class Color32 implements Defined {
     }
 
     public static int abgr8(String hex) {
-        if (hex == null || hex.length() == 0) return ERROR.val;
+        if (hex == null || hex.isBlank()) return ERROR.i_bits;
         hex = hex.charAt(0) == '#' ? hex.substring(1) : hex;
-        if (hex.length() < 6) return ERROR.val;
+        if (hex.length() < 6) return ERROR.i_bits;
         try { int r = Integer.parseInt(hex.substring(0, 2), 16);
             int g = Integer.parseInt(hex.substring(2, 4), 16);
             int b = Integer.parseInt(hex.substring(4, 6), 16);
@@ -365,7 +381,7 @@ public class Color32 implements Defined {
             return r | (g << 8) | (b << 16) | (a << 24);
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            return ERROR.val;
+            return ERROR.i_bits;
         }
     }
 

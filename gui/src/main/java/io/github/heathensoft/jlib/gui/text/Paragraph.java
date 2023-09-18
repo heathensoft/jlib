@@ -1,6 +1,8 @@
 package io.github.heathensoft.jlib.gui.text;
 
 
+import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.Iterator;
@@ -13,14 +15,15 @@ import java.util.regex.Pattern;
  */
 
 
-public class Paragraph implements FormattedText, Iterable<Word>{
+public class Paragraph implements Iterable<Word>{
 
-    private final Word[] words;
 
-    public Paragraph(String line) {
-        if (line == null || line.isBlank()) {
+    protected Word[] words;
+
+    public Paragraph(String text) {
+        if (text == null || text.isBlank()) {
             words = NEW_LINE;
-        } else words = parseInternal(line.trim());
+        } else words = parse(text.trim());
     }
 
     public Word[] words() {
@@ -54,29 +57,27 @@ public class Paragraph implements FormattedText, Iterable<Word>{
         return new WordIterator(words);
     }
 
-    private Word[] parseInternal(String line) {
 
+    protected Word[] parse(String line) {
         List<Word> list = new ArrayList<>();
         String[] split_paragraph = line.split("\\s+");
-        if (this instanceof Header || this instanceof Warning || this instanceof Comment) {
-            for (String word : split_paragraph) list.add(new Word(word));
-        } else { for (String word : split_paragraph) {
-                if (!(this instanceof Debug)) {
+        if (this.getClass().equals(Paragraph.class) || this instanceof PDebug) {
+            for (String word : split_paragraph) {
+                if (!(this instanceof PDebug)) {
                     char first_char = word.charAt(0);
                     if (first_char > 34 && first_char < 39 && word.length() > 1) { // Atp. It could be a keyword
                         String regex = first_char == '$' ? "\\$+\\w+[\\,.:]??" : first_char +"+\\w+[\\,.:]??";
-                        if (Pattern.matches(regex,word)) // Keyword
-                        {
+                        if (Pattern.matches(regex,word)) { // Keyword
                             if (first_char == '&') { // Atp. We know the word is an Action
                                 char second_char = word.charAt(1);
                                 if (second_char == '&') {
                                     char third_char = word.charAt(2);
-                                    if (third_char == '&') { // Failure Action
+                                    if (third_char == '&') { // Negative Action
                                         word = word.replaceFirst("&&&","");
                                         String[] split_word = word.split("_+");
                                         for (String s : split_word)
                                             if (!s.isBlank()) list.add(new Keyword.Action.Failure(s));
-                                    } else { // Success Action
+                                    } else { // Positive Action
                                         word = word.replaceFirst("&&","");
                                         String[] split_word = word.split("_+");
                                         for (String s : split_word)
@@ -90,17 +91,38 @@ public class Paragraph implements FormattedText, Iterable<Word>{
                                 }
                             } else if (first_char == '#') {
                                 word = word.replaceFirst("#","");
+                                word = "("+word+")";
                                 String[] split_word = word.split("_+");
                                 for (String s : split_word) {
-                                    if (!s.isBlank()) list.add(new Keyword.Comment(s));
+                                    if (!s.isBlank()) {
+                                        list.add(new Keyword.InlineComment(s));
+                                    }
                                 }
-                            } else if (first_char == '$') {
-                                word = word.replaceFirst("\\$","");
-                                String[] split_word = word.split("_+");
-                                for (String s : split_word) {
-                                    if (!s.isBlank()) list.add(new Keyword.Entity(s));
+                            }
+                            else if (first_char == '$') {
+                                char second_char = word.charAt(1);
+                                if (second_char == '$') {
+                                    char third_char = word.charAt(2);
+                                    if (third_char == '$') { // Hostile
+                                        word = word.replaceFirst("\\$\\$\\$","");
+                                        String[] split_word = word.split("_+");
+                                        for (String s : split_word)
+                                            if (!s.isBlank()) list.add(new Keyword.Entity.Hostile(s));
+                                    } else { // Friendly
+                                        word = word.replaceFirst("\\$\\$","");
+                                        String[] split_word = word.split("_+");
+                                        for (String s : split_word)
+                                            if (!s.isBlank()) list.add(new Keyword.Entity.Friendly(s));
+                                    }
+                                } else { // Neutral
+                                    word = word.replaceFirst("\\$","");
+                                    String[] split_word = word.split("_+");
+                                    for (String s : split_word)
+                                        if (!s.isBlank()) list.add(new Keyword.Entity(s));
                                 }
-                            } else { // generic keyword
+                            }
+
+                            else { // generic keyword
                                 word = word.replaceFirst("%","");
                                 String[] split_word = word.split("_+");
                                 for (String s : split_word) {
@@ -108,33 +130,54 @@ public class Paragraph implements FormattedText, Iterable<Word>{
                                 }
                             }
                             continue;
-                        }
-                        // Not a keyword
+                        } // Not a keyword
                     }
                 }
-                if (Character.isDigit(word.charAt(0))) {
-                    String number = word;
-                    if (number.length() > 3) {
-                        if (number.charAt(0) == '0') {
-                            if (number.charAt(1) == 'x') {
-                                number = number.substring(2,number.length()-1);
+
+                if (Character.isDigit(word.charAt(0))) { // Numerics values
+
+                    if (word.charAt(0) == '0' && word.length() > 3) {
+                        if (word.charAt(1) == 'v') {
+                            word = word.replaceFirst("0v","");
+                            String[] split_word = word.split("_+");
+                            for (String s : split_word) {
+                                if (!s.isBlank()) {
+                                    list.add(new Keyword.Value(s));
+                                }
+                            } continue;
+                        }
+                        else if (word.charAt(1) == 'x') {
+                            String number = word.substring(2,word.length()-1);
+                            if (isHexadecimal(number)) {
+                                list.add(new Keyword.Value(number.toUpperCase()));
+                                continue;
                             }
                         }
                     }
+
+                    String number = word;
                     Pattern p = Pattern.compile("[\\S]+[\\.,:%]");
-                    if (p.matcher(number).matches()) { // ends on . , : or %
-                        number = number.substring(0,number.length() - 1);
+                    if (p.matcher(word).matches()) { // ends on . , : or %
+                        number = word.substring(0,word.length() - 1);
                         if (number.endsWith("%")) {
                             number = number.substring(0,number.length() - 1);
                         }
                     }
                     if (isNumeric(number)) {
-                        list.add(new Number(word));
+                        list.add(new Keyword.Value(word));
+                        continue;
+                    }
+                }
+                if (this instanceof PDebug) {
+                    if (word.equals("true") || word.equals("false")) {
+                        list.add(new Keyword.Value(word));
                         continue;
                     }
                 }
                 list.add(new Word(word));
             }
+        } else {
+            for (String word : split_paragraph) list.add(new Word(word));
         }
         list.add(EOL);
         Word[] words = new Word[list.size()];
@@ -144,14 +187,19 @@ public class Paragraph implements FormattedText, Iterable<Word>{
         return words;
     }
 
+    private boolean isHexadecimal(String s) {
+        if (s == null) return false;
+        try { int h = HexFormat.fromHexDigits(s);
+        } catch (IllegalArgumentException i) {
+            return false;
+        } return true;
+    }
+
     private boolean isNumeric(String s) {
         if (s == null) return false;
         try { double d = Double.parseDouble(s);
         } catch (NumberFormatException e) {
-            try { int h = HexFormat.fromHexDigits(s);
-            } catch (IllegalArgumentException i) {
-                return false;
-            } return true;
+            return false;
         } return true;
     }
 
@@ -164,11 +212,16 @@ public class Paragraph implements FormattedText, Iterable<Word>{
         public void remove() { throw new UnsupportedOperationException(); }
     }
 
-    private static final Word EOL = new EOL();
+    private static final Word EOL = new Word.EOL();
     private static final Word[] NEW_LINE = new Word[]{EOL};
-    private static final Paragraph EMPTY_PARAGRAPH = new Paragraph(null);
+    protected static final Paragraph EMPTY_PARAGRAPH = new Paragraph(null);
 
-    public static Paragraph parse(String string) {
+    public static Paragraph colored(String string, Color32 color) {
+        if (string == null || color == null || string.isBlank()) return EMPTY_PARAGRAPH;
+        return new PColored(string.trim(),color);
+    }
+
+    public static Paragraph create(String string) {
         if (string == null || string.isBlank()) return EMPTY_PARAGRAPH;
         string = string.trim();
         if (string.length() > 2) {
@@ -176,16 +229,16 @@ public class Paragraph implements FormattedText, Iterable<Word>{
             if (first_char > 32 && first_char < 48) {
                 if (string.startsWith("##")) {
                     string = string.replaceFirst("##\\s*","");
-                    return new Header(string);
+                    return new PHeader(string);
                 } else if (string.startsWith("//")) {
                     string = string.replaceFirst("//\\s*","");
-                    return new Comment(string);
+                    return new PComment(string);
                 } else if (string.startsWith("**")) {
                     string = string.replaceFirst("\\*\\*\\s*","");
-                    return new Debug(string);
+                    return new PDebug(string);
                 } else if (string.startsWith("!!")) {
                     string = string.replaceFirst("!!\\s*","");
-                    return new Warning(string);
+                    return new PWarning(string);
                 }
             }
         } return new Paragraph(string);

@@ -743,11 +743,15 @@ public class Window extends AbstractWindow {
     };
     
     private final GLFWKeyCallback key_callback = new GLFWKeyCallback() {
-        private int lastKey = GLFW_KEY_UNKNOWN;
+        //private int lastKey = GLFW_KEY_UNKNOWN;
         public void invoke(long window, int key, int scancode, int action, int mods) {
-            if (key != GLFW_KEY_UNKNOWN && key < GLFW_KEY_LAST && action != GLFW_REPEAT) {
+            /*  if (key != GLFW_KEY_UNKNOWN && key < GLFW_KEY_LAST && action != GLFW_REPEAT) {
                 key = action == GLFW_PRESS ? key : -key;
                 if (key != lastKey) current_processor.on_key_event(lastKey = key);
+            }*/
+            if (key != GLFW_KEY_UNKNOWN && key < GLFW_KEY_LAST) {
+                key = action != GLFW_RELEASE ? key : -key;
+                current_processor.on_key_event(key);
             }
         }
     };

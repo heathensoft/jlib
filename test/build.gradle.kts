@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":ai"))
     implementation(project(":tiles"))
+    implementation(project(":gui"))
     implementation(project(":lwjgl"))
     runtimeOnly(files("../libs/lwjgl-3.3.1/natives/win-x64/lwjgl-natives-windows.jar"))
     runtimeOnly(files("../libs/lwjgl-3.3.1/natives/win-x64/lwjgl-glfw-natives-windows.jar"))

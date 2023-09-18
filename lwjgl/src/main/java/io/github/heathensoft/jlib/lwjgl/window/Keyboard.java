@@ -35,7 +35,8 @@ public class Keyboard {
             update_required = false;
         } if (queued_keys.isEmpty()) {
             update_required = false;
-        } else { queued_keys.dequeueAll(keyCollector);
+        } else {
+            queued_keys.dequeueAll(keyCollector);
             update_required = true;
         } if (!queued_chars.isEmpty()) {
             queued_chars.dequeueAll(charCollector);
@@ -55,12 +56,14 @@ public class Keyboard {
     }
     
     private final IntReader keyCollector = key -> {
-        if (key > 0) { keys[key] = true;
-            if (key < 0x20 || key == 0x7F)
+        if (key > 0) {
+            keys[key] = true;
+            if (key < 0x20 || key > 0x7E) {
                 textProcessor.npcPress(key);
+            }
         } else { key = Math.abs(key);
             keys[key] = false;
-            if (key < 0x20 || key == 0x7F) {
+            if (key < 0x20 || key > 0x7E) {
                 textProcessor.npcRelease(key);
             }
         }
@@ -106,8 +109,8 @@ public class Keyboard {
     }
     
     private static final TextProcessor tp_internal = new TextProcessor() {
-        public void npcPress(int character) {}
-        public void npcRelease(int character) {}
+        public void npcPress(int key) {}
+        public void npcRelease(int key) {}
         public void printable(byte character) {}
     };
 }

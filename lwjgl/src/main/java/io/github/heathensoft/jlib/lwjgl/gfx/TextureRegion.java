@@ -27,12 +27,22 @@ public class TextureRegion {
     }
     
     public TextureRegion(int x, int y, int width, int height, int texture_width, int texture_height) {
+        this(x,y,width,height,texture_width,texture_height,false);
+    }
+
+    public TextureRegion(int x, int y, int width, int height, int texture_width, int texture_height, boolean pixel_centered_uvs) {
         this.width = width; this.texture_width = texture_width; this.x = x % texture_width;
         this.height = height; this.texture_height = texture_height; this.y = y % texture_height;
-        this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
-        this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
-        this.u2 = (float) ((this.x + width - 0.5d) / (double) this.texture_width);
-        this.v2 = (float) ((this.y + height - 0.5d) / (double) this.texture_height);
+        if (pixel_centered_uvs) {
+            this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
+            this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
+            this.u2 = (float) ((this.x + width - 0.5d) / (double) this.texture_width);
+            this.v2 = (float) ((this.y + height - 0.5d) / (double) this.texture_height);
+        } else { this.u = (float) ((this.x) / (double) this.texture_width);
+            this.v = (float) ((this.y) / (double) this.texture_height);
+            this.u2 = (float) ((this.x + width) / (double) this.texture_width);
+            this.v2 = (float) ((this.y + height) / (double) this.texture_height);
+        }
     }
 
     public TextureRegion(TextureRegion region) {
@@ -47,21 +57,36 @@ public class TextureRegion {
         this.u2 = region.u2;
         this.v2 = region.v2;
     }
-    
-    public TextureRegion[] subDivide(int rows, int cols, int element_width, int element_height) {
+
+    public void pixelCenterUVs() {
+        this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
+        this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
+        this.u2 = (float) ((this.x + width - 0.5d) / (double) this.texture_width);
+        this.v2 = (float) ((this.y + height - 0.5d) / (double) this.texture_height);
+    }
+
+    public TextureRegion[] subDivide(int rows, int cols, int element_width, int element_height, boolean pixel_centered_uvs) {
         TextureRegion[] array = new TextureRegion[rows * cols];
         for (int row = 0; row < rows; row++) {
             int local_y = row * element_height;
             for (int col = 0; col < cols; col++) {
                 int local_x = col * element_width;
                 array[row * cols + col] = subRegion(
-                        local_x,local_y,element_width,element_height);
+                        local_x,local_y,element_width,element_height,pixel_centered_uvs);
             }
         } return array;
     }
     
+    public TextureRegion[] subDivide(int rows, int cols, int element_width, int element_height) {
+        return subDivide(rows,cols,element_width,element_height,false);
+    }
+    
     public TextureRegion[] subDivide(int rows, int cols, int element_size) {
         return subDivide(rows,cols,element_size,element_size);
+    }
+
+    public TextureRegion subRegion(int local_x, int local_y, int w, int h, boolean pixel_centered_uvs) {
+        return new TextureRegion(x+local_x,y+local_y,w,h, texture_width, texture_height, pixel_centered_uvs);
     }
     
     public TextureRegion subRegion(int local_x, int local_y, int w, int h) {
@@ -73,15 +98,17 @@ public class TextureRegion {
     }
     
     public void setPosition(int x, int y) {
+        boolean pixel_centered = isPixelCentered();
         this.x = x % texture_width;
         this.y = y % texture_height;
-        recalculateUV();
+        recalculateUV(pixel_centered);
     }
     
     public void setSize(int w, int h) {
+        boolean pixel_centered = isPixelCentered();
         this.width = w;
         this.height = h;
-        recalculateUV();
+        recalculateUV(pixel_centered);
     }
     
     public void resize(int amount_x, int amount_y) {
@@ -99,7 +126,7 @@ public class TextureRegion {
         v = v2;
         v2 = f;
     }
-    
+
     public float u() {
         return u;
     }
@@ -143,6 +170,10 @@ public class TextureRegion {
     public void getUVs(FloatBuffer buffer) {
         buffer.put(u).put(v).put(u2).put(v2);
     }
+
+    public boolean isPixelCentered() {
+        return !(u == (this.x / (double) texture_width));
+    }
     
     public boolean isFlippedX() {
         return u > u2;
@@ -156,14 +187,19 @@ public class TextureRegion {
         return new TextureRegion(this);
     }
     
-    private void recalculateUV() {
+    private void recalculateUV(boolean pixel_centered) {
         boolean was_flipped_x = isFlippedX();
         boolean was_flipped_y = isFlippedY();
-        u = (float) ((x + 0.5d) / (double) texture_width);
-        v = (float) ((y + 0.5d) / (double) texture_height);
-        u2 = (float) ((x + (width - 1) + 0.5d) / (double) texture_width);
-        v2 = (float) ((y + (height - 1) + 0.5d) / (double) texture_height);
-        if (was_flipped_x) flipX();
+        if (pixel_centered) {
+            u = (float) ((x + 0.5d) / (double) texture_width);
+            v = (float) ((y + 0.5d) / (double) texture_height);
+            u2 = (float) ((x + width - 0.5d) / (double) texture_width);
+            v2 = (float) ((y + height - 0.5d) / (double) texture_height);
+        } else { u = (float) ((x) / (double) texture_width);
+            v = (float) ((y) / (double) texture_height);
+            u2 = (float) ((x + width) / (double) texture_width);
+            v2 = (float) ((y + height) / (double) texture_height);
+        } if (was_flipped_x) flipX();
         if (was_flipped_y) flipY();
     }
     

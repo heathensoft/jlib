@@ -227,6 +227,10 @@ public class Framebuffer implements Disposable {
         }
     }
 
+    public static void setClearColor(Color32 color) {
+        setClearColor(color.r(),color.g(),color.b(),color.a());
+    }
+
     public static void setClearColor(float r, float g, float b, float a) {
         if (usingDefaultDrawBuffer()) {
             DEFAULT_CLEAR_COLOR.set(r, g, b, a);

@@ -6,9 +6,9 @@ package io.github.heathensoft.jlib.gui.text;
  */
 
 
-public class Comment extends Paragraph {
+public class PWarning extends Paragraph {
 
-    public Comment(String line) {
+    public PWarning(String line) {
         super(line);
     }
 }

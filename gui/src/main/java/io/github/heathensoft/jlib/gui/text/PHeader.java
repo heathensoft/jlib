@@ -1,14 +1,15 @@
 package io.github.heathensoft.jlib.gui.text;
 
 /**
+ * AKA Highlighted paragraph
  * @author Frederik Dahl
  * 10/09/2023
  */
 
 
-public class Debug extends Paragraph {
+public class PHeader extends Paragraph {
 
-    public Debug(String line) {
+    public PHeader(String line) {
         super(line);
     }
 }

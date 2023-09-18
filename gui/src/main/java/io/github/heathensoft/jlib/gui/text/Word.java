@@ -11,6 +11,9 @@ import java.util.Arrays;
 
 public class Word  {
 
+
+    public static final class EOL extends Word {  EOL() { super("\n"); } }
+
     private final byte[] value;
 
     protected Word(String string) {
@@ -55,5 +58,7 @@ public class Word  {
     public int hashCode() {
         return Arrays.hashCode(value);
     }
+
+
     
 }

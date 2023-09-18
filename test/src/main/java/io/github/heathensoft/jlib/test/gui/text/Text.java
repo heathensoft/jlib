@@ -72,7 +72,8 @@ public class Text {
                             batch.draw(region, x + word_advance, y, space,
                             font_height, word_color, word_id);
                             word_advance += space;
-                        } pointer_x += (word_width + space);
+                        }
+                        pointer_x += (word_width + space);
                     } pointer_x = 0;
                     pointer_y += (font_height + leading);
                 }

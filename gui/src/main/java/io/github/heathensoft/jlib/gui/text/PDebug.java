@@ -6,9 +6,9 @@ package io.github.heathensoft.jlib.gui.text;
  */
 
 
-public class Warning extends Paragraph {
+public class PDebug extends Paragraph {
 
-    public Warning(String line) {
+    public PDebug(String line) {
         super(line);
     }
 }

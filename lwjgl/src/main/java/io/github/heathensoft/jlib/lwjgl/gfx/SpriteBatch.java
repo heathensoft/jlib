@@ -41,8 +41,7 @@ public class SpriteBatch implements Disposable {
         if (rendering) {
             Logger.warn("spriteBatch: already in rendering state");
             return;
-        }
-        drawCalls = 0;
+        } drawCalls = 0;
         rendering = true;
     }
     
@@ -50,18 +49,31 @@ public class SpriteBatch implements Disposable {
         if (!rendering) {
             Logger.warn("spriteBatch: calling end when not in rendering state");
             return;
-        }
-        if (count > 0) flush();
+        } flush();
         rendering = false;
     }
     
-    private void flush() {
-        vertexData.render(vertexBuffer,count);
-        count = 0;
-        drawCalls++;
-        drawCallsTotal++;
+    public void flush() {
+        if (count > 0) {
+            vertexData.render(vertexBuffer,count);
+            count = 0;
+            drawCalls++;
+            drawCallsTotal++;
+        }
     }
-    
+
+    public int spriteCountSinceFlush() {
+        return count;
+    }
+
+    public int drawCalls() {
+        return drawCalls;
+    }
+
+    public int drawCallsTotal() {
+        return drawCallsTotal;
+    }
+
     public void draw(Sprite sprite) {
         if (rendering) {
             if (count == capacity) flush();
@@ -104,6 +116,10 @@ public class SpriteBatch implements Disposable {
     
     public void draw(TextureRegion region, float x, float y, float width, float height, int custom) {
         draw(region, x, y, width, height, DEFAULT_COLOR_BITS, custom);
+    }
+
+    public void draw(TextureRegion region, float x, float y, float width, float height, float color, int textureSlot, int pixelID) {
+        draw(region, x, y, width, height, color, (pixelID << 8) + (textureSlot & 0xFF));
     }
     
     public void draw(TextureRegion region, float x, float y, float width, float height, float color, int custom) {

@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 
 
-public class Font {
+public class FontData {
 
     public static final int FIRST_CHARACTER = 32;
     public static final int FINAL_CHARACTER = 127;
@@ -23,7 +23,7 @@ public class Font {
     private final boolean monoSpaced;
 
 
-    public Font(TextureRegion font_region, List<String> font_info) {
+    public FontData(TextureRegion font_region, List<String> font_info) {
         String[] info_lines = font_info.get(0).split("\\s+");
         name = info_lines[0];
         height = Integer.parseInt(info_lines[1]);
@@ -48,7 +48,7 @@ public class Font {
         } monoSpaced = sameAdvance;
     }
 
-    public Font(String name, TextureRegion[] glyphs) {
+    public FontData(String name, TextureRegion[] glyphs) {
         this.name = name == null ? "Unnamed Font" : name;
         this.num_characters = Math.min(glyphs.length,FINAL_CHARACTER);
         this.glyphs = new Glyph[num_characters];
@@ -61,6 +61,14 @@ public class Font {
             if (this.glyphs[i].advance() != advance)
                 sameAdvance = false;
         } monoSpaced = sameAdvance;
+    }
+
+    public Glyph getChar(int c) {
+        return getChar((byte) (c & 0xFF));
+    }
+
+    public Glyph getChar(char c) {
+        return getChar((byte) (c & 0xFF));
     }
 
     public Glyph getChar(byte c) {
@@ -86,7 +94,7 @@ public class Font {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Font font = (Font) o;
+        FontData font = (FontData) o;
         return Objects.equals(name, font.name);
     }
 

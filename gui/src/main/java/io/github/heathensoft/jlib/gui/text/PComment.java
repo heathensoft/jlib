@@ -6,9 +6,9 @@ package io.github.heathensoft.jlib.gui.text;
  */
 
 
-public class Header extends Paragraph {
+public class PComment extends Paragraph {
 
-    public Header(String line) {
+    public PComment(String line) {
         super(line);
     }
 }

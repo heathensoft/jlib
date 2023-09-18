@@ -12,14 +12,14 @@ package io.github.heathensoft.jlib.lwjgl.window;
 public interface TextProcessor {
     
     /**
-     * @param character "non-printable-character"
+     * @param key "non-printable-key"
      */
-    void npcPress(int character);
+    void npcPress(int key);
     
     /**
-     * @param character "non-printable-character"
+     * @param key "non-printable-key"
      */
-    void npcRelease(int character);
+    void npcRelease(int key);
     
     /**
      * @param character ascii  [32 - 126]

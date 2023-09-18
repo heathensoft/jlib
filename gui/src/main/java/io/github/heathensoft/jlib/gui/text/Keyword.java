@@ -3,6 +3,23 @@ package io.github.heathensoft.jlib.gui.text;
 import java.nio.charset.StandardCharsets;
 
 /**
+ * Mostly intended for gameplay logging.
+ *
+ * Tags:
+ *   value          0v
+ *   Hexadecimal	0x  (Just a bonus tag for hexadecimals)
+ *   Highlighted    %   (Base Keyword object)
+ *   InlineComment	#
+ *   Entity	        $   (Neutral)
+ *     Friendly	    $$
+ *     Hostile      $$$
+ *   Action	        &   (Neutral)
+ *     Negative	    &&
+ *     Positive	    &&&
+ *
+ * But the tags have no real meaning outside of coloring them.
+ * So you could tag words with any.
+ *
  * @author Frederik Dahl
  * 04/09/2023
  */
@@ -10,21 +27,19 @@ import java.nio.charset.StandardCharsets;
 
 public class Keyword extends Word {
 
-    protected Keyword(String string) {
-        this(string.getBytes(StandardCharsets.US_ASCII));
-    }
+    protected Keyword(String string) { this(string.getBytes(StandardCharsets.US_ASCII)); }
 
     protected Keyword(byte[] value) {
         super(value);
     }
 
-    public static class Comment extends Keyword {
+    public static class InlineComment extends Keyword {
 
-        protected Comment(String string) {
+        protected InlineComment(String string) {
             this(string.getBytes(StandardCharsets.US_ASCII));
         }
 
-        protected Comment(byte[] value) {
+        protected InlineComment(byte[] value) {
             super(value);
         }
     }
@@ -36,6 +51,19 @@ public class Keyword extends Word {
 
         protected Entity(byte[] value) {
             super(value);
+        }
+
+        public static class Friendly extends Entity {
+
+            protected Friendly(String string) { this(string.getBytes(StandardCharsets.US_ASCII)); }
+
+            protected Friendly(byte[] value) { super(value); }
+
+        } public static class Hostile extends Entity {
+
+            protected Hostile(String string) { this(string.getBytes(StandardCharsets.US_ASCII)); }
+
+            protected Hostile(byte[] value) { super(value); }
         }
     }
     public static class Action extends Keyword {
@@ -69,4 +97,17 @@ public class Keyword extends Word {
             }
         }
     }
+    public static class Value extends Keyword {
+
+        protected Value(String string) {
+            this(string.getBytes(StandardCharsets.US_ASCII));
+        }
+
+        protected Value(byte[] value) {
+            super(value);
+        }
+
+    }
+
+
 }
