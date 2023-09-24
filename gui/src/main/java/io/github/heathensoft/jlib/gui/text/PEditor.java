@@ -6,7 +6,7 @@ package io.github.heathensoft.jlib.gui.text;
  */
 
 
-public class PEditor extends PSpecial {
+public class PEditor extends PUnparsed {
 
     private boolean highlighted;
 

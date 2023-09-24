@@ -1,6 +1,8 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 
+import java.util.List;
+
 /**
  * @author Frederik Dahl
  * 13/10/2022
@@ -23,7 +25,7 @@ public abstract class InputProcessor {
      * when released. So use abs(key) to get the GLFW equivalent.
      * @param key the key value
      */
-    protected void on_key_event(int key) {}
+    protected void on_key_event(int key, int mods) {}
     
     /**
      * Called when the cursor hovers over the window.
@@ -44,7 +46,7 @@ public abstract class InputProcessor {
     
     protected void on_mouse_enter(boolean enter) {}
 
-    protected void on_file_drop(String path) {}
+    protected void on_file_drop(List<String> droppedFiles) {}
 
     protected void controller_connect(int id, boolean connect) {}
 

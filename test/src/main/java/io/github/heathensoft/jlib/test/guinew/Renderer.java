@@ -5,8 +5,7 @@ import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.gui.Size;
 import io.github.heathensoft.jlib.gui.text.ColorScheme;
 import io.github.heathensoft.jlib.gui.text.FontData;
-import io.github.heathensoft.jlib.gui.text.ParagraphList;
-import io.github.heathensoft.jlib.gui.TextRenderer;
+import io.github.heathensoft.jlib.gui.text.TextRenderer;
 import io.github.heathensoft.jlib.gui.text.Text;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.gfx.debug.DebugLines2D;
@@ -55,7 +54,7 @@ public class Renderer implements Disposable {
         textRenderer.enableWrapping(false);
         textRenderer.setTextLeading(2);
         textRenderer.setTextScale(1);
-        textRenderer.setTextArea(4,716,size.width(),size.height());
+        textRenderer.setTextArea(4,resolution.height() - 4,size.width(),size.height());
     }
 
 

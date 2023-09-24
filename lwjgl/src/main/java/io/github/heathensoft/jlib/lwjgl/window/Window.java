@@ -14,7 +14,6 @@ import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -453,17 +452,26 @@ public class Window extends AbstractWindow {
     
     @Override
     public void setInputProcessor(InputProcessor processor) {
-        Objects.requireNonNull(processor,"processor cannot be null");
         if (processor != current_processor) {
-            current_processor = processor;
-            double x = mouse_screen_x;
-            double y = mouse_screen_y;
-            x *= ((float)framebuffer_width / window_width);
-            y *= ((float)framebuffer_height / window_height);
-            x = (x - viewport.x()) * viewport.w_inv();
-            y = (y - viewport.y()) * viewport.h_inv();
-            current_processor.on_activation(x,y);
+            String descriptor;
+            if (processor == null) {
+                descriptor = "none";
+                current_processor = placeholder_processor;
+            }
+            else {
+                descriptor = processor.getClass().getSimpleName();
+                current_processor = processor;
+                double x = mouse_screen_x;
+                double y = mouse_screen_y;
+                x *= ((float)framebuffer_width / window_width);
+                y *= ((float)framebuffer_height / window_height);
+                x = (x - viewport.x()) * viewport.w_inv();
+                y = (y - viewport.y()) * viewport.h_inv();
+                current_processor.on_activation(x,y);
+            }
+            Logger.info("setting window processor: " + descriptor);
         }
+
     }
 
     @Override
@@ -655,7 +663,12 @@ public class Window extends AbstractWindow {
         user.setBool(LIMIT_FPS,limit_fps);
         user.save();
     }
-    
+
+    @Override
+    public InputProcessor inputProcessor() {
+        return current_processor;
+    }
+
     @Override
     public List<Resolution> appResOptions() {
         return app_res_options;
@@ -691,8 +704,10 @@ public class Window extends AbstractWindow {
 
     private final GLFWDropCallback drop_callback = new GLFWDropCallback() {
         public void invoke(long window, int count, long names) {
+            List<String> list = new ArrayList<>(count);
             for (int i = 0; i < count; i++) {
-                current_processor.on_file_drop(GLFWDropCallback.getName(names,i));
+                list.add(GLFWDropCallback.getName(names,i));
+                current_processor.on_file_drop(list);
             }
         }
     };
@@ -751,7 +766,7 @@ public class Window extends AbstractWindow {
             }*/
             if (key != GLFW_KEY_UNKNOWN && key < GLFW_KEY_LAST) {
                 key = action != GLFW_RELEASE ? key : -key;
-                current_processor.on_key_event(key);
+                current_processor.on_key_event(key,mods);
             }
         }
     };
@@ -759,8 +774,10 @@ public class Window extends AbstractWindow {
     private final GLFWCharCallback char_callback = new GLFWCharCallback() {
         @Override
         public void invoke(long window, int codepoint) {
-            if ((codepoint & 0x7F) == codepoint)
+            if ((codepoint & 0x7F) == codepoint) {
                 current_processor.on_char_press(codepoint);
+            }
+
         }
     };
     

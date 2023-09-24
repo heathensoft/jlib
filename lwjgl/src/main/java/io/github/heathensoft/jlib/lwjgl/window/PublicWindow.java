@@ -84,6 +84,8 @@ interface PublicWindow {
     boolean isLimitFPSEnabled();
     
     void saveSettings() throws IOException;
+
+    InputProcessor inputProcessor();
     
     /**
      * All options provided by the Application during its on_init() method.

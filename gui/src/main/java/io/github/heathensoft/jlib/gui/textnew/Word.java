@@ -1,9 +1,23 @@
-package io.github.heathensoft.jlib.gui.text;
+package io.github.heathensoft.jlib.gui.textnew;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
+ *
+ * Word
+ *   EOL
+ *   Value		    0v
+ *   Hexadecimal	0x
+ *   Keyword	    %
+ *   InlineComment	#
+ *   Entity	        $
+ *     Friendly	    $$
+ *     Hostile	    $$$
+ *   Action	        &
+ *     Success	    &&
+ *     Failure	    &&&
+ *
  * @author Frederik Dahl
  * 16/11/2022
  */
@@ -11,17 +25,22 @@ import java.util.Arrays;
 
 public class Word  {
 
-
-    public static final class EOL extends Word {
-        EOL() { super("\n"); }
+    public static EOL END_OF_LINE() {
+        return EOL.singleton;
     }
 
+    public static final class EOL extends Word {
+        static EOL singleton = new EOL();
+        private EOL() { super("\n"); }
+    }
 
     private final byte[] value;
 
     protected Word(String string) {
         this(string.getBytes(StandardCharsets.US_ASCII));
     }
+
+    protected Word(byte c) { this(new byte[]{c}); }
     
     protected Word(byte[] value) {
         this.value = value;
@@ -49,6 +68,12 @@ public class Word  {
 
     public String toString() {
         return new String(value);
+    }
+
+    public boolean isEndOfLine() { return this instanceof EOL; }
+
+    public boolean isRegularWord() {
+        return this.getClass().equals(Word.class);
     }
 
     public boolean equals(Object o) {

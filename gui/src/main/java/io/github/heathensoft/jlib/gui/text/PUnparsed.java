@@ -6,10 +6,9 @@ package io.github.heathensoft.jlib.gui.text;
  */
 
 
-public class PSpecial extends Paragraph {
+public class PUnparsed extends Paragraph {
 
-
-    public PSpecial(String text) {
+    protected PUnparsed(String text) {
         super(text);
     }
 }

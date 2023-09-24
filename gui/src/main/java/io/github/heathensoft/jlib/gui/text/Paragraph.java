@@ -26,12 +26,28 @@ public class Paragraph implements Iterable<Word>{
         } else words = parse(text.trim());
     }
 
-    public Word[] words() {
+    protected Word[] words() {
         return words;
     }
 
     public boolean isBlank() {
         return words.length == 1;
+    }
+
+    public byte charAt(int index) throws IndexOutOfBoundsException {
+        int p = 0;
+        int num_words = words.length - 1;
+        for (int i = 0; i < num_words; i++) {
+            byte[] w = words[i].get();
+            p += w.length;
+            if (p > index) {
+                return w[w.length - p + index];
+            } else if (p == index) {
+                if (i == (num_words - 1)) {
+                    return 10;
+                } else return 32;
+            } else p++;
+        } throw new IndexOutOfBoundsException("index: " + index + " length: " + length());
     }
 
     public int length() {
@@ -42,6 +58,15 @@ public class Paragraph implements Iterable<Word>{
             Word word = words[i];
             num += word.length() + 1;
         } return num;
+    }
+
+    public String toStringTrimmed() {
+        if (isBlank()) return "";
+        StringBuilder sb = new StringBuilder(length());
+        for (int i = 0; i < (words.length - 1); i++) {
+            sb.append(words[i]).append(' ');
+        } sb.deleteCharAt(sb.length()-1);
+        return sb.toString();
     }
 
     public String toString() {
@@ -57,6 +82,10 @@ public class Paragraph implements Iterable<Word>{
         return new WordIterator(words);
     }
 
+    protected Word[] cpy(Word[] src) {
+
+        return null;
+    }
 
     protected Word[] parse(String line) {
         List<Word> list = new ArrayList<>();
@@ -65,7 +94,7 @@ public class Paragraph implements Iterable<Word>{
             for (String word : split_paragraph) {
                 if (!(this instanceof PDebug)) {
                     char first_char = word.charAt(0);
-                    if (first_char > 34 && first_char < 39 && word.length() > 1) { // Atp. It could be a keyword
+                    if (first_char > 34 && first_char < 39 && word.length() > 1) {
                         String regex = first_char == '$' ? "\\$+\\w+[\\,.:]??" : first_char +"+\\w+[\\,.:]??";
                         if (Pattern.matches(regex,word)) { // Keyword
                             if (first_char == '&') { // Atp. We know the word is an Action
@@ -212,16 +241,16 @@ public class Paragraph implements Iterable<Word>{
         public void remove() { throw new UnsupportedOperationException(); }
     }
 
-    private static final Word EOL = new Word.EOL();
-    private static final Word[] NEW_LINE = new Word[]{EOL};
+    protected static final Word EOL = new Word.EOL();
+    protected static final Word[] NEW_LINE = new Word[]{EOL};
     protected static final Paragraph EMPTY_PARAGRAPH = new Paragraph(null);
 
-    public static Paragraph colored(String string, Color32 color) {
+    protected static Paragraph colored(String string, Color32 color) {
         if (string == null || color == null || string.isBlank()) return EMPTY_PARAGRAPH;
         return new PColored(string.trim(),color);
     }
 
-    public static Paragraph create(String string) {
+    protected static Paragraph create(String string) {
         if (string == null || string.isBlank()) return EMPTY_PARAGRAPH;
         string = string.trim();
         if (string.length() > 2) {

@@ -26,6 +26,7 @@ public final class Engine {
     private Engine() {}
     
     private Time time;
+    private DefaultInput input;
     private Window window;
     private Application app;
     private ThreadService threadPool;
@@ -135,6 +136,15 @@ public final class Engine {
     public Time time() {
         return time;
     }
+
+    public DefaultInput input() {
+        if (input == null) {
+            input = new DefaultInput();
+            window.setInputProcessor(input);
+        } else { InputProcessor current = window.inputProcessor();
+            if (current != input) window.setInputProcessor(input);
+        } return input;
+    }
     
     public Window window() {
         return window;
@@ -158,11 +168,9 @@ public final class Engine {
             service_keep_alive_time_ms);
         } return threadPool;
     }
-    
-    
+
     public static Engine get() {
         return instance == null ? (instance = new Engine()) : instance;
     }
-    
-    
+
 }

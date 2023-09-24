@@ -1,11 +1,11 @@
 package io.github.heathensoft.jlib.test.uitest;
 
+import io.github.heathensoft.jlib.lwjgl.window.DefaultInput;
 import io.github.heathensoft.jlib.test.graphicsOld.IDBuffer;
 import io.github.heathensoft.jlib.test.gui.GUI;
 import io.github.heathensoft.jlib.test.gui.interactable.Interactable;
 import io.github.heathensoft.jlib.test.gui.interactable.Interactables;
 import io.github.heathensoft.jlib.test.gui.interactable.UInteractable;
-import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Keyboard;
@@ -23,13 +23,13 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 public class Controls {
 
     private Interactable previousElement;
-    private Input input;
+    private DefaultInput input;
     private GUI GUI;
     private boolean isDragging;
 
     public Controls(GUI GUI) {
-        Input.initialize();
-        this.input = Input.get();
+        //Input.initialize();
+        this.input = Engine.get().input();
         this.GUI = GUI;
     }
 
@@ -37,7 +37,7 @@ public class Controls {
 
         // update hud
 
-        Keyboard keyboard = input.keyboard();
+        Keyboard keyboard = input.keys();
         Mouse mouse = input.mouse();
         IDBuffer idBuffer = GUI.ID_BUFFER;
         if(keyboard.just_pressed(GLFW_KEY_ESCAPE)) {

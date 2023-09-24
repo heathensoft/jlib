@@ -1,11 +1,8 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
-import io.github.heathensoft.jlib.common.storage.primitive.iterators.IntReader;
 
-import java.util.Objects;
-
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_LAST;
+import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * ASCII table:
@@ -17,12 +14,12 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_LAST;
 
 
 public class Keyboard {
-    
+
+
     private final IntQueue queued_keys = new IntQueue(16);
     private final IntQueue queued_chars = new IntQueue(16);
-    private final boolean[] keys = new boolean[GLFW_KEY_LAST];
-    private final boolean[] pkeys = new boolean[GLFW_KEY_LAST];
-    
+    private final boolean[] c_keys = new boolean[GLFW_KEY_LAST];
+    private final boolean[] p_keys = new boolean[GLFW_KEY_LAST];
     private TextProcessor textProcessor = tp_internal;
     private boolean update_required;
     
@@ -30,23 +27,34 @@ public class Keyboard {
     
     public void process_input() {
         if (update_required) {
-            System.arraycopy(keys,0,
-            pkeys,0, GLFW_KEY_LAST);
+            System.arraycopy(c_keys,0,
+            p_keys,0, GLFW_KEY_LAST);
             update_required = false;
         } if (queued_keys.isEmpty()) {
             update_required = false;
         } else {
-            queued_keys.dequeueAll(keyCollector);
-            update_required = true;
-        } if (!queued_chars.isEmpty()) {
-            queued_chars.dequeueAll(charCollector);
+            while (!queued_keys.isEmpty()) {
+                int key = queued_keys.dequeue();
+                int mods = queued_keys.dequeue();
+                if (key > 0) { c_keys[key] = true;
+                    textProcessor.npcPress(key,mods);
+                } else { key = Math.abs(key);
+                    c_keys[key] = false;
+                    textProcessor.npcRelease(key,mods);
+                }
+            } update_required = true;
+        } while (!queued_chars.isEmpty()) {
+            int character = queued_chars.dequeue();
+            textProcessor.printable((byte) character);
         }
     }
     
-    public void on_key_event(int key) {
-        if (queued_keys.size() == 16) {
+    public void on_key_event(int key, int mods) {
+        if (queued_keys.size() == 32) {
+            queued_keys.dequeue();
             queued_keys.dequeue();
         } queued_keys.enqueue(key);
+        queued_keys.enqueue(mods);
     }
     
     public void on_char_press(int codepoint) {
@@ -54,28 +62,11 @@ public class Keyboard {
             queued_chars.dequeue();
         } queued_chars.enqueue(codepoint);
     }
-    
-    private final IntReader keyCollector = key -> {
-        if (key > 0) {
-            keys[key] = true;
-            if (key < 0x20 || key > 0x7E) {
-                textProcessor.npcPress(key);
-            }
-        } else { key = Math.abs(key);
-            keys[key] = false;
-            if (key < 0x20 || key > 0x7E) {
-                textProcessor.npcRelease(key);
-            }
-        }
-    };
-    
-    private final IntReader charCollector = key
-    -> textProcessor.printable((byte)key);
-    
-    
+
+
     public boolean pressed(int key) {
         if (key > GLFW_KEY_LAST) return false;
-        return keys[key];
+        return c_keys[key];
     }
     
     public boolean pressed(int key1, int key2) {
@@ -84,7 +75,7 @@ public class Keyboard {
     
     public boolean just_pressed(int key) {
         if (key >= GLFW_KEY_LAST) return false;
-        return keys[key] && !pkeys[key];
+        return c_keys[key] && !p_keys[key];
     }
     
     /**
@@ -97,20 +88,21 @@ public class Keyboard {
     }
     
     public boolean just_released(int key) {
-        return pkeys[key] && !keys[key];
+        return p_keys[key] && !c_keys[key];
     }
     
     public void setTextProcessor(TextProcessor processor) {
-        Objects.requireNonNull(processor,"null argument text processor");
+        processor = processor == null ? tp_internal : processor;
         if (textProcessor != processor) {
-            queued_chars.dequeueAll(charCollector);
+            queued_chars.clear();
+            queued_keys.clear();
             textProcessor = processor;
         }
     }
     
     private static final TextProcessor tp_internal = new TextProcessor() {
-        public void npcPress(int key) {}
-        public void npcRelease(int key) {}
+        public void npcPress(int key, int mods) {}
+        public void npcRelease(int key, int mods) {}
         public void printable(byte character) {}
     };
 }

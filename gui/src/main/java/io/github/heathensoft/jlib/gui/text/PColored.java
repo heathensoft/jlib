@@ -8,7 +8,7 @@ import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
  */
 
 
-public class PColored extends PSpecial {
+public class PColored extends PUnparsed {
 
     private final Color32 color;
 

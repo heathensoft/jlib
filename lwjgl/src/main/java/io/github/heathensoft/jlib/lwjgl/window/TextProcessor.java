@@ -14,15 +14,15 @@ public interface TextProcessor {
     /**
      * @param key "non-printable-key"
      */
-    void npcPress(int key);
+    void npcPress(int key, int mods);
     
     /**
      * @param key "non-printable-key"
      */
-    void npcRelease(int key);
+    void npcRelease(int key, int mods);
     
     /**
-     * @param character ascii  [32 - 126]
+     * @param character ascii  [00 - 127]
      */
     void printable(byte character);
 }

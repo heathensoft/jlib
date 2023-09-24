@@ -124,7 +124,7 @@ public class ColorScheme {
             return text_debugging;
         } else if (paragraph instanceof PWarning) {
             return text_warnings;
-        } else if (paragraph instanceof PSpecial) {
+        } else if (paragraph instanceof PUnparsed) {
             if (paragraph instanceof PColored colored) {
                 return colored.color();
             } else if (paragraph instanceof PEditor edit) {

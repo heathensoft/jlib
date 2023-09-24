@@ -2,7 +2,6 @@ package io.github.heathensoft.jlib.test.uitest;
 
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.utils.Input;
 import io.github.heathensoft.jlib.test.graphicsOld.Color;
 import io.github.heathensoft.jlib.test.gui.GUI;
 import io.github.heathensoft.jlib.lwjgl.window.Application;
@@ -13,7 +12,6 @@ import io.github.heathensoft.jlib.test.gui.window.HBoxContainer;
 import io.github.heathensoft.jlib.test.gui.window.Size;
 import io.github.heathensoft.jlib.test.gui.window.Spacing;
 import io.github.heathensoft.jlib.test.gui.window.VBoxContainer;
-import io.github.heathensoft.jlib.test.gui.window.window.DynamicWindow;
 import io.github.heathensoft.jlib.test.gui.window.window.ScrollableBox;
 import org.joml.Vector2f;
 
@@ -126,7 +124,7 @@ public class UiApp extends Application  {
 
     @Override
     protected void on_render(float frame_time, float alpha) {
-        Vector2f mouse = Input.get().mouse().position();
+        Vector2f mouse = Engine.get().input().mouse().position();
         renderer.render(frame_time,alpha,mouse);
     }
 

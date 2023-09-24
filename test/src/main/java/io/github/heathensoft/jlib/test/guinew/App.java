@@ -3,9 +3,9 @@ package io.github.heathensoft.jlib.test.guinew;
 import io.github.heathensoft.jlib.common.io.External;
 
 import io.github.heathensoft.jlib.gui.text.ParagraphList;
-import io.github.heathensoft.jlib.gui.text.TextEditorPld;
-import io.github.heathensoft.jlib.lwjgl.utils.Input;
+import io.github.heathensoft.jlib.lwjgl.window.DefaultInput;
 import io.github.heathensoft.jlib.lwjgl.window.*;
+import org.joml.Vector2f;
 import org.tinylog.Logger;
 
 import java.io.IOException;
@@ -25,30 +25,40 @@ public class App extends Application {
 
     private ParagraphList text;
     private Renderer renderer;
-    private TextEditorPld textEditor = new TextEditorPld();
+    private TEdit edit = new TEdit();
 
     @Override
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         config.settings_width = 1280;
         config.settings_height = 720;
+        //config.settings_width = 1920;
+        //config.settings_height = 1080;
         config.windowed_mode = true;
         config.auto_resolution = false;
         supported.add(Resolution.R_1280x720);
+        supported.add(Resolution.R_1920x1080);
     }
 
     @Override
     protected void on_start(Resolution resolution) throws Exception {
+
         renderer = new Renderer(resolution);
         text = new ParagraphList();
-        Input.initialize();
-        Input.get().keyboard().setTextProcessor(textEditor);
+
+        Engine.get().input().keys().setTextProcessor(edit);
     }
 
     @Override
     protected void on_update(float delta) {
-        if (Input.get().keyboard().just_pressed(GLFW_KEY_ESCAPE)) Engine.get().exit();
-        if (Input.get().anyFilesDropped()) {
-            Input.get().collectDroppedFiles(item -> {
+
+        DefaultInput input = Engine.get().input();
+
+
+        /*
+        DefaultInput input = Engine.get().input();
+        if (input.keys().just_pressed(GLFW_KEY_ESCAPE)) Engine.get().exit();
+        if (input.anyFilesDropped()) {
+            input.collectDroppedFiles(item -> {
                 try {
                     External io = new External(Path.of(item));
                     if (io.isFile()) {
@@ -65,7 +75,11 @@ public class App extends Application {
             });
         }
 
+         */
 
+
+
+        /*
         float amount = 4;
         if (Input.get().keyboard().pressed(GLFW_KEY_W)) {
             float v = renderer.size.height() - amount;
@@ -77,11 +91,11 @@ public class App extends Application {
             renderer.size.setWidth(v);
         } else if (Input.get().keyboard().pressed(GLFW_KEY_S)) {
             float v = renderer.size.height() + amount;
-            v = Math.min(v,712);
+            v = Math.min(v,resolution.height() - 8);
             renderer.size.setHeight(v);
         } else if (Input.get().keyboard().pressed(GLFW_KEY_D)) {
             float v = renderer.size.width() + amount;
-            v = Math.min(v,1272);
+            v = Math.min(v,resolution.width() - 8);
             renderer.size.setWidth(v);
         } else if (Input.get().keyboard().just_pressed(GLFW_KEY_C)) {
             boolean current = renderer.textRenderer.isScissoringEnabled();
@@ -90,6 +104,10 @@ public class App extends Application {
             boolean current = renderer.textRenderer.isWrappingEnabled();
             renderer.textRenderer.enableWrapping(!current);
         }
+
+         */
+
+
 
 
 

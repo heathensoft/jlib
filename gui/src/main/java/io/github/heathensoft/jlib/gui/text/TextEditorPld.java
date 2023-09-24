@@ -35,7 +35,7 @@ public class TextEditorPld implements TextProcessor {
         } return text;
     }
 
-    public void npcPress(int key) {
+    public void npcPress(int key, int mods) {
         if (!lines.isEmpty()) {
 
             if (key == GLFW_KEY_UP) {
@@ -75,7 +75,7 @@ public class TextEditorPld implements TextProcessor {
     }
 
 
-    public void npcRelease(int key) { }
+    public void npcRelease(int key, int mods) { }
 
 
     public void printable(byte character) {

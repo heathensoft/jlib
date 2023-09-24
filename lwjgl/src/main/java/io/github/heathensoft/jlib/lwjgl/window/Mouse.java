@@ -79,12 +79,13 @@ public class Mouse {
                 if (!last_button[b]) {
                     drag_origin[b].set(current_position);
                     drag_vector[b].zero();
-                } else if (timer[b] > DRAG_TIME) {
+                } else {
+                    Vector2f d_vec = drag_vector[b];
+                    d_vec.set(current_position).sub(drag_origin[b]);
                     if (!current_dragging[b]) {
-                        current_dragging[b] = true;
-                    } else {
-                        Vector2f d_vec = drag_vector[b];
-                        d_vec.set(current_position).sub(drag_origin[b]);
+                        if (timer[b] > DRAG_TIME && drag_vector[b].length() > 0.005f) {
+                            current_dragging[b] = true;
+                        }
                     }
                 }
             } else {
@@ -151,7 +152,6 @@ public class Mouse {
     }
 
     // ** CALLBACKS ** //
-
 
     public void on_mouse_hover(double x, double y) {
         callback_position.set((float)x,(float)y);

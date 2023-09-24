@@ -1,6 +1,6 @@
-package io.github.heathensoft.jlib.gui;
+package io.github.heathensoft.jlib.gui.text;
 
-import io.github.heathensoft.jlib.gui.text.*;
+import io.github.heathensoft.jlib.gui.Size;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
 import io.github.heathensoft.jlib.lwjgl.gfx.SpriteBatch;
 import org.joml.Vector2f;
@@ -157,7 +157,10 @@ public class TextRenderer {
                     float word_width = word_width(word);
                     float next_x = local_pointer.x + word_width;
                     if (next_x > area.width()) {
-                        if (word_width > area.width()) return; // No room for single word
+                        if (word_width > area.width()) {
+                            local_pointer.x = 0;
+                            continue; // No room for single word
+                        }
                         local_pointer.y += font_height;
                         local_pointer.y += leading;
                         if (local_pointer.y > area.height()) return; // partially outside y-bounds.

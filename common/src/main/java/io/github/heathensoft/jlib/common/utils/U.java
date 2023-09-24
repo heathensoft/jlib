@@ -2,6 +2,8 @@ package io.github.heathensoft.jlib.common.utils;
 
 import io.github.heathensoft.jlib.common.noise.Noise;
 
+import java.nio.*;
+
 
 /**
  * @author Frederik Dahl
@@ -128,6 +130,36 @@ public class U {
             if (t != 0) return logTable[t] - 133;
             else return (x >> 8 != 0) ? logTable[t] - 141 : logTable[x] - 149;
         }
+    }
+
+    public static byte[] splice(byte[] src1, byte[] src2) {
+        byte[] dst = new byte[src1.length + src2.length];
+        ByteBuffer buffer = ByteBuffer.wrap(dst);
+        return buffer.put(src1).put(src2).array();
+    }
+
+    public static char[] splice(char[] src1, char[] src2) {
+        char[] dst = new char[src1.length + src2.length];
+        CharBuffer buffer = CharBuffer.wrap(dst);
+        return buffer.put(src1).put(src2).array();
+    }
+
+    public static short[] splice(short[] src1, short[] src2) {
+        short[] dst = new short[src1.length + src2.length];
+        ShortBuffer buffer = ShortBuffer.wrap(dst);
+        return buffer.put(src1).put(src2).array();
+    }
+
+    public static int[] splice(int[] src1, int[] src2) {
+        int[] dst = new int[src1.length + src2.length];
+        IntBuffer buffer = IntBuffer.wrap(dst);
+        return buffer.put(src1).put(src2).array();
+    }
+
+    public static float[] splice(float[] src1, float[] src2) {
+        float[] dst = new float[src1.length + src2.length];
+        FloatBuffer buffer = FloatBuffer.wrap(dst);
+        return buffer.put(src1).put(src2).array();
     }
 
     public static float[][] copy_array(float[][] src) {
