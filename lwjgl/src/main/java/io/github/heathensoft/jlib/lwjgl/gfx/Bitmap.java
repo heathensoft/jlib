@@ -1,167 +1,300 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.utils.U;
+import io.github.heathensoft.jlib.lwjgl.utils.GLError;
+import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import org.joml.Math;
+import org.joml.Vector3f;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.stb.STBIWriteCallback;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
+import org.tinylog.Logger;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.*;
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
-import static io.github.heathensoft.jlib.common.utils.U.floor;
+import static io.github.heathensoft.jlib.common.utils.U.round;
 import static org.lwjgl.stb.STBImage.*;
 import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png_to_func;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 /**
+ *
+ * 4 channels: | a | b | g | r |
+ * 3 channels: | b | g | r |
+ * 2 channels: | g | r |
+ * 1 channels: | r |
+ *
  * @author Frederik Dahl
- * 11/04/2023
+ * 03/10/2023
  */
 
 
 public class Bitmap implements Disposable {
 
-    private final ByteBuffer data;
+    private final ByteBuffer pixels;
     private final int width;
     private final int height;
     private final int channels;
 
-    public Bitmap(int[][] abgr8) {
-        width = abgr8[0].length;
-        height = abgr8.length;
-        channels = 4;
-        data = MemoryUtil.memAlloc(width * height * channels);
-        for (int r = 0; r < height; r++) {
-            for (int c = 0; c < width; c++) {
-                int idx = (r * width + c) * channels;
-                data.putInt(idx,abgr8[r][c]);
-            }
-        }
-    }
 
     public Bitmap(int width, int height, int channels) {
-        if (channels < 0 || channels > 4) throw new RuntimeException("invalid channels: " + channels);
-        this.data = MemoryUtil.memCalloc(width * height * channels);
+        this.pixels = MemoryUtil.memAlloc(width * height * channels);
         this.width = width;
         this.height = height;
         this.channels = channels;
     }
 
-    public Bitmap(ByteBuffer png) throws Exception {
-        this(png,false);
+    public Bitmap(ByteBuffer pixels, int width, int height, int channels) {
+        if (!pixels.isDirect()) {
+            int size = width * height * channels;
+            this.pixels = MemoryUtil.memAlloc(size);
+            for (int i = 0; i < size; i++)
+                this.pixels.put(i,pixels.get(i));
+        } else this.pixels = pixels;
+        this.width = width;
+        this.height = height;
+        this.channels = channels;
     }
 
-    public Bitmap(ByteBuffer png, boolean flip_v) throws Exception {
+    public Bitmap(ByteBuffer png, boolean vFlip) throws Exception{
         try (MemoryStack stack = stackPush()) {
             IntBuffer w = stack.mallocInt(1);
             IntBuffer h = stack.mallocInt(1);
             IntBuffer c = stack.mallocInt(1);
             if (!stbi_info_from_memory(png, w, h, c))
                 throw new Exception("unable to read image info: " + stbi_failure_reason());
-            stbi_set_flip_vertically_on_load(flip_v);
-            this.data = stbi_load_from_memory(png, w, h, c, 0);
-            if (data == null) throw new Exception("unable to load image: " + stbi_failure_reason());
+            stbi_set_flip_vertically_on_load(vFlip);
+            this.pixels = stbi_load_from_memory(png, w, h, c, 0);
+            if (pixels == null) throw new Exception("unable to load image: " + stbi_failure_reason());
             this.width = w.get(0);
             this.height = h.get(0);
             this.channels = c.get(0);
         }
     }
 
-    public void draw_nearest_sampling(Bitmap source, TextureRegion region, int x0, int y0, int w, int h) {
-        draw_nearest_sampling(source,x0,y0,w,h,region.u(),region.v(),region.u2(),region.v2());
+    public Bitmap(float[][] heightmap) {
+        this.width = heightmap[0].length;
+        this.height = heightmap.length;
+        this.channels = 1;
+        this.pixels = MemoryUtil.memAlloc(sizeOf());
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                float f = clamp(heightmap[r][c]);
+                pixels.put(r * width + c,(byte) (round(f*255f) & 0xFF));
+            }
+        }
     }
 
-    public void draw_linear_sampling(Bitmap source, TextureRegion region, int x0, int y0, int w, int h) {
-        draw_linear_sampling(source,x0,y0,w,h,region.u(),region.v(),region.u2(),region.v2());
+    public Bitmap(int[][] abgr) {
+        width = abgr[0].length;
+        height = abgr.length;
+        channels = 4;
+        pixels = MemoryUtil.memAlloc(sizeOf());
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                int idx = (r * width + c) * channels;
+                pixels.putInt(idx,abgr[r][c]);
+            }
+        }
     }
 
-    public void draw_nearest_sampling(Bitmap source, int x0, int y0, int w, int h, float u1, float v1, float u2, float v2) {
-        if (w > 1 && h > 1) {
-            if (source.channels == 4 && channels == 4) {
-                for (int r = 0; r < h; r++) {
-                    int texel_y = r + y0;
-                    for (int c = 0; c < w; c++) {
-                        int texel_x = c + x0;
-                        if (texel_y >= 0 && texel_x >= 0 && texel_y < height && texel_x < width) {
-                            float u = U.lerp(u1,u2, (float) (c) / (float) (w - 1));
-                            float v = U.lerp(v1,v2, (float) (r) / (float) (h - 1));
-                            int dst_color = get_unchecked(texel_x,texel_y);
-                            int src_color = source.sampleNearest(u,v);
-                            set_unchecked(texel_x,texel_y,alpha_blend(src_color,dst_color));
-                        }
-                    }
+    public Bitmap(byte[][] red) {
+        width = red[0].length;
+        height = red.length;
+        channels = 1;
+        pixels = MemoryUtil.memAlloc(sizeOf());
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                int idx = (r * width + c);
+                pixels.put(idx,red[r][c]);
+            }
+        }
+    }
+
+    public Bitmap(ByteBuffer png) throws Exception { this(png,false); }
+
+    public ByteBuffer pixels() { return pixels; }
+
+    public int channels() { return channels; }
+
+    public int stride() { return width * channels; }
+
+    public int sizeOf() { return width * height * channels; }
+
+    public int width() { return width; }
+
+    public int height() { return height; }
+
+    /** src channels must == dst channels */
+    public void drawNearest(Bitmap source, float x, float y, float w, float h, float u1, float v1, float u2, float v2) {
+        float x2 = x + w;
+        float y2 = y + h;
+        int ix1 = Math.max(floor(x),0);
+        int iy1 = Math.max(floor(y),0);
+        int ix2 = Math.min(ceil(x2),width);
+        int iy2 = Math.min(ceil(y2),height);
+        if (source.channels == 4 && channels == 4) {
+            for (int r = iy1; r < iy2; r++) {
+                float v = remap(r,y,y2,v1,v2);
+                for (int c = ix1; c < ix2; c++) {
+                    float u = remap(c,x,x2,u1,u2);
+                    int dst = getPixelUnchecked(c,r);
+                    int src = source.sampleNearest(u,v);
+                    setPixelUnchecked(c,r,alphaBlend(src,dst));
                 }
-            } else if (source.channels == channels){
-                for (int r = 0; r < h; r++) {
-                    int texel_y = r + y0;
-                    for (int c = 0; c < w; c++) {
-                        int texel_x = c + x0;
-                        if (texel_y >= 0 && texel_x >= 0 && texel_y < height && texel_x < width) {
-                            float u = U.lerp(u1,u2, (float) (c) / (float) (w - 1));
-                            float v = U.lerp(v1,v2, (float) (r) / (float) (h - 1));
-                            set_unchecked(texel_x,texel_y,source.sampleNearest(u,v));
-                        }
-                    }
+            }
+        } else if (source.channels == channels) {
+            for (int r = iy1; r < iy2; r++) {
+                float v = remap(r,y,y2,v1,v2);
+                for (int c = ix1; c < ix2; c++) {
+                    float u = remap(c,x,x2,u1,u2);
+                    int src = source.sampleNearest(u,v);
+                    setPixelUnchecked(c,r,src);
                 }
             }
         }
     }
 
-    public void draw_linear_sampling(Bitmap source, int x0, int y0, int w, int h, float u1, float v1, float u2, float v2) {
-        if (w > 1 && h > 1) {
-            if (source.channels == 4 && channels == 4) {
-                for (int r = 0; r < h; r++) {
-                    int texel_y = r + y0;
-                    for (int c = 0; c < w; c++) {
-                        int texel_x = c + x0;
-                        if (texel_y >= 0 && texel_x >= 0 && texel_y < height && texel_x < width) {
-                            // TODO: Linear sampling is not correct ()
-                            float u = U.lerp(u1,u2, (float) (c) / (float) (w - 1));
-                            float v = U.lerp(v1,v2, (float) (r) / (float) (h - 1));
-                            int dst_color = get_unchecked(texel_x,texel_y);
-                            int src_color = source.sampleLinear(u,v);
-                            set_unchecked(texel_x,texel_y,alpha_blend(src_color,dst_color));
-                        }
-                    }
+    /** src channels must == dst channels */
+    public void drawLinear(Bitmap source, float x, float y, float w, float h, float u1, float v1, float u2, float v2) {
+        float x2 = x + w;
+        float y2 = y + h;
+        int ix1 = Math.max(floor(x),0);
+        int iy1 = Math.max(floor(y),0);
+        int ix2 = Math.min(ceil(x2),width);
+        int iy2 = Math.min(ceil(y2),height);
+        if (source.channels == 4 && channels == 4) {
+            for (int r = iy1; r < iy2; r++) {
+                float v = remap(r,y,y2,v1,v2);
+                for (int c = ix1; c < ix2; c++) {
+                    float u = remap(c,x,x2,u1,u2);
+                    int dst = getPixelUnchecked(c,r);
+                    int src = source.sampleLinear(u,v);
+                    setPixelUnchecked(c,r,alphaBlend(src,dst));
                 }
-            }else if (source.channels == channels){
-                for (int r = 0; r < h; r++) {
-                    int texel_y = r + y0;
-                    for (int c = 0; c < w; c++) {
-                        int texel_x = c + x0;
-                        if (texel_y >= 0 && texel_x >= 0 && texel_y < height && texel_x < width) {
-                            float u = U.lerp(u1,u2, (float) (c) / (float) (w - 1));
-                            float v = U.lerp(v1,v2, (float) (r) / (float) (h - 1));
-                            set_unchecked(texel_x,texel_y,source.sampleLinear(u,v));
-                        }
-                    }
+            }
+        } else if (source.channels == channels) {
+            for (int r = iy1; r < iy2; r++) {
+                float v = remap(r,y,y2,v1,v2);
+                for (int c = ix1; c < ix2; c++) {
+                    float u = remap(c,x,x2,u1,u2);
+                    int src = source.sampleLinear(u,v);
+                    setPixelUnchecked(c,r,src);
                 }
             }
         }
     }
 
-    public void draw_pixel(int x, int y, Color32 color) {
-        draw_pixel(x, y, color.intBits());
+    /** src channels must == dst channels */
+    public void drawNearest(Bitmap source, TextureRegion region, float x, float y, float w, float h) {
+        drawNearest(source,x,y,w,h,region.u(),region.v(),region.u2(),region.v2());
+    }
+    /** src channels must == dst channels */
+    public void drawLinear(Bitmap source, TextureRegion region, float x, float y, float w, float h) {
+        drawLinear(source,x,y,w,h,region.u(),region.v(),region.u2(),region.v2());
+    }
+    /** src channels must == dst channels */
+    public void drawNearest(Bitmap source, float x, float y, float w, float h) {
+        drawNearest(source,x,y,w,h,0,0,1,1);
+    }
+    /** src channels must == dst channels */
+    public void drawLinear(Bitmap source, float x, float y, float w, float h) {
+        drawLinear(source,x,y,w,h,0,0,1,1);
     }
 
-    public void draw_pixel(int x, int y, int color) {
-        set(x,y,alpha_blend(color,get(x,y)));
+    public void drawPixel(int x, int y, int value) {
+        if (boundsCheck(x,y)) drawPixelUnchecked(x,y,value);
     }
 
-    public void draw_pixel_unchecked(int x, int y, int color) {
-        set_unchecked(x,y,alpha_blend(color,get_unchecked(x,y)));
+    public void drawPixelUnchecked(int x, int y, int value) {
+        if (channels == 4) {
+            value = alphaBlend(value,getPixelUnchecked(x,y));
+        } setPixelUnchecked(x,y,value);
     }
 
-    public void draw_pixel_unchecked(int x, int y, Color32 color) {
-        draw_pixel_unchecked(x, y, color.intBits());
+    public void setPixel(int x, int y, int value) {
+        if (boundsCheck(x,y)) setPixelUnchecked(x,y,value);
     }
 
-    // When using the bitmap as source for drawing ops, it's useful to premultiply before alpha blending
+    public void setPixelUnchecked(int x, int y, int value) {
+        int idx = (y * width + x) * channels;
+        if (channels == 4) pixels.putInt(idx,value);
+        else { for (int i = 0; i < channels; i++) {
+            pixels.put(idx + i, (byte) ((value >> (i * 8)) & 0xFF)); }
+        }
+    }
 
+    public int getPixel(int x, int y) {
+        return getPixelUnchecked(clampToEdgeX(x), clampToEdgeY(y));
+    }
+
+    public int getPixelUnchecked(int x, int y) {
+        int idx = (y * width + x) * channels;
+        if (channels == 4) {
+            return pixels.getInt(idx);
+        } int return_value = 0;
+        for (int i = 0; i < channels; i++) {
+            return_value |= (pixels.get(idx + i) & 0xFF) << (i * 8);
+        } return return_value;
+    }
+
+    public int getColorComponent(int x, int y, int channel) {
+        int idx = ((clampToEdgeY(y) * width + clampToEdgeX(x)) * channels + channel);
+        return pixels.get(idx) & 0xFF;
+    }
+
+    public int sampleNearest(float u, float v) {
+        int return_value = 0;
+        int x = clampToEdgeX((int) (u * width));
+        int y = clampToEdgeY((int) (v * height));
+        int idx = (y * width + x) * channels;
+        for (int i = 0; i < channels; i++) {
+            return_value |= (pixels.get(idx + i) & 0xFF) << (i * 8);
+        } return return_value;
+    }
+
+    public int sampleLinear(float u, float v) {
+        int return_value = 0;
+        float px = (u * width  - 0.5f); // half-pixel offset
+        float py = (v * height - 0.5f); // half-pixel offset
+        int floorX = floor(px); float fractX = px - floorX;
+        int floorY = floor(py); float fractY = py - floorY;
+        for (int i = 0; i < channels; i++) {
+            int bl = getColorComponent(floorX + 0,floorY + 0,i);
+            int br = getColorComponent(floorX + 1,floorY + 0,i);
+            int tl = getColorComponent(floorX + 0,floorY + 1,i);
+            int tr = getColorComponent(floorX + 1,floorY + 1,i);
+            float tx = lerp(tl,tr,fractX);
+            float bx = lerp(bl,br,fractX);
+            int c =  round(lerp(bx,tx,fractY));
+            return_value |= ((c & 0xFF) << (i * 8));
+        } return return_value;
+    }
+
+    public void clear(int value) {
+        byte[] rgba = new byte[channels];
+        for (int c = 0; c < channels; c++) {
+            rgba[c] = (byte) ((value >> (8 * c)) & 0xFF);
+        } for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int i = (y * width + x) * channels;
+                for (int c = 0; c < channels; c++) {
+                    pixels.put(i + c, rgba[c]);
+                }
+            }
+        }
+    }
+
+    /**  (4 channels only) When using the bitmap as source for drawing ops,
+     * it's useful to premultiply before alpha blending */
     public void premultiplyAlpha() {
         if (channels == 4) {
-            final ByteBuffer b = data;
+            final ByteBuffer b = pixels;
             int stride = width * 4;
             for (int r = 0; r < height; r++) {
                 for (int c = 0; c < width; c++) {
@@ -177,7 +310,7 @@ public class Bitmap implements Disposable {
 
     public void unMultiplyAlpha() {
         if (channels == 4) {
-            final ByteBuffer b = data;
+            final ByteBuffer b = pixels;
             int stride = width * 4;
             for (int r = 0; r < height; r++) {
                 for (int c = 0; c < width; c++) {
@@ -191,87 +324,146 @@ public class Bitmap implements Disposable {
         }
     }
 
-    public void set(int x, int y, Color32 color) {
-        set(x, y, color.intBits());
-    }
-
-    public void set(int x, int y, int color) {
-        if (x >= 0 && x < width && y >= 0 && y < height) {
-            set_unchecked(x, y, color);
+    public void linearToSrgb() {
+        float inv255 = 1 / 255f;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int idx = (y * width + x) * channels;
+                float fSRGB = sqrt((pixels.get(idx) & 0xFF) * inv255);
+                int value = ((int)(fSRGB * 255f) & 0xFF);
+                pixels.put(idx,(byte) value);
+                if (channels > 1) {
+                    fSRGB = sqrt((pixels.get(idx + 1) & 0xFF)  * inv255);
+                    value = ((int)(fSRGB * 255f) & 0xFF);
+                    pixels.put(idx + 1,(byte) value);
+                    if (channels > 2) {
+                        fSRGB = sqrt((pixels.get(idx + 2) & 0xFF)  * inv255);
+                        value = ((int)(fSRGB * 255f) & 0xFF);
+                        pixels.put(idx + 2,(byte) value);
+                    }
+                }
+            }
         }
     }
 
-    public int[][] array() {
-        int[][] result = new int[height][width];
+    public void srgbToLinear() {
+        float inv255 = 1 / 255f;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int idx = (y * width + x) * channels;
+                int iSRGB = (pixels.get(idx) & 0xFF);
+                float fLinear = square(inv255 * iSRGB);
+                int value = ((int) (fLinear * 255f) & 0xFF);
+                pixels.put(idx,(byte) value);
+                if (channels > 1) {
+                    iSRGB = (pixels.get(idx + 1) & 0xFF) ;
+                    fLinear = square(inv255 * iSRGB);
+                    value = ((int) (fLinear * 255f) & 0xFF);
+                    pixels.put(idx + 1,(byte) value);
+                    if (channels > 2) {
+                        iSRGB = (pixels.get(idx + 2) & 0xFF);
+                        fLinear = square(inv255 * iSRGB);
+                        value = ((int) (fLinear * 255f) & 0xFF);
+                        pixels.put(idx + 2,(byte) value);
+                    }
+                }
+            }
+        }
+    }
+
+    /** write as png to disk */
+    public void compressToDisk(String path) {
+        stbi_write_png(path,width,height,channels,pixels,stride());
+    }
+
+    /**
+     * Allocated direct with BufferUtils (No need to free the buffer)
+     * @return compressed png or empty buffer if compressed > (uncompressed * 1.25)
+     * Tested with every pixel as random colors, And x1.25 should be more than enough
+     * to store the size of worst case scenario.
+     */
+    public ByteBuffer compress() {
+        ByteBuffer buffer = BufferUtils.createByteBuffer((int) (sizeOf() * 1.25f));
+        long window = Engine.get().window().handle();
+        stbi_write_png_to_func(new STBIWriteCallback() {
+            public void invoke(long context, long data, int size) {
+                if (size <= buffer.capacity()) {
+                    ByteBuffer stb_buffer = STBIWriteCallback.getData(data, size);
+                    for (int i = 0; i < size; i++)
+                        buffer.put(stb_buffer.get(i));
+                } buffer.flip();
+            } }, window, width, height, channels, pixels, stride());
+        return MemoryUtil.memSlice(buffer);
+    }
+
+    public Bitmap copy() {
+        ByteBuffer copy = MemoryUtil.memAlloc(sizeOf());
+        MemoryUtil.memCopy(pixels,copy);
+        return new Bitmap(copy,width,height,channels);
+    }
+
+    public Bitmap greyScale() {
+        if (channels == 1) { return copy();
+        } else { int size = width * height;
+            ByteBuffer src = pixels;
+            ByteBuffer dst = MemoryUtil.memAlloc(size);
+            Vector3f luma = new Vector3f(0.2126f,0.7152f,0.0722f);
+            Vector3f color = new Vector3f();
+            if (channels == 2) {
+                for (int i = 0; i < size; i++) {
+                    int idx = i * 2;
+                    float avg = (src.get(idx) & 0xFF);
+                    avg += (src.get(idx + 1)  & 0xFF);
+                    dst.put(i,(byte) (round(avg / 2f) & 0xFF)); }
+            } else if (channels == 3) {
+                for (int i = 0; i < size; i++) {
+                    float r = (src.get(i*channels+0) & 0xFF) / 255.0f;
+                    float g = (src.get(i*channels+1) & 0xFF) / 255.0f;
+                    float b = (src.get(i*channels+2) & 0xFF) / 255.0f;
+                    float v = color.set(r,g,b).dot(luma);
+                    dst.put(i,(byte) (round(v * 255f) & 0xFF)); }
+            } else if (channels == 4) {
+                for (int i = 0; i < size; i++) {
+                    float r = (src.get(i*channels+0) & 0xFF) / 255.0f;
+                    float g = (src.get(i*channels+1) & 0xFF) / 255.0f;
+                    float b = (src.get(i*channels+2) & 0xFF) / 255.0f;
+                    float a = (src.get(i*channels+3) & 0xFF) / 255.0f;
+                    float v = color.set(r,g,b).dot(luma) * a;
+                    dst.put(i,(byte) (round(v * 255f) & 0xFF)); }
+            } else throw new IllegalStateException("color channels: " + channels);
+            return new Bitmap(dst,width,height,1);
+        }
+    }
+
+    public Bitmap normalMap(float amp) {
+        Bitmap bm = channels == 1 ? this : greyScale();
+        float[][] hm = new float[height][width];
         for (int r = 0; r < height; r++) {
             for (int c = 0; c < width; c++) {
-                result[r][c] = get_unchecked(c,r);
-            }
-        } return result;
+                float d = ((bm.pixels.get(r*width+c)&0xff)/255f);
+                hm[r][c] = (2 * d - 1) * amp; }
+        } if (bm != this) bm.dispose();
+        ByteBuffer dst = MemoryUtil.memAlloc(width * height * 3);
+        float hu, hr, hd, hl;
+        final int cBounds = width - 1;
+        final int rBounds = height - 1;
+        Vector3f n = new Vector3f();
+        for (int r = 0; r < height; r++) {
+            for (int c = 0; c < width; c++) {
+                hr = c < cBounds ? hm[r][c+1] : hm[r][c];
+                hd = r < rBounds ? hm[r+1][c] : hm[r][c];
+                hu = r > 0 ? hm[r-1][c] : hm[r][c];
+                hl = c > 0 ? hm[r][c-1] : hm[r][c];
+                n.set(hl - hr,hd - hu,2).normalize();
+                dst.put((byte) Math.round((n.x * 0.5f + 0.5f) * 255));
+                dst.put((byte) Math.round((n.y * 0.5f + 0.5f) * 255));
+                dst.put((byte) Math.round((n.z * 0.5f + 0.5f) * 255));}
+        } return new Bitmap(dst.flip(),width,height,3);
     }
 
-    public int get(int x, int y) {
-        x = Math.max(0,Math.min(x,width-1));
-        y = Math.max(0,Math.min(y,height-1));
-        return get_unchecked(x,y);
-    }
+    public Texture asTexture() { return asTexture(false); }
 
-    public void set_unchecked(int x, int y, int color) {
-        int idx = y * width * channels + x * channels;
-        if (channels == 4) data.putInt(idx,color);
-        else { for (int i = 0; i < channels; i++) {
-            data.put(idx + i, (byte) ((color >> (i * 8)) & 0xFF)); }
-        }
-    }
-
-    public int get_unchecked(int x, int y) {
-        int idx = y * width * channels + x * channels;
-        if (channels == 4) {
-            return data.getInt(idx);
-        } int color = 0;
-        for (int i = 0; i < channels; i++) {
-            color |= (data.get(idx + i) & 0xFF) << (i * 8);
-        } return color;
-    }
-
-    public int sampleNearest(float u, float v) {
-        int x = (int) (clamp(u) * width);
-        int y = (int) (clamp(v) * height);
-        int color = 0;
-        int idx = y_clamp(y) * width * channels + x_clamp(x) * channels;
-        for (int i = 0; i < channels; i++) {
-            color |= (data.get(idx + i) & 0xFF) << (i * 8);
-        } return color;
-    }
-
-    public int sampleLinear(float u, float v) {
-        float x = (clamp(u) * width);
-        float y = (clamp(v) * height);
-        float fx = fract(clamp(x-0.49f)); // TODO: previous: fract(x)
-        float fy = fract(clamp(y-0.49f));
-        int ix = floor(x);
-        int iy = floor(y);
-        int color = 0;
-        for (int i = 0; i < channels; i++) {
-            int n0 = color_component(ix,iy,i);
-            int n1 = color_component(ix+1,iy,i);
-            int n2 = color_component(ix,iy+1,i);
-            int n3 = color_component(ix+1,iy+1,i);
-            int c = interpolate_color_component(
-                    interpolate_color_component(n0,n1,fx),
-                    interpolate_color_component(n2,n3,fx),fy);
-            color |= ((c & 0xFF) << (i * 8));
-        } return color;
-    }
-
-    // Do not use this anonymously. Bitmap must be disposed
-    public Texture asTexture() {
-        return asTexture(false);
-    }
-
-    public Texture asTexture(boolean allocate_mipmap) {
-        return asTexture(allocate_mipmap,false);
-    }
+    public Texture asTexture(boolean allocate_mipmap) { return asTexture(allocate_mipmap,false); }
 
     public Texture asTexture(boolean allocate_mipmap, boolean srgb) {
         Texture texture = Texture.generate2D(width,height);
@@ -284,69 +476,69 @@ public class Bitmap implements Disposable {
             default -> format = TextureFormat.INVALID;
         } texture.bindToActiveSlot();
         texture.allocate(format,allocate_mipmap);
-        texture.uploadData(data);
+        texture.uploadData(pixels);
         return texture;
     }
 
-    public void toDisk(String path) {
-        stbi_write_png(path,width,height,channels, data,width * channels);
+    public ColorPalette palette() {
+        ArrayList<Color32> list = new ArrayList<>();
+        Set<Color32> set = new HashSet<>((int)(128 * 1.75f));
+        if (channels == 1) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int idx = (y * width + x) * channels;
+                    int r = pixels.get(idx) & 0xFF;
+                    Color32 c = new Color32(r,0,0,255);
+                    if (set.add(c)) list.add(c);
+                }
+            }
+        } else if (channels == 2) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int idx = (y * width + x) * channels;
+                    int r = pixels.get(idx + 0) & 0xFF;
+                    int g = pixels.get(idx + 1) & 0xFF;
+                    Color32 c = new Color32(r,g,0,255);
+                    if (set.add(c)) list.add(c);
+                }
+            }
+        } else if (channels == 3) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int idx = (y * width + x) * channels;
+                    int r = pixels.get(idx + 0) & 0xFF;
+                    int g = pixels.get(idx + 1) & 0xFF;
+                    int b = pixels.get(idx + 2) & 0xFF;
+                    Color32 c = new Color32(r,g,b,255);
+                    if (set.add(c)) list.add(c);
+                }
+            }
+        } else if (channels == 4) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int idx = (y * width + x) * channels;
+                    Color32 c = new Color32(pixels.getInt(idx));
+                    if (set.add(c)) list.add(c);
+                }
+            }
+        } else throw new IllegalStateException("color channels: " + channels);
+        list.trimToSize();
+        return new ColorPalette(list);
     }
 
-    public ByteBuffer data() {
-        return data;
+    protected int clampToEdgeX(int x) {
+        return Math.max(0,Math.min(width - 1, x));
     }
 
-    public int width() {
-        return width;
+    protected int clampToEdgeY(int y) {
+        return Math.max(0,Math.min(height - 1, y));
     }
 
-    public int height() {
-        return height;
+    protected boolean boundsCheck(int x, int y) {
+        return x >= 0 && x < width && y >= 0 && y < height;
     }
 
-    public int channels() {
-        return channels;
-    }
-
-    public int pixels() {
-        return width * height;
-    }
-
-    public int sizeOf() {
-        return pixels() * channels;
-    }
-
-    public void clear() {
-        int p = data.position();
-        int l = data.limit();
-        for (int i = p; i < l; i++) {
-            data.put(i,(byte)0);
-        }
-    }
-
-    public void dispose() {
-        if (data.isDirect()) {
-            MemoryUtil.memFree(data);
-        }
-    }
-
-    private int x_clamp(int x) {
-        return Math.min(width - 1, x);
-    }
-
-    private int y_clamp(int y) {
-        return Math.min(height - 1, y);
-    }
-
-    private static int interpolate_color_component(int c0, int c1, float v) {
-        return (int)(c0+(c1-c0)*v);
-    }
-
-    private int color_component(int x, int y, int c) {
-        return data.get(y_clamp(y) * width * channels + x_clamp(x) * channels + c) & 0xFF;
-    }
-
-    private int alpha_blend(int src, int dst) {
+    protected int alphaBlend(int src, int dst) {
         final float src_alpha = ((src >> 24) & 0xFF) / 255f;
         final float dst_alpha = ((dst >> 24) & 0xFF) / 255f;
         float rf = ((src & 0xFF) / 255f) + ((dst & 0xFF) / 255f) * (1 - src_alpha);
@@ -360,4 +552,113 @@ public class Bitmap implements Disposable {
         return color;
     }
 
+    /** Will cause undefined behaviour if the buffer is not allocated through lwjgl */
+    public void dispose() {
+        MemoryUtil.memFree(pixels);
+    }
+
+    public record ColorPalette(List<Color32> colors) {
+
+        public Bitmap bitmap() {
+            List<Color32> list;
+            if (colors.isEmpty()) {
+                list = new ArrayList<>(1);
+                list.add(Color32.ERROR);
+            } else list = colors;
+            int width = list.size();
+            int size = Integer.BYTES * width;
+            ByteBuffer buffer;
+            buffer = MemoryUtil.memAlloc(size);
+            for (Color32 color : list) {
+                buffer.putInt(color.intBits());
+            } buffer.flip();
+            return new Bitmap(buffer,width,1,4);
+        }
+
+        public Texture texture1D(int min_filter, int mag_filter) {
+            Texture texture;
+            if (colors.isEmpty()) {
+                Logger.warn("Creating Texture of empty palette");
+                texture = Texture.generate1D(1);
+                texture.bindToActiveSlot();
+                texture.filter(min_filter,mag_filter);
+                texture.clampToEdge();
+                texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    IntBuffer buffer = stack.mallocInt(1);
+                    buffer.put(Color32.ERROR.intBits()).flip();
+                    texture.uploadData(buffer);
+                }
+            } else {
+                int width = colors.size();
+                texture = Texture.generate1D(width);
+                texture.bindToActiveSlot();
+                texture.filter(min_filter,mag_filter);
+                texture.clampToEdge();
+                texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    IntBuffer buffer = stack.mallocInt(width);
+                    for (Color32 color : colors) {
+                        buffer.put(color.intBits());
+                    } texture.uploadData(buffer.flip());
+                }
+            }
+            GLError.check();
+            return texture;
+        }
+
+        public Texture texture3D(int texture_size, int min_filter, int mag_filter) {
+            Texture texture = Texture.generate3D(texture_size, texture_size, texture_size);
+            texture.bindToActiveSlot();
+            texture.filter(min_filter, mag_filter);
+            texture.clampToEdge();
+            texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
+            int num_pixels = texture_size * texture_size * texture_size;
+            int bytes = num_pixels * 3;
+            ByteBuffer buffer = MemoryUtil.memAlloc(bytes);
+            if (colors.isEmpty()) {
+                Logger.warn("Creating Texture of empty palette");
+                byte r = (byte) Color32.ERROR.redBits();
+                byte g = (byte) Color32.ERROR.greenBits();
+                byte b = (byte) Color32.ERROR.blueBits();
+                for (int i = 0; i < num_pixels; i++) {
+                    buffer.put(r).put(g).put(b);
+                }
+            } else {
+                int num_palette_colors = colors.size();
+                List<Vector3f> paletteLAB = new ArrayList<>(num_palette_colors);
+                for (Color32 color : colors) {
+                    paletteLAB.add(color.lab(new Vector3f()));
+                }
+                Color32 closestColor = new Color32();
+                Vector3f size = new Vector3f(texture_size);
+                Vector3f sampleLAB = new Vector3f();
+                for (int r = 0; r < texture_size; r++) {
+                    for (int g = 0; g < texture_size; g++) {
+                        for (int b = 0; b < texture_size; b++) {
+                            sampleLAB.set(b, g, r).div(size);
+                            Color32.rgbToLab(sampleLAB);
+                            float d_min = Float.MAX_VALUE;
+                            for (int i = 0; i < num_palette_colors; i++) {
+                                float d = paletteLAB.get(i).distance(sampleLAB);
+                                if (d < d_min) {
+                                    closestColor.set(colors.get(i));
+                                    d_min = d;
+                                }
+                            }
+                            closestColor.getRGB(buffer);
+                        }
+                    }
+                }
+            }
+            texture.uploadData(buffer.flip());
+            MemoryUtil.memFree(buffer);
+            GLError.check();
+            return texture;
+        }
+    }
+
+
 }
+
+

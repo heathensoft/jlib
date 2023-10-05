@@ -1,6 +1,8 @@
-package io.github.heathensoft.jlib.lwjgl.gfx;
+package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
+import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;

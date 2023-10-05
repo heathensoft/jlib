@@ -1,8 +1,7 @@
-package io.github.heathensoft.jlib.lwjgl.gfx.debug;
+package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.utils.OrthographicCamera;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;

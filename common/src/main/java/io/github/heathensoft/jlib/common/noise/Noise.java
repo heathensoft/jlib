@@ -97,7 +97,7 @@ public class Noise {
             min = Math.min(min,n);
         } if (max != min) {
             for (int x = 0; x < length; x++) {
-                dst[x] = map(dst[x],min,max);
+                dst[x] = unlerp(min,max,dst[x]);
             }
         } return dst;
     }
@@ -148,7 +148,7 @@ public class Noise {
         if (max != min) {
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    dst[r][c] = map(dst[r][c],min,max);
+                    dst[r][c] = unlerp(min,max,dst[r][c]);
                 }
             }
         }
@@ -331,7 +331,7 @@ public class Noise {
         if (max != min) {
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    dst[r][c] = map(dst[r][c],min,max);
+                    dst[r][c] = unlerp(min,max,dst[r][c]);
                 }
             }
         } return dst;

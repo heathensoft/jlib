@@ -10,7 +10,7 @@ import java.nio.FloatBuffer;
 import java.util.Objects;
 
 /**
- *
+ * | alpha | blue | green | red |
  * 32 bit precision ABGR color value
  * For vector calculations, use Vector3f rgb()
  *
@@ -33,6 +33,14 @@ public class Color32 implements Defined {
 
     public Color32() {
         black();
+    }
+
+    public Color32(int r, int g, int b, int a) {
+        i_bits = a & 0xFF;
+        i_bits = (i_bits << 8) | (b & 0xFF);
+        i_bits = (i_bits << 8) | (g & 0xFF);
+        i_bits = (i_bits << 8) | (r & 0xFF);
+        f_bits = floatBits(i_bits);
     }
 
     public Color32(float r, float g, float b, float a) {
@@ -63,6 +71,15 @@ public class Color32 implements Defined {
     public Color32(int abgr8) {
         i_bits = abgr8;
         f_bits = floatBits(i_bits);
+    }
+
+    public Color32 set(int r, int g, int b, int a) {
+        i_bits = a & 0xFF;
+        i_bits = (i_bits << 8) | (b & 0xFF);
+        i_bits = (i_bits << 8) | (g & 0xFF);
+        i_bits = (i_bits << 8) | (r & 0xFF);
+        f_bits = floatBits(i_bits);
+        return this;
     }
 
     public Color32 set(float r, float g, float b, float a) {
@@ -389,13 +406,17 @@ public class Color32 implements Defined {
         return Float.intBitsToFloat(abgr8 & 0xfeffffff);
     }
 
-    // TODO: prints FF if rgba = 0 0 0 1 etc. Fix that
+
     public static String toHex(int abgr8) {
         int r = rBits(abgr8);
         int g = gBits(abgr8);
         int b = bBits(abgr8);
         int a = aBits(abgr8);
-        return (Integer.toHexString((r << 24) | (g << 16) | (b << 8) | a)).toUpperCase();
+        StringBuilder sb = new StringBuilder(8);
+        String string = (Integer.toHexString((r << 24) | (g << 16) | (b << 8) | a)).toUpperCase();
+        sb.append(string);
+        while (sb.length() < 8) sb.insert(0,'0');
+        return sb.toString();
     }
 
     /**

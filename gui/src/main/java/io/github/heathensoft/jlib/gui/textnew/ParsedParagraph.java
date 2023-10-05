@@ -103,10 +103,96 @@ public class ParsedParagraph extends Paragraph {
                     }
                 }
                 if (Character.isDigit(first_char)) {
-                    // Possible VALUE "0v" , "0x" or otherwise numeric
+                    // Possible VALUE "0v" , "0x" or CUSTOM "0c" or otherwise numeric
                     // If the word is a Value: add the word to list. Then continue.
                     // If not, pass the word on and add it as a regular Word
                     if (word.charAt(0) == '0' && word.length() > 3) {
+
+                        if (word.charAt(1) == 'c' && word.length() > 4) {
+                            String n = Character.toString(word.charAt(2));
+                            if (TextUtils.isNumeric(n)) {
+                                int c;
+                                try { c = Integer.parseInt(n);
+                                } catch (NumberFormatException e) {
+                                    c = 0;
+                                } String[] split_word;
+                                switch (c) {
+                                    case 0 -> { word = word.replaceFirst("0c0", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom(s));
+                                            }
+                                        }
+                                    } case 1 -> { word = word.replaceFirst("0c1", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C1(s));
+                                            }
+                                        }
+                                    } case 2 -> { word = word.replaceFirst("0c2", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C2(s));
+                                            }
+                                        }
+                                    } case 3 -> { word = word.replaceFirst("0c3", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C3(s));
+                                            }
+                                        }
+                                    } case 4 -> { word = word.replaceFirst("0c4", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C4(s));
+                                            }
+                                        }
+                                    } case 5 -> { word = word.replaceFirst("0c5", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C5(s));
+                                            }
+                                        }
+                                    } case 6 -> { word = word.replaceFirst("0c6", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C6(s));
+                                            }
+                                        }
+                                    } case 7 -> { word = word.replaceFirst("0c7", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C7(s));
+                                            }
+                                        }
+                                    } case 8 -> { word = word.replaceFirst("0c8", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C8(s));
+                                            }
+                                        }
+                                    } case 9 -> { word = word.replaceFirst("0c9", "");
+                                        split_word = word.split("_+");
+                                        for (String s : split_word) {
+                                            if (!s.isBlank()) {
+                                                list.add(new Keyword.Custom.C9(s));
+                                            }
+                                        }
+                                    }
+                                }
+                                continue;
+                            }
+                        }
+
                         if (word.charAt(1) == 'v') {
                             word = word.replaceFirst("0v","");
                             String[] split_word = word.split("_+");

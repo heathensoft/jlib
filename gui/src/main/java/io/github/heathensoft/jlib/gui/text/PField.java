@@ -66,7 +66,7 @@ public abstract class PField extends PColored implements TextProcessor {
 
     public void npcRelease(int key) { }
 
-    public void printable(byte character) {
+    public void characterStream(byte character) {
         if (character == 32) {
             if (!isBlank() && pointer != 0) {
                 byte prev = charAt(pointer - 1);

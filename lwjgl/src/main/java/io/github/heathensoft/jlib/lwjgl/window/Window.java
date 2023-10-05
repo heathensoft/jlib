@@ -480,7 +480,12 @@ public class Window extends AbstractWindow {
             glfwSetWindowTitle(window,title);
         }
     }
-    
+
+    @Override
+    public void setClipboard(String string) {
+        if (string != null) glfwSetClipboardString(window,string);
+    }
+
     @Override
     public void setTargetUPS(int value) {
         target_ups = Math.max(1,value);
@@ -662,6 +667,11 @@ public class Window extends AbstractWindow {
         user.setInt(TARGET_UPS,target_ups);
         user.setBool(LIMIT_FPS,limit_fps);
         user.save();
+    }
+
+    @Override
+    public String getClipboard() {
+        return glfwGetClipboardString(window);
     }
 
     @Override

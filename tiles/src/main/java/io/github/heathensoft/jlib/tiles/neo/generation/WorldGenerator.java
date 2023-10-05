@@ -296,7 +296,7 @@ public class WorldGenerator {
                     int adjacent_y = current_node.y + offset[1];
                     if (area.contains(adjacent_x,adjacent_y)) {
                         float height = elevation[adjacent_y][adjacent_x];
-                        int move_cost = round(map(height,0.1f,1.0f) * 1000);
+                        int move_cost = round(unlerp(0.1f,1.0f,height) * 1000);
                         tmp_node.set(adjacent_x,adjacent_y);
                         if (!closed.contains(tmp_node)) {
                             int g_cost = tmp_node.distance(current_node) + move_cost;

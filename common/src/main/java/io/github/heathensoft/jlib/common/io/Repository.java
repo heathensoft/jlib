@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Utility class for storing binary data as chunks in a single file.
+ * Utility class for storing binary data as chunks in a single file. (Save files etc.)
  * If you need to replace a portion of the database on disk you have to:
  * deserialize the whole database, replace the entry/portion and re-serialize the database.
  * Hey, it works. Alternatively, if you keep the database in memory. You only need to replace

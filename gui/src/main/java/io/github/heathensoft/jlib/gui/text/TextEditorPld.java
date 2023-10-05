@@ -35,7 +35,7 @@ public class TextEditorPld implements TextProcessor {
         } return text;
     }
 
-    public void npcPress(int key, int mods) {
+    public void keyPress(int key, int mods) {
         if (!lines.isEmpty()) {
 
             if (key == GLFW_KEY_UP) {
@@ -75,10 +75,10 @@ public class TextEditorPld implements TextProcessor {
     }
 
 
-    public void npcRelease(int key, int mods) { }
+    public void keyRelease(int key, int mods) { }
 
 
-    public void printable(byte character) {
+    public void characterStream(byte character) {
 
         TextLine line = lines.get(line_index);
         if (character == 32) { // Space

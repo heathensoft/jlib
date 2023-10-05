@@ -5,19 +5,6 @@ import java.util.Arrays;
 
 /**
  *
- * Word
- *   EOL
- *   Value		    0v
- *   Hexadecimal	0x
- *   Keyword	    %
- *   InlineComment	#
- *   Entity	        $
- *     Friendly	    $$
- *     Hostile	    $$$
- *   Action	        &
- *     Success	    &&
- *     Failure	    &&&
- *
  * @author Frederik Dahl
  * 16/11/2022
  */

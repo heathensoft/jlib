@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.io.External;
+import io.github.heathensoft.jlib.common.storage.primitive.ByteQueue;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryUtil;
@@ -28,8 +29,7 @@ import java.util.stream.Stream;
 
 
 public class Resources {
-    
-    
+
     private final Class<?> clazz;
     
     public Resources(Class<?> clazz) {
@@ -63,19 +63,15 @@ public class Resources {
     public ByteBuffer toBufferExternal(Path path) throws IOException {
         External file = new External(path);
         if (file.isFile()) {
-            InputStream inputStream = null;
-            try { long byte_size = file.size();
-                inputStream = new FileInputStream(path.toFile());
-                ByteBuffer buffer = MemoryUtil.memAlloc((int) byte_size);
+            try (InputStream inputStream = new FileInputStream(path.toFile())) {
+                ByteQueue bytes = new ByteQueue((int) file.size());
                 int data = inputStream.read();
                 while (data != -1) {
-                    buffer.put((byte) data);
+                    bytes.enqueue((byte) (data));
                     data = inputStream.read();
-                } buffer.flip();
-                return buffer;
-            } finally {
-                if (inputStream != null)
-                    inputStream.close();
+                } ByteBuffer buffer = MemoryUtil.memAlloc(bytes.size());
+                buffer.put(bytes.array(), 0, bytes.size());
+                return buffer.flip();
             }
         } else throw new IOException("argument not path to file: " + path.toString());
     }
@@ -100,7 +96,7 @@ public class Resources {
     }
 
     public Bitmap image(String file) throws Exception {
-        return new Bitmap(toBuffer(file,1024 * 16));
+        return image(file,false);
     }
 
     public Bitmap image(String file, boolean flip_v) throws Exception {

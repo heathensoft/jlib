@@ -51,7 +51,6 @@ public class ShaderProgram implements Disposable {
     
     public ShaderProgram() throws Exception {
         name = glCreateProgram();
-        Logger.info("created shader program [{}]", name);
         if (name == GL_FALSE) {
             throw new Exception(glGetProgramInfoLog(name));
         } uniforms = new HashMap<>();
@@ -69,15 +68,13 @@ public class ShaderProgram implements Disposable {
                 throw new Exception(
                 "unknown or unsupported shader type");
             }
-        } Logger.info("creating {} shader", prefix);
+        }
         int handle = glCreateShader(type);
-        Logger.info("attaching {} shader to program", prefix);
         glShaderSource(handle,source);
         glAttachShader(name,handle);
     }
     
     public void compile() throws Exception {
-        Logger.info("compiling program shaders");
         final int[] count = {0};
         final int[] shaders = new int[16];
         glGetAttachedShaders(name,count,shaders);
@@ -94,7 +91,6 @@ public class ShaderProgram implements Disposable {
     }
     
     public void link() throws Exception {
-        Logger.info("linking program shaders");
         int status = glGetProgrami(name,GL_LINK_STATUS);
         int attachedCount = glGetProgrami(name,GL_ATTACHED_SHADERS);
         if (status != GL_TRUE && attachedCount >= 2) {

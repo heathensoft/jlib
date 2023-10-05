@@ -56,7 +56,7 @@ public class MapGen implements Disposable {
         drawBackGround(bg_noise,0.7f);
         drawMountains(0.60f);
         drawRoad();
-        map_output_texture.toDisk("map_test.png");
+        map_output_texture.compressToDisk("map_test.png");
     }
 
 
@@ -87,7 +87,7 @@ public class MapGen implements Disposable {
             for (int c = 0; c < cols; c++) {
                 float n = Rand.nextFloat();
                 int color = noise[r][c] < n ? dirt_color : grass_color;
-                map_output_texture.set(c,r,color);
+                map_output_texture.setPixel(c,r,color);
             }
         }
     }
@@ -111,7 +111,7 @@ public class MapGen implements Disposable {
                             index = (64 + mod);
                         }
 
-                        map_output_texture.draw_nearest_sampling(tile_set_texture,tile_regions[index],x0,y0,16,16);
+                        map_output_texture.drawNearest(tile_set_texture,tile_regions[index],x0,y0,16,16);
                     }
                 }
             }
@@ -134,7 +134,7 @@ public class MapGen implements Disposable {
                             }
                         } else mask += (1 << i);
                     } TextureRegion region = road_tile_regions[mask_to_idx[mask]];
-                    map_output_texture.draw_nearest_sampling(road_tiles_texture,region,c*16,r*16,16,16);
+                    map_output_texture.drawNearest(road_tiles_texture,region,c*16,r*16,16,16);
                 }
             }
         }
@@ -167,7 +167,7 @@ public class MapGen implements Disposable {
         }
 
         public int movementPenalty(int x, int y) {
-            float h = U.map(noise[y][x],0.5f,1.0f); // no movement penalty below .5
+            float h = U.unlerp(0.5f,1.0f,noise[y][x]); // no movement penalty below .5
             return U.round(h * movement_penalty_factor);
         }
 

@@ -143,7 +143,11 @@ public class ByteQueue implements ReadableByte {
             s.popAll(this::enqueue);
         }
     }
-    
+
+    public byte[] array() {
+        return q;
+    }
+
     public void clear() {
         f = r = p = 0;
     }

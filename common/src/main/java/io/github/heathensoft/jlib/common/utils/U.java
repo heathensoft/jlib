@@ -28,8 +28,12 @@ public class U {
         return v < 0 ? 0 : (v > 1 ? 1 : v);
     }
 
-    public static float map(float v, float min, float max) {
-        return clamp((v - min) / (max - min));
+    public static float remap(float v, float v_min, float v_max, float out_min, float out_max) {
+        return lerp(out_min,out_max,unlerp(v_min,v_max,v));
+    }
+
+    public static float unlerp(float a, float b, float t) {
+        return clamp((t - a) / (b - a));
     }
 
     public static float smooth(float v) {
@@ -48,11 +52,21 @@ public class U {
         return (int) Math.ceil(v);
     }
 
-    public static int clamp(int v, int min, int max) {
+    public static float square(float v) {
+        return v * v;
+    }
+
+    public static float sqrt(float v) {
+        return (float) Math.sqrt(v);
+    }
+
+    public static float clamp(float v, float min, float max) {
         return Math.max(min,Math.min(v,max));
     }
 
-
+    public static int clamp(int v, int min, int max) {
+        return Math.max(min,Math.min(v,max));
+    }
 
     public static float pow(float v, float e) {
         return (float)Math.pow(v,e);
@@ -63,20 +77,21 @@ public class U {
         return v < 0 ? (range + (v % range)) % range : v % range;
     }
 
-    public static float lerp(float a, float b, float f) {
-        return a+(b-a)*f;
+    public static float lerp(float a, float b, float t) {
+        //return a+(b-a)*t;
+        return a * (1-t) + b * t;
     }
 
-    public static float lerp(float a, float b, float c, float f) {
-      if (f < 0.5f) return lerp(a,b,map(f,0,0.5f));
-      if (f > 0.5f) return lerp(b,c,map(f,0.5f,1.0f));
-      return b;
+    public static float lerp(float a, float b, float c, float t) {
+        if (t < 0.5f) return lerp(a,b, unlerp(0,0.5f,t));
+        if (t > 0.5f) return lerp(b,c, unlerp(0.5f,1.0f,t));
+        return b;
     }
 
-    // lerp default value a between 0 - 1 , ((f = 0.5) == a)
-    public static float lerp(float a, float f) {
-        if (f < 0.5f) return map(f,0,0.5f) * a;
-        if (f > 0.5f) return map(f,0.5f,1.0f) * (1 - a) + a;
+    // lerp default value a between 0 - 1 , ((t = 0.5) == a)
+    public static float lerp(float a, float t) {
+        if (t < 0.5f) return unlerp(0,0.5f,t) * a;
+        if (t > 0.5f) return unlerp(0.5f,1.0f,t) * (1 - a) + a;
         return a;
     }
 
@@ -319,6 +334,17 @@ public class U {
             tmp0 = tmp1;
             tmp1 = dst;
         } return dst;
+    }
+
+    public static void interleaveBuffers(ByteBuffer src1, int channels1, ByteBuffer src2, int channels2, ByteBuffer dst, int dst_size) {
+        int src1_index = 0, src2_index = 0, dst_index = 0;
+        for (int i = 0; i < dst_size; i++) {
+            for (int j = 0; j < channels1; j++) {
+                dst.put(dst_index++,src1.get(src1_index++));
+            } for (int j = 0; j < channels2; j++) {
+                dst.put(dst_index++,src2.get(src2_index++));
+            }
+        }
     }
 
     private static int most_frequent(int[] arr, int n)  {

@@ -2,10 +2,7 @@ plugins {
     id("io.github.heathensoft.jlib.conventions")
 }
 
-
-repositories {
-    //mavenCentral()
-}
+repositories { }
 
 dependencies {
     implementation(project(":common"))

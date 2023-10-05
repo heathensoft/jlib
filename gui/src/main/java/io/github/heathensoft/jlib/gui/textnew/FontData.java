@@ -6,6 +6,13 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ *
+ * name size leading
+ * char x y advance
+ * ...
+ * ...
+ * char x y advance
+ *
  * @author Frederik Dahl
  * 05/09/2023
  */
@@ -19,6 +26,7 @@ public class FontData {
     private final String name;
     private final Glyph[] glyphs;
     private final int height;
+    private final int leading;
     private final int num_characters;
     private final boolean monoSpaced;
 
@@ -27,6 +35,7 @@ public class FontData {
         String[] info_lines = font_info.get(0).split("\\s+");
         name = info_lines[0];
         height = Integer.parseInt(info_lines[1]);
+        leading = Integer.parseInt(info_lines[2]);
         num_characters = font_info.size() - 1;
         glyphs = new Glyph[num_characters];
         for (int i = 1; i <= num_characters; i++) {
@@ -48,11 +57,12 @@ public class FontData {
         } monoSpaced = sameAdvance;
     }
 
-    public FontData(String name, TextureRegion[] glyphs) {
+    public FontData(String name, TextureRegion[] glyphs, int leading) {
         this.name = name == null ? "Unnamed Font" : name;
         this.num_characters = Math.min(glyphs.length,FINAL_CHARACTER);
         this.glyphs = new Glyph[num_characters];
         this.height = glyphs[0].h();
+        this.leading = Math.max(0,leading);
         int advance = glyphs[0].w();
         boolean sameAdvance = true;
         for (int i = 0; i < num_characters; i++) {
@@ -82,6 +92,8 @@ public class FontData {
     public int height() {
         return height;
     }
+
+    public int leading() { return leading; }
 
     public int numCharacters() {
         return num_characters;

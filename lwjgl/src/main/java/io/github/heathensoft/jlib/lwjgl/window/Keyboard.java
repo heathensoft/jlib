@@ -15,7 +15,6 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class Keyboard {
 
-
     private final IntQueue queued_keys = new IntQueue(16);
     private final IntQueue queued_chars = new IntQueue(16);
     private final boolean[] c_keys = new boolean[GLFW_KEY_LAST];
@@ -26,7 +25,10 @@ public class Keyboard {
     public Keyboard() { }
     
     public void process_input() {
-        if (update_required) {
+        while (!queued_chars.isEmpty()) {
+            int character = queued_chars.dequeue();
+            textProcessor.characterStream((byte) character);
+        } if (update_required) {
             System.arraycopy(c_keys,0,
             p_keys,0, GLFW_KEY_LAST);
             update_required = false;
@@ -37,15 +39,12 @@ public class Keyboard {
                 int key = queued_keys.dequeue();
                 int mods = queued_keys.dequeue();
                 if (key > 0) { c_keys[key] = true;
-                    textProcessor.npcPress(key,mods);
+                    textProcessor.keyPress(key,mods);
                 } else { key = Math.abs(key);
                     c_keys[key] = false;
-                    textProcessor.npcRelease(key,mods);
+                    textProcessor.keyRelease(key,mods);
                 }
             } update_required = true;
-        } while (!queued_chars.isEmpty()) {
-            int character = queued_chars.dequeue();
-            textProcessor.printable((byte) character);
         }
     }
     
@@ -101,8 +100,8 @@ public class Keyboard {
     }
     
     private static final TextProcessor tp_internal = new TextProcessor() {
-        public void npcPress(int key, int mods) {}
-        public void npcRelease(int key, int mods) {}
-        public void printable(byte character) {}
+        public void keyPress(int key, int mods) {}
+        public void keyRelease(int key, int mods) {}
+        public void characterStream(byte character) {}
     };
 }

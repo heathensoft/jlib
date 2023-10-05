@@ -87,7 +87,7 @@ public class MapGenerator {
             for (int c = 0; c < cols; c++) {
                 float n = next_float(seed);
                 int color = noise[r][c] < (n - 0.15f) ? dirt : grass;
-                texture.set_unchecked(c,r,color);
+                texture.setPixelUnchecked(c,r,color);
             }
         }
 
@@ -126,13 +126,13 @@ public class MapGenerator {
                 float temp_mod = 8f;
                 float min = 0.4f;
                 float max = 0.6f;
-                float temperature = map(climate[r][c],min,max) * temp_mod;
+                float temperature = unlerp(min,max,climate[r][c]) * temp_mod;
                 if (temperature == 0) {
-                    texture.set_unchecked(c,r,snow_light.intBits());
+                    texture.setPixelUnchecked(c,r,snow_light.intBits());
                 } else if (temperature < 1.0f) {
                     float n = next_float(seed);
                     int color = temperature < n ? snow_light.intBits() : snow_dark.intBits();
-                    texture.set_unchecked(c,r,color);
+                    texture.setPixelUnchecked(c,r,color);
                 }
 
 
@@ -306,7 +306,7 @@ public class MapGenerator {
                     int adjacent_y = current_node.y + offset[1];
                     if (area.contains(adjacent_x,adjacent_y)) {
                         float height = elevation[adjacent_y][adjacent_x];
-                        int move_cost = round(map(height,0.4f,1.0f) * max_move_cost);
+                        int move_cost = round(unlerp(0.4f,1.0f,height) * max_move_cost);
                         tmp_node.set(adjacent_x,adjacent_y);
                         if (!closed.contains(tmp_node)) {
                             int g_cost = tmp_node.distance(current_node) + move_cost;

@@ -1,7 +1,6 @@
 package io.github.heathensoft.jlib.tiles.neo;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureFormat;
 

@@ -50,7 +50,7 @@ public class CursorObject implements Disposable {
      * @throws Exception caught and logged by Window.
      */
     protected CursorObject(Bitmap image, long window, int xH, int yH) throws Exception {
-        ByteBuffer rgba = image.data();
+        ByteBuffer rgba = image.pixels();
         int w = image.width();
         int h = image.height();
         int c = image.channels();

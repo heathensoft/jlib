@@ -25,7 +25,6 @@ import java.util.Map;
 
 public class TextureAtlas implements Disposable {
 
-
     private final Bitmap image;
     private final List<String> region_names;
     private final Map<String,TextureRegion> map;
@@ -59,7 +58,7 @@ public class TextureAtlas implements Disposable {
             int y = rectangles.get();
             TextureRegion region = new TextureRegion(x,y,w,h,image.width(),image.height());
             map.put(region_names.get(id),region);
-            image.draw_nearest_sampling(images[id],x,y,w,h,0,0,1,1);
+            image.drawNearest(images[id],x,y,w,h,0,0,1,1);
         } Disposable.dispose(images);
     }
 

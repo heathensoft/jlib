@@ -13,7 +13,6 @@ import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
-import io.github.heathensoft.jlib.lwjgl.gfx.DepthMap8;
 
 
 import java.util.ArrayList;
@@ -363,7 +362,7 @@ public class WorldGen {
                 base_temperature = lerp(base_temperature,classic_noise_base,classic_noise_weight);
                 float e_inv = 1.0f - clamp((elevation[r][c] * 2.0f) + white_noise_elev);
                 float multiplied = base_temperature * e_inv;
-                result[r][c] = lerp(multiplied,base_temperature,map(base_temperature,0.5f,1.0f));
+                result[r][c] = lerp(multiplied,base_temperature, unlerp(0.5f,1.0f,base_temperature));
             }
         } return Noise.smoothen(result);
     }
@@ -423,7 +422,7 @@ public class WorldGen {
                 float e = elevation[r][c];
                 float h = humidity[r][c];
                 if (e < 0.1f) {
-                    float l = map(e,0.1f,0.0f);
+                    float l = unlerp(0.1f,0.0f,e);
                     h = Math.max(l,h);
                 } humidity[r][c] = h - (rng.white_noise() * 0.25f);
             }
@@ -580,7 +579,7 @@ public class WorldGen {
                     int adjacent_y = current_node.y + offset[1];
                     if (area.contains(adjacent_x,adjacent_y)) {
                         float height = elevation[adjacent_y][adjacent_x];
-                        int move_cost = round(map(height,0.1f,1.0f) * 1000);
+                        int move_cost = round(unlerp(0.1f,1.0f,height) * 1000);
                         tmp_node.set(adjacent_x,adjacent_y);
                         if (!closed.contains(tmp_node)) {
                             int g_cost = tmp_node.distance(current_node) + move_cost;
@@ -728,7 +727,7 @@ public class WorldGen {
                 colors[r][c] = get_region_color_hsv(c,r);
             }
         } Bitmap hsv_image = new Bitmap(colors);
-        hsv_image.toDisk(path);
+        hsv_image.compressToDisk(path);
         hsv_image.dispose();
     }
 
@@ -739,7 +738,7 @@ public class WorldGen {
                 colors[r][c] = get_region_color(c,r);
             }
         } Bitmap hsv_image = new Bitmap(colors);
-        hsv_image.toDisk(path);
+        hsv_image.compressToDisk(path);
         hsv_image.dispose();
     }
 

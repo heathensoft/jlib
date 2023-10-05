@@ -6,6 +6,7 @@ import java.util.Arrays;
 
 /**
  * PlainParagraph can be edited while Parsed cannot.
+ * It might be better to store the words as a linked list for readability / debugging. But an array works fine.
  *
  * @author Frederik Dahl
  * 19/09/2023
@@ -118,6 +119,7 @@ public class PlainParagraph extends Paragraph {
                             byte[] n = Arrays.copyOf(w,w.length + 1);
                             n[w.length] = 32;
                             words[word_count - 1] = new Word(n);
+                            words[word_count] = Word.END_OF_LINE();
                             length --;
                         }
                         else {
@@ -285,21 +287,13 @@ public class PlainParagraph extends Paragraph {
      * Then it is one of its subclasses.
      * @return if this class equals UnParsedParagraphClass
      */
-    public boolean isRegularUnParsed() {
+    public boolean isRegularPlain() {
         return this.getClass().equals(PlainParagraph.class);
     }
 
     @Override
     public int length() {
         return length;
-    }
-
-    /**
-     * all characters except '\n'
-     * @return length - 1
-     */
-    public int numPrintable() {
-        return length - 1;
     }
 
 
@@ -313,6 +307,7 @@ public class PlainParagraph extends Paragraph {
         } words[split_string.length] = Word.END_OF_LINE();
         return words;
     }
+
 
     protected void trim() {
         if (words.length > 1) {

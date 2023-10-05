@@ -48,6 +48,7 @@ interface PublicWindow {
     void setInputProcessor(InputProcessor processor);
     
     void setTitle(String string);
+    void setClipboard(String string);
     void setTargetUPS(int value);
     void setTargetFPS(int value);
     void enableSaveSettingsOnExit(boolean enable);
@@ -84,6 +85,8 @@ interface PublicWindow {
     boolean isLimitFPSEnabled();
     
     void saveSettings() throws IOException;
+
+    String getClipboard();
 
     InputProcessor inputProcessor();
     

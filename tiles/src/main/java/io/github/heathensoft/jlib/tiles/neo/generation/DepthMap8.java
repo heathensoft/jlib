@@ -1,6 +1,8 @@
-package io.github.heathensoft.jlib.lwjgl.gfx;
+package io.github.heathensoft.jlib.tiles.neo.generation;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
+import io.github.heathensoft.jlib.lwjgl.gfx.TextureFormat;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryUtil;
 
@@ -16,6 +18,7 @@ import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
  */
 
 
+@Deprecated
 public class DepthMap8 implements Disposable {
 
     private final int width;
@@ -41,7 +44,8 @@ public class DepthMap8 implements Disposable {
         }
     }
 
-    public DepthMap8(Bitmap bitmap) {
+    public DepthMap8(BitmapOld bitmap) {
+        // todo: very wrong (data swapped by srs)
         this.width = bitmap.width();
         this.height = bitmap.height();
         int channels = bitmap.channels();

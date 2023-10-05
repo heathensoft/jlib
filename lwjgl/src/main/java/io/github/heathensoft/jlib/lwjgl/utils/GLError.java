@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.gfx;
+package io.github.heathensoft.jlib.lwjgl.utils;
 
 import org.tinylog.Logger;
 

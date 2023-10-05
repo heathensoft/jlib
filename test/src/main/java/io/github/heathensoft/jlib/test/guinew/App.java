@@ -1,19 +1,20 @@
 package io.github.heathensoft.jlib.test.guinew;
 
-import io.github.heathensoft.jlib.common.io.External;
 
-import io.github.heathensoft.jlib.gui.text.ParagraphList;
+
+import io.github.heathensoft.jlib.common.io.External;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+import io.github.heathensoft.jlib.lwjgl.gfx.TextureAtlas;
+import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.DefaultInput;
 import io.github.heathensoft.jlib.lwjgl.window.*;
-import org.joml.Vector2f;
-import org.tinylog.Logger;
 
-import java.io.IOException;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.List;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
+import static org.lwjgl.system.MemoryUtil.memAddress;
 
 /**
  * @author Frederik Dahl
@@ -23,9 +24,8 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class App extends Application {
 
-    private ParagraphList text;
+    private Cmd commandLine = new Cmd(128);
     private Renderer renderer;
-    private TEdit edit = new TEdit();
 
     @Override
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
@@ -42,10 +42,59 @@ public class App extends Application {
     @Override
     protected void on_start(Resolution resolution) throws Exception {
 
-        renderer = new Renderer(resolution);
-        text = new ParagraphList();
 
-        Engine.get().input().keys().setTextProcessor(edit);
+
+
+
+        Bitmap earth = new Bitmap(new External(Path.of("C:\\dump","Earth_Analog.png")).readToBuffer());
+        Bitmap canvas = new Bitmap(320,320,4);
+        canvas.clear(new Color32("2b2b2b").intBits());
+        earth.premultiplyAlpha();
+        canvas.drawLinear(earth,0,0,canvas.width(),canvas.height());
+        canvas.compressToDisk("earthX22.png");
+        canvas.dispose();
+        earth.dispose();
+
+
+
+
+        /*
+        External external = new External(Path.of(""));
+        if (external.isFolder()) {
+            TextureAtlas atlas = new TextureAtlas(external.toString());
+            atlas.image().compressToDisk("atlasTest.png");
+            atlas.dispose();
+        }
+
+         */
+
+
+
+        /*
+        Resources io = new Resources(TextUtils.class);
+        ByteBuffer ttf = io.toBuffer("res/jlib/gui/Topaz_a500_v1.0.ttf",32 * 1024);
+        Font.extractAndWrite("Amiga500",ttf,"fonts",32,1);
+         */
+
+        /*
+        try {
+            Resources io = new Resources(TextUtils.class);
+            ByteBuffer ttf = io.toBuffer("res/jlib/gui/Topaz_a500_v1.0.ttf",32 * 1024);
+            Repository repo = new Repository(Path.of("fonts","font.repo"));
+            //TrueTypeFont.extractAndWriteToRepo("Amiga500",ttf,repo,16,1,false);
+            repo.deserialize();
+
+            ByteBuffer buffer = repo.get("Amiga500.png");
+            Bitmap bitmap = new Bitmap(buffer);
+            bitmap.toDisk("test.png");
+            bitmap.dispose();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+         */
+
+        renderer = new Renderer(resolution);
+        Engine.get().input().keys().setTextProcessor(commandLine);
     }
 
     @Override
@@ -53,71 +102,13 @@ public class App extends Application {
 
         DefaultInput input = Engine.get().input();
 
-
-        /*
-        DefaultInput input = Engine.get().input();
-        if (input.keys().just_pressed(GLFW_KEY_ESCAPE)) Engine.get().exit();
-        if (input.anyFilesDropped()) {
-            input.collectDroppedFiles(item -> {
-                try {
-                    External io = new External(Path.of(item));
-                    if (io.isFile()) {
-                        if (item.endsWith(".txt")) {
-                            String contents = io.asString();
-                            if (!contents.isBlank()) {
-                                text.set(contents);
-                            }
-                        }
-                    }
-                } catch (InvalidPathException | IOException e) {
-                    Logger.warn(e);
-                }
-            });
-        }
-
-         */
-
-
-
-        /*
-        float amount = 4;
-        if (Input.get().keyboard().pressed(GLFW_KEY_W)) {
-            float v = renderer.size.height() - amount;
-            v = Math.max(v,16);
-            renderer.size.setHeight(v);
-        } else if (Input.get().keyboard().pressed(GLFW_KEY_A)) {
-            float v = renderer.size.width() - amount;
-            v = Math.max(v,16);
-            renderer.size.setWidth(v);
-        } else if (Input.get().keyboard().pressed(GLFW_KEY_S)) {
-            float v = renderer.size.height() + amount;
-            v = Math.min(v,resolution.height() - 8);
-            renderer.size.setHeight(v);
-        } else if (Input.get().keyboard().pressed(GLFW_KEY_D)) {
-            float v = renderer.size.width() + amount;
-            v = Math.min(v,resolution.width() - 8);
-            renderer.size.setWidth(v);
-        } else if (Input.get().keyboard().just_pressed(GLFW_KEY_C)) {
-            boolean current = renderer.textRenderer.isScissoringEnabled();
-            renderer.textRenderer.enableScissoring(!current);
-        } else if (Input.get().keyboard().just_pressed(GLFW_KEY_V)) {
-            boolean current = renderer.textRenderer.isWrappingEnabled();
-            renderer.textRenderer.enableWrapping(!current);
-        }
-
-         */
-
-
-
-
-
-
+        Resolution resolution = Engine.get().window().appResolution();
 
     }
 
     @Override
     protected void on_render(float frame_time, float alpha) {
-        renderer.render(text);
+        renderer.render(commandLine);
     }
 
     @Override

@@ -1,5 +1,12 @@
 package io.github.heathensoft.jlib.common.io;
+import io.github.heathensoft.jlib.common.storage.primitive.ByteQueue;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
@@ -25,6 +32,10 @@ public class External {
 
     private Path path;
 
+    public External(String path) throws InvalidPathException {
+        this(Path.of(path));
+    }
+
     public External(Path path) {
         this.path = path;
     }
@@ -33,19 +44,20 @@ public class External {
         this.path = path;
     }
 
-    /**
-     * This buffer is allocated on the heap and can not interface with lwjgl
-     * @return bytebuffer of read data
-     * @throws IOException
-     */
     @SuppressWarnings("all")
     public ByteBuffer readToBuffer() throws IOException {
-        ByteBuffer buffer;
-        try (SeekableByteChannel byteChannel = Files.newByteChannel(path, StandardOpenOption.READ)) {
-            buffer = ByteBuffer.allocate((int)byteChannel.size() + 1);
-            while (byteChannel.read(buffer) != -1); // *intentional*
-            buffer.slice();
-        } return buffer.flip();
+        if (isFile()) {
+            try (InputStream inputStream = new FileInputStream(path.toFile())) {
+                ByteQueue bytes = new ByteQueue((int) size());
+                int data = inputStream.read();
+                while (data != -1) {
+                    bytes.enqueue((byte) (data));
+                    data = inputStream.read();
+                } ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.size());
+                buffer.put(bytes.array(), 0, bytes.size());
+                return buffer.flip();
+            }
+        } else throw new IOException("argument not path to file: " + path.toString());
     }
 
     public Stream<String> readLines(Charset charset) throws IOException {
@@ -140,6 +152,19 @@ public class External {
                 StandardOpenOption.APPEND)){
             byteChannel.write(source);
         }
+    }
+
+    public JSONObject readAsJSON() throws IOException {
+        JSONObject object;
+        try { JSONParser parser = new JSONParser();
+            object = (JSONObject) parser.parse(asString());
+        } catch (ParseException e) {
+            throw new IOException(e);
+        } return object;
+    }
+
+    public void write(JSONObject object) throws IOException {
+        write(object.toString());
     }
 
     public void createFile(boolean replace) throws IOException {
@@ -284,6 +309,10 @@ public class External {
 
     public String name() {
         return path().getFileName().toString();
+    }
+
+    public String toString() {
+        return path().toString();
     }
 
     public Path path() {

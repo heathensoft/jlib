@@ -5,17 +5,20 @@ import java.util.Iterator;
 /**
  *
  * Paragraph
- *   ParsedParagraph (Un-editable)
- *     Highlighted                  %%
+ *
+ *   ColoredParagraph (interface)
+ *
+ *   ParsedParagraph (Un-editable, parsed)
+ *     Highlight                    %%
  *     Comment                      ##
  *     DebugLine                    **
  *     Warning                      !!
- *   PlainParagraph (Editable)
- *     ColoredParagraph
- *       CommandLine
+ *
+ *   PlainParagraph (Editable, un-parsed)
+ *     CommandLine
  *
  *
- * All Paragraphs en with EOL -> Words[words.length-1] == Word.EOL.singleton
+ * All Paragraphs end with EOL -> Words[words.length-1] == Word.EOL.singleton
  *
  * @author Frederik Dahl
  * 19/09/2023
@@ -25,7 +28,6 @@ import java.util.Iterator;
 public abstract class Paragraph implements Iterable<Word>{
 
     protected abstract Word[] words();
-
 
     public byte charAt(int index) throws IndexOutOfBoundsException {
         int p = 0;
@@ -80,6 +82,15 @@ public abstract class Paragraph implements Iterable<Word>{
         return calculateLength(words());
     }
 
+    /**
+     * all characters except '\n'
+     * @return length - 1
+     */
+    public int numPrintable() {
+        return length() - 1;
+    }
+
+
     protected int calculateLength(Word[] words) {
         if (words.length == 1) return 1;
         int word_count = words.length - 1;
@@ -107,13 +118,13 @@ public abstract class Paragraph implements Iterable<Word>{
     }
 
     public Iterator<Word> iterator() {
-        return new WordIterator(words());
+        return new WordItr(words());
     }
 
-    private static class WordIterator implements Iterator<Word> {
+    private static class WordItr implements Iterator<Word> {
         private int index = 0;
         private final Word[] words;
-        WordIterator(Word[] words) { this.words = words; }
+        WordItr(Word[] words) { this.words = words; }
         public boolean hasNext() { return index < words.length; }
         public Word next() { return words[index++]; }
         public void remove() { throw new UnsupportedOperationException(); }

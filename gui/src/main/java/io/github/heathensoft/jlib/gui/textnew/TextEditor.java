@@ -32,7 +32,7 @@ public abstract class TextEditor implements TextProcessor {
         this.desiredIndex = 0;
     }
 
-    public void npcPress(int key, int mods) {
+    public void keyPress(int key, int mods) {
 
         if ((mods & GLFW_MOD_CONTROL) > 0) {
             if (key == GLFW_KEY_DELETE) {
@@ -129,9 +129,9 @@ public abstract class TextEditor implements TextProcessor {
 
     }
 
-    public void npcRelease(int key, int mods) { }
+    public void keyRelease(int key, int mods) { }
 
-    public void printable(byte character) {
+    public void characterStream(byte character) {
         if (character != 10) {
             PlainParagraph p = text.get(lineIndex);
             if (p.insert(character,charIndex)) {
@@ -176,6 +176,7 @@ public abstract class TextEditor implements TextProcessor {
     public PlainText text() {
         return text;
     }
+
 
     private int charIndexMax(int line) {
         return text.get(line).numPrintable();

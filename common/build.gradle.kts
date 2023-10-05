@@ -3,7 +3,6 @@ plugins {
 }
 
 dependencies {
-
     api(files("../libs/joml/joml-1.10.4/joml-1.10.4.jar"))
     api(files("../libs/joml/joml-primitives-1.10.0/joml-primitives-1.10.0.jar"))
     api(files("../libs/json/json-simple-1.1.1.jar"))
