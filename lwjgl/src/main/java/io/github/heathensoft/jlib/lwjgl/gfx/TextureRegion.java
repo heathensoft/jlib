@@ -13,10 +13,10 @@ import java.nio.FloatBuffer;
 
 public class TextureRegion {
     
-    private final int texture_width;
-    private final int texture_height;
-    private int x, y, width, height;
-    private float u, v, u2, v2;
+    protected final int texture_width;
+    protected final int texture_height;
+    protected int x, y, width, height;
+    protected float u, v, u2, v2;
     
     public TextureRegion(int texture_size) {
         this(texture_size,texture_size);

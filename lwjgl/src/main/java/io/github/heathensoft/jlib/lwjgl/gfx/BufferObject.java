@@ -107,9 +107,7 @@ public class BufferObject implements Disposable {
         glBufferData(target,data,usage);
     }
     
-    public void bufferSubData(FloatBuffer data, int offset) {
-        glBufferSubData(target,offset,data);
-    }
+    public void bufferSubData(FloatBuffer data, int offset) { glBufferSubData(target,offset,data); }
     
     public void bufferSubData(IntBuffer data, int offset) {
         glBufferSubData(target,offset,data);
@@ -127,9 +125,7 @@ public class BufferObject implements Disposable {
         glBindBufferBase(target, bindingPoint, name);
     }
     
-    public void bindBufferRange(int bindingPoint, long offset, long size) {
-        glBindBufferRange(target, bindingPoint, name,offset,size);
-    }
+    public void bindBufferRange(int bindingPoint, long offset, long size) { glBindBufferRange(target, bindingPoint, name,offset,size); }
 
     public void setTarget(int target) {
         this.target = target;

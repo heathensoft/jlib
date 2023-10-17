@@ -45,7 +45,7 @@ public class Renderer implements Disposable {
         defaultProgram.use();
         defaultProgram.setUniform1i("u_sampler",0);
         GUI.FRAMEBUFFER.hud_texture().bindToSlot(0);
-        screenQuad.render();
+        //screenQuad.render();
     }
 
     public void dispose() {

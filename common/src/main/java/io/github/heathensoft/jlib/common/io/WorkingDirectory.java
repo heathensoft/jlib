@@ -67,7 +67,7 @@ public class WorkingDirectory {
                            validFiles.add(name);
                        } else {
                            for (String validType : fileTypes) {
-                               if (name.contains(validType)) {
+                               if (name.contains(validType)) { // todo ends on
                                    validFiles.add(name);
                                }
                            }
@@ -84,7 +84,7 @@ public class WorkingDirectory {
         } else {
             name = name.replace(" ","");
             name = name.length() == 0 ? "folder" : name;
-        } External folder = new External(path.resolve(name));
+        } ExternalFile folder = new ExternalFile(path.resolve(name));
         folder.createDirectories();
         refresh();
     }
@@ -97,7 +97,7 @@ public class WorkingDirectory {
      */
     public boolean deleteFolder(String folderName) throws Exception {
         if (subFolders.contains(folderName)) {
-            External folder = new External(path.resolve(folderName));
+            ExternalFile folder = new ExternalFile(path.resolve(folderName));
             folder.delete();
             refresh();
             return true;
@@ -112,7 +112,7 @@ public class WorkingDirectory {
      */
     public boolean deleteFile(String fileName) throws Exception {
         if (validFiles.contains(fileName)) {
-            External file = new External(path.resolve(fileName));
+            ExternalFile file = new ExternalFile(path.resolve(fileName));
             file.delete();
             refresh();
             return true;
@@ -287,7 +287,7 @@ public class WorkingDirectory {
             subFolders.clear();
             validFiles.addAll(prevFiles);
             subFolders.addAll(prevFolders);
-            throw new Exception(e);
+            throw e;
         }
     }
     

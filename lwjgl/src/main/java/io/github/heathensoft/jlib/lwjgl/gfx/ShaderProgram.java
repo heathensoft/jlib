@@ -32,19 +32,19 @@ public class ShaderProgram implements Disposable {
     private final Map<String,Integer> uniforms;
     private final Map<String,Integer> blockIndices;
     
-    public ShaderProgram(String vsSource, String fsSource) throws Exception {
+    public ShaderProgram(String vSource, String fSource) throws Exception {
         this();
-        attach(vsSource,GL_VERTEX_SHADER);
-        attach(fsSource,GL_FRAGMENT_SHADER);
+        attach(vSource,GL_VERTEX_SHADER);
+        attach(fSource,GL_FRAGMENT_SHADER);
         compile();
         link();
     }
 
-    public ShaderProgram(String vsSource, String gsSource, String fsSource) throws Exception {
+    public ShaderProgram(String vSource, String gSource, String fSource) throws Exception {
         this();
-        attach(vsSource,GL_VERTEX_SHADER);
-        attach(gsSource,GL_GEOMETRY_SHADER);
-        attach(fsSource,GL_FRAGMENT_SHADER);
+        attach(vSource,GL_VERTEX_SHADER);
+        attach(gSource,GL_GEOMETRY_SHADER);
+        attach(fSource,GL_FRAGMENT_SHADER);
         compile();
         link();
     }
@@ -136,17 +136,46 @@ public class ShaderProgram implements Disposable {
         if (index == null) throw new RuntimeException("no such block: " + name);
         glUniformBlockBinding(this.name,index,bindingPoint);
     }
-    
+
+    /** Do not have to use shader for this */
     public void createUniform(String name) {
         int uniformLocation = glGetUniformLocation(this.name, name);
         if (uniformLocation == GL_INVALID_INDEX)
             throw new RuntimeException("no such uniform: " + name);
         uniforms.put(name, uniformLocation);
     }
-    
+
+    /** Do not have to use shader for this */
     public void createUniforms(String... names) {
         for (String name : names) {
             createUniform(name);
+        }
+    }
+
+    public void setUniform(String name, float x, float y) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.mallocFloat(2);
+            buffer.put(x).put(y);
+            buffer.flip();
+            glUniform2fv(uniforms.get(name), buffer);
+        }
+    }
+
+    public void setUniform(String name, float x, float y, float z) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.mallocFloat(3);
+            buffer.put(x).put(y).put(z);
+            buffer.flip();
+            glUniform3fv(uniforms.get(name), buffer);
+        }
+    }
+
+    public void setUniform(String name, float x, float y, float z, float w) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.mallocFloat(4);
+            buffer.put(x).put(y).put(z).put(w);
+            buffer.flip();
+            glUniform4fv(uniforms.get(name), buffer);
         }
     }
     
@@ -347,11 +376,11 @@ public class ShaderProgram implements Disposable {
         }
     }
 
-    public void use() {
+    public ShaderProgram use() {
         if (name != currentID) {
             glUseProgram(name);
             currentID = name;
-        }
+        } return this;
     }
     
     public static void useZERO() {

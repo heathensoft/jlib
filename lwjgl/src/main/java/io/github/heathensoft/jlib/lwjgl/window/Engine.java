@@ -8,6 +8,8 @@ import org.tinylog.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.lwjgl.opengl.GL11.glGetIntegerv;
+
 /**
  *
  *
@@ -26,11 +28,12 @@ public final class Engine {
     private Engine() {}
     
     private Time time;
-    private DefaultInput input;
     private Window window;
     private Application app;
+    private DefaultInput input;
+    private GLContext glContext;
     private ThreadService threadPool;
-    
+
     public void run(Application app, String[] args) {
         if (this.app == null) {
             this.app = app;
@@ -66,6 +69,7 @@ public final class Engine {
                 float alpha;
                 float frameTime;
                 float accumulator = 0f;
+                glContext = new GLContext(window.handle());
                 Logger.info("starting application");
                 app.on_start(window.appResolution());
                 Logger.info("application is running");
@@ -149,6 +153,8 @@ public final class Engine {
     public Window window() {
         return window;
     }
+
+    public GLContext glContext() { return glContext; }
     
     public Application app() {
         return app;

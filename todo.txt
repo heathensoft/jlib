@@ -1,4 +1,5 @@
 
-SpriteBatch
 
-    Make sure rotation is working correctly
+Need an opengl struct in engine with version, limitations, compatibility / core.
+Then query this when creating shaders and allocating buffers.
+i.e. cannon use (#define version 460 core) when gl version is 4.3 or running on mac-os etc.

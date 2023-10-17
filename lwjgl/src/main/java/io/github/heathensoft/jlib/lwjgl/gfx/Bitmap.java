@@ -1,8 +1,8 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.utils.GLError;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.joml.Math;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
@@ -18,8 +18,7 @@ import java.util.*;
 import static io.github.heathensoft.jlib.common.utils.U.*;
 import static io.github.heathensoft.jlib.common.utils.U.round;
 import static org.lwjgl.stb.STBImage.*;
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png_to_func;
+import static org.lwjgl.stb.STBImageWrite.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 
 /**
@@ -41,9 +40,11 @@ public class Bitmap implements Disposable {
     private final int height;
     private final int channels;
 
+    // todo: support drawing from larger format to a smaller
+
 
     public Bitmap(int width, int height, int channels) {
-        this.pixels = MemoryUtil.memAlloc(width * height * channels);
+        this.pixels = MemoryUtil.memCalloc(width * height * channels);
         this.width = width;
         this.height = height;
         this.channels = channels;
@@ -61,7 +62,8 @@ public class Bitmap implements Disposable {
         this.channels = channels;
     }
 
-    public Bitmap(ByteBuffer png, boolean vFlip) throws Exception{
+    public Bitmap(ByteBuffer png, boolean vFlip) throws Exception {
+        if (png == null) throw new Exception("null argument png");
         try (MemoryStack stack = stackPush()) {
             IntBuffer w = stack.mallocInt(1);
             IntBuffer h = stack.mallocInt(1);
@@ -126,11 +128,13 @@ public class Bitmap implements Disposable {
 
     public int sizeOf() { return width * height * channels; }
 
+    public int surfaceArea() { return width * height; }
+
     public int width() { return width; }
 
     public int height() { return height; }
 
-    /** src channels must == dst channels */
+    /** src channels must <= dst channels */
     public void drawNearest(Bitmap source, float x, float y, float w, float h, float u1, float v1, float u2, float v2) {
         float x2 = x + w;
         float y2 = y + h;
@@ -157,10 +161,31 @@ public class Bitmap implements Disposable {
                     setPixelUnchecked(c,r,src);
                 }
             }
+        } else if (source.channels < channels) {
+            if (channels == 4) {
+                for (int r = iy1; r < iy2; r++) {
+                    float v = remap(r,y,y2,v1,v2);
+                    for (int c = ix1; c < ix2; c++) {
+                        float u = remap(c,x,x2,u1,u2);
+                        int dst = getPixelUnchecked(c,r);
+                        int src = source.sampleNearest(u,v) | 0xFF000000;
+                        setPixelUnchecked(c,r,alphaBlend(src,dst));
+                    }
+                }
+            } else {
+                for (int r = iy1; r < iy2; r++) {
+                    float v = remap(r,y,y2,v1,v2);
+                    for (int c = ix1; c < ix2; c++) {
+                        float u = remap(c,x,x2,u1,u2);
+                        int src = source.sampleNearest(u,v);
+                        setPixelUnchecked(c,r,src);
+                    }
+                }
+            }
         }
     }
 
-    /** src channels must == dst channels */
+    /** src channels must <= dst channels */
     public void drawLinear(Bitmap source, float x, float y, float w, float h, float u1, float v1, float u2, float v2) {
         float x2 = x + w;
         float y2 = y + h;
@@ -187,6 +212,28 @@ public class Bitmap implements Disposable {
                     setPixelUnchecked(c,r,src);
                 }
             }
+        } else if (source.channels < channels) {
+            if (channels == 4) {
+                for (int r = iy1; r < iy2; r++) {
+                    float v = remap(r,y,y2,v1,v2);
+                    for (int c = ix1; c < ix2; c++) {
+                        float u = remap(c,x,x2,u1,u2);
+                        int dst = getPixelUnchecked(c,r);
+                        int src = source.sampleLinear(u,v) | 0xFF000000;
+                        setPixelUnchecked(c,r,alphaBlend(src,dst));
+                    }
+                }
+            } else {
+                for (int r = iy1; r < iy2; r++) {
+                    float v = remap(r,y,y2,v1,v2);
+                    for (int c = ix1; c < ix2; c++) {
+                        float u = remap(c,x,x2,u1,u2);
+                        int src = source.sampleLinear(u,v);
+                        setPixelUnchecked(c,r,src);
+                    }
+                }
+            }
+
         }
     }
 
@@ -373,6 +420,12 @@ public class Bitmap implements Disposable {
 
     /** write as png to disk */
     public void compressToDisk(String path) {
+        stbi_flip_vertically_on_write(false);
+        stbi_write_png(path,width,height,channels,pixels,stride());
+    }
+
+    public void compressToDiskFlipped(String path) {
+        stbi_flip_vertically_on_write(true);
         stbi_write_png(path,width,height,channels,pixels,stride());
     }
 
@@ -557,6 +610,46 @@ public class Bitmap implements Disposable {
         MemoryUtil.memFree(pixels);
     }
 
+    /** combine bitmaps in order and return new. (Exception if channel overflow or wrong dim )*/
+    public static Bitmap combine(Bitmap b0, Bitmap b1) throws Exception {
+        if ((b0.channels + b1.channels) <= 4) {
+            if (b0.width == b1.width && b0.height == b1.height) {
+                int channels = b0.channels + b1.channels;
+                int num_pixels = b0.height * b0.width;
+                int size = num_pixels * channels;
+                ByteBuffer dst = MemoryUtil.memAlloc(size);
+                int b0_idx = 0, b1_idx = 0, dst_idx = 0;
+                for (int i = 0; i < num_pixels; i++) {
+                    for (int j = 0; j < b0.channels; j++) {
+                        dst.put(dst_idx++,b0.pixels.get(b0_idx++));
+                    } for (int j = 0; j < b1.channels; j++) {
+                        dst.put(dst_idx++,b1.pixels.get(b1_idx++)); }
+                } return new Bitmap(dst,b0.width,b0.height,channels);
+            } else throw new Exception("Combining bitmaps != dimensions");
+        } else throw new Exception("Combining bitmaps with sum channels > 4");
+    }
+
+    /** combine bitmaps in order and return new. (Exception if channel overflow or wrong dim )*/
+    public static Bitmap combine(Bitmap b0, Bitmap b1, Bitmap b2) throws Exception {
+        if ((b0.channels + b1.channels + b2.channels) <= 4) {
+            if (b0.width == b1.width && b0.height == b1.height && b0.width == b2.width && b0.height == b2.height) {
+                int channels = b0.channels + b1.channels + b2.channels;
+                int num_pixels = b0.height * b0.width;
+                int size = num_pixels * channels;
+                ByteBuffer dst = MemoryUtil.memAlloc(size);
+                int b0_idx = 0, b1_idx = 0, b2_idx = 0, dst_idx = 0;
+                for (int i = 0; i < num_pixels; i++) {
+                    for (int j = 0; j < b0.channels; j++) {
+                        dst.put(dst_idx++,b0.pixels.get(b0_idx++));
+                    } for (int j = 0; j < b1.channels; j++) {
+                        dst.put(dst_idx++,b1.pixels.get(b1_idx++));
+                    } for (int j = 0; j < b2.channels; j++) {
+                        dst.put(dst_idx++,b2.pixels.get(b2_idx++)); }
+                } return new Bitmap(dst,b0.width,b0.height,channels);
+            } else throw new Exception("Combining bitmaps != dimensions");
+        } else throw new Exception("Combining bitmaps with sum channels > 4");
+    }
+
     public record ColorPalette(List<Color32> colors) {
 
         public Bitmap bitmap() {
@@ -603,7 +696,7 @@ public class Bitmap implements Disposable {
                     } texture.uploadData(buffer.flip());
                 }
             }
-            GLError.check();
+            GLContext.checkError();
             return texture;
         }
 
@@ -653,7 +746,7 @@ public class Bitmap implements Disposable {
             }
             texture.uploadData(buffer.flip());
             MemoryUtil.memFree(buffer);
-            GLError.check();
+            GLContext.checkError();
             return texture;
         }
     }

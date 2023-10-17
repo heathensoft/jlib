@@ -2,12 +2,17 @@ package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
+import org.tinylog.Logger;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
+import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE;
@@ -52,7 +57,6 @@ public class Framebuffer implements Disposable {
         this.clear_color = new Vector4f(DEFAULT_CLEAR_COLOR);
         this.colorAttachments = new ColorAttachment[16];
     }
-
 
     /**
      * Detaches the currently bound color texture from the framebuffer attachment slot.
@@ -379,6 +383,45 @@ public class Framebuffer implements Disposable {
             if (drawBuffer.depthStencilAttachment != null)
                 return drawBuffer.depthStencilAttachment.texture();
         } return null;
+    }
+
+    /** Bitmap is flipped vertically */
+    public static Bitmap screenshot() {
+        Logger.debug("Attempting to take screenshot of default framebuffer, backbuffer");
+        Framebuffer currentRead = readBuffer;
+        Bitmap screenshot = null;
+        if (currentRead != null) {
+            Logger.debug("Switching target readBuffer to default framebuffer");
+            bindRead(null);
+        } boolean RGB_8_FORMAT;
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer red = stack.mallocInt(1);
+            IntBuffer gre = stack.mallocInt(1);
+            IntBuffer blu = stack.mallocInt(1);
+            glGetFramebufferAttachmentParameteriv(GL_READ_FRAMEBUFFER,GL_BACK_LEFT,GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE,red);
+            glGetFramebufferAttachmentParameteriv(GL_READ_FRAMEBUFFER,GL_BACK_LEFT,GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE,gre);
+            glGetFramebufferAttachmentParameteriv(GL_READ_FRAMEBUFFER,GL_BACK_LEFT,GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE,blu);
+            Logger.debug("Framebuffer color depth: RED_BITS {} | GREEN_BITS {} | BLUE_BITS {}", red.get(0),gre.get(0),blu.get(0));
+            RGB_8_FORMAT = (red.get(0) == 8 && gre.get(0) == 8 && blu.get(0) == 8);
+            GLContext.checkError();
+        } if (RGB_8_FORMAT) {
+            int width = 0, height = 0;
+            try (MemoryStack stack = MemoryStack.stackPush()){
+                IntBuffer w = stack.mallocInt(1);
+                IntBuffer h = stack.mallocInt(1);
+                long window = Engine.get().window().handle();
+                glfwGetFramebufferSize(window,w,h);
+                width = w.get(0); height = h.get(0);
+            } Logger.debug("Framebuffer: width: {}, height {}",width,height);
+            ByteBuffer pixels = MemoryUtil.memAlloc(width * height * 3);
+            glPixelStorei(GL_PACK_ALIGNMENT,1);
+            glReadPixels(0, 0, width, height,GL_RGB,GL_UNSIGNED_BYTE, pixels);
+            GLContext.checkError();
+            screenshot = new Bitmap(pixels,width,height,3);
+        } else Logger.debug("Unable to take screenshot: Not RGB8 format");
+        if (currentRead != null) {
+            bindRead(currentRead);
+        } return screenshot;
     }
 
     public static Framebuffer boundDrawBuffer() {

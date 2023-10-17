@@ -20,8 +20,8 @@ public class OrthographicCamera {
     private final Matrix4f PV  = new Matrix4f();
     private final Matrix4f INV = new Matrix4f();
     
-    public float far  = 1.0f;
-    public float near = 0.01f;
+    public float far  = 257.0f;
+    public float near = 1.00f;
     public float zoom = 1.0f;
     public float culling = 1.0f;
     
@@ -90,6 +90,10 @@ public class OrthographicCamera {
     
     public void translateYZ(float y, float z) {
         translate(0,y,z);
+    }
+
+    public void unProject(Vector3f ndc) {
+        ndc.mulProject(INV);
     }
     
     public void unProject(Vector2f ndc) {

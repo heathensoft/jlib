@@ -64,7 +64,7 @@ public class ScreenQuad implements Disposable {
 
     public static String default_screen_vs_shader() {
         return """
-                #version 440
+                #version 460 core
                 layout (location=0) in vec4 a_pos;
                 layout (location=1) in vec2 a_uv;
                 out vec2 uv;
@@ -76,7 +76,7 @@ public class ScreenQuad implements Disposable {
 
     public static String default_screen_fs_shader() {
         return """
-                #version 440
+                #version 460 core
                 layout (location=0) out vec4 f_color;
                 in vec2 uv;
                 uniform sampler2D u_sampler;

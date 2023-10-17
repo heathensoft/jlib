@@ -1,8 +1,5 @@
 package io.github.heathensoft.jlib.common.utils;
 
-import io.github.heathensoft.jlib.common.Defined;
-
-import java.nio.ByteBuffer;
 
 /**
  * Discrete coordinate
@@ -10,7 +7,7 @@ import java.nio.ByteBuffer;
  * 10/07/2022
  */
 
-public class Coordinate implements Defined {
+public class Coordinate {
 
     public int x, y;
     
@@ -116,17 +113,4 @@ public class Coordinate implements Defined {
         return "(" + x + ", " + y + ")";
     }
 
-
-    public void setProperties(ByteBuffer buffer) {
-        x = buffer.getInt();
-        y = buffer.getInt();
-    }
-
-    public void getProperties(ByteBuffer buffer) {
-        buffer.putInt(x).putInt(y);
-    }
-
-    public int sizeOfProperties() {
-        return 8;
-    }
 }

@@ -42,7 +42,7 @@ public class Settings {
     }
 
     public void validate(boolean replace) throws IOException {
-        new External(path).createFile(replace);
+        new ExternalFile(path).createFile(replace);
     }
 
     public Properties table() {

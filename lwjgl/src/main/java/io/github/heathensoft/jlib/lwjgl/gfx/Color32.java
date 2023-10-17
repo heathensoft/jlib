@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
-import io.github.heathensoft.jlib.common.Defined;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -19,7 +18,7 @@ import java.util.Objects;
  */
 
 
-public class Color32 implements Defined {
+public class Color32 {
 
     private static final Vector3f CIE_1964_DAYLIGHT_sRGB = new Vector3f(95.047f,100.000f,108.883f);
     public static final Color32 WHITE = new Color32(0xFFFFFFFF);
@@ -281,22 +280,6 @@ public class Color32 implements Defined {
 
     public void getRGBA(ByteBuffer buffer) {
         buffer.putInt(i_bits);
-    }
-
-    public void setProperties(ByteBuffer buffer) {
-        i_bits = buffer.getInt();
-    }
-
-    public void getProperties(ByteBuffer buffer) {
-        buffer.putInt(i_bits);
-    }
-
-    public int sizeOfProperties() {
-        return sizeOf();
-    }
-
-    public String toString() {
-        return toHex(intBits());
     }
 
     public boolean equals(Object o) {

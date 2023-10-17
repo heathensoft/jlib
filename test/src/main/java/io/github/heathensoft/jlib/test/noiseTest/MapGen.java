@@ -36,9 +36,9 @@ public class MapGen implements Disposable {
 
 
     public MapGen(int width, int height, String tile_set_img_path, String road_img_path) throws Exception {
-        this.road_tiles_texture = new Resources().image(road_img_path,false);
+        this.road_tiles_texture = Resources.image(road_img_path,false);
         this.road_tiles_texture.premultiplyAlpha();
-        this.tile_set_texture = new Resources().image(tile_set_img_path,false);
+        this.tile_set_texture = Resources.image(tile_set_img_path,false);
         this.tile_set_texture.premultiplyAlpha();
         this.map_output_texture = new Bitmap(width*16,height*16,4);
         this.grass_color = Color32.abgr8("596555");

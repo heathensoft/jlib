@@ -1,6 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
-import io.github.heathensoft.jlib.common.io.External;
+import io.github.heathensoft.jlib.common.io.ExternalFile;
 import io.github.heathensoft.jlib.common.io.Settings;
 
 import java.io.IOException;
@@ -48,9 +48,9 @@ public abstract class Application {
     
     public final Settings settings() throws IOException  {
         if (settings == null) {
-            Path appFolder = External.APP_DATA(framework(),name());
+            Path appFolder = ExternalFile.APP_DATA(framework(),name());
             Path settingsFile = appFolder.resolve("settings");
-            new External(settingsFile).createFile(false);
+            new ExternalFile(settingsFile).createFile(false);
             settings = new Settings(settingsFile);
         } return settings;
     }

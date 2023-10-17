@@ -1,93 +1,47 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
-import io.github.heathensoft.jlib.common.io.External;
-import io.github.heathensoft.jlib.common.storage.primitive.ByteQueue;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
- * Eventually replace with
- * // https://github.com/classgraph/classgraph
- *
  * @author Frederik Dahl
- * 29/10/2022
+ * 16/10/2023
  */
 
 
 public class Resources {
 
-    private final Class<?> clazz;
-    
-    public Resources(Class<?> clazz) {
-        this.clazz = clazz;
-    }
-    
-    public Resources() {
-        clazz = getClass();
-    }
 
-
-    public List<String> getResourceFiles(String dir) throws IOException {
-        List<String> filenames = new ArrayList<>();
-        try (InputStream is = clazz.getClassLoader().getResourceAsStream(dir)){
-            if (is == null) throw new IOException("unable to locate resource: " + dir);
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String resource;
-            while ((resource = br.readLine()) != null) {
-                filenames.add(resource);
-            }
-        } return filenames;
-    }
-
-    /**
-     * Read external file. Remember to free the buffer:
-     * MemoryUtil.memFree(buffer) after use.
-     * @param path path to external file
-     * @return bytebuffer
-     * @throws IOException if the file is not a file
-     */
-    public ByteBuffer toBufferExternal(Path path) throws IOException {
-        External file = new External(path);
-        if (file.isFile()) {
-            try (InputStream inputStream = new FileInputStream(path.toFile())) {
-                ByteQueue bytes = new ByteQueue((int) file.size());
-                int data = inputStream.read();
-                while (data != -1) {
-                    bytes.enqueue((byte) (data));
-                    data = inputStream.read();
-                } ByteBuffer buffer = MemoryUtil.memAlloc(bytes.size());
-                buffer.put(bytes.array(), 0, bytes.size());
-                return buffer.flip();
-            }
-        } else throw new IOException("argument not path to file: " + path.toString());
-    }
-    
-    public ByteBuffer toBuffer(String file, int byteSize) throws IOException {
+    // For some reason, BufferUtils gives me little endian data stream. (Big endian is default for standard java)
+    // I am converting it to big endian. And now it seems to work for deserializing repositories, and images.
+    // Leaving the comment here in case of issues.
+    public static ByteBuffer toBuffer(String resource, int size) throws IOException {
         ByteBuffer result;
-        try (InputStream is = clazz.getClassLoader().getResourceAsStream(file)){
-            if (is == null) throw new IOException("unable to read file: " + file);
-            try (ReadableByteChannel bc = Channels.newChannel(is)){
-                result = BufferUtils.createByteBuffer(Math.max(128,byteSize));
+        try (InputStream is = resourceStream(resource)){
+            try (ReadableByteChannel byteChannel = Channels.newChannel(is)){
+                result = BufferUtils.createByteBuffer(Math.max(128,size));
+                result.order(ByteOrder.BIG_ENDIAN);
                 while (true) {
-                    int bytes = bc.read(result);
+                    int bytes = byteChannel.read(result);
                     if (bytes == -1) break;
                     if (result.remaining() == 0) {
-                        byteSize = result.capacity() * 2;
-                        ByteBuffer b = BufferUtils.createByteBuffer(byteSize);
+                        size = result.capacity() * 2;
+                        ByteBuffer b = BufferUtils.createByteBuffer(size);
+                        result.order(ByteOrder.BIG_ENDIAN);
                         result = b.put(result.flip());
                     }
                 }
@@ -95,49 +49,61 @@ public class Resources {
         } return MemoryUtil.memSlice(result.flip());
     }
 
-    public Bitmap image(String file) throws Exception {
+    public static Bitmap image(String file) throws Exception {
         return image(file,false);
     }
 
-    public Bitmap image(String file, boolean flip_v) throws Exception {
+    public static Bitmap image(String file, boolean flip_v) throws Exception {
         return new Bitmap(toBuffer(file,1024 * 16),flip_v);
     }
 
-    public List<String> asLines(String file, Charset charset) throws IOException {
+    public static List<String> asLines(String resource) throws IOException {
+        return asLines(resource, StandardCharsets.UTF_8);
+    }
+
+    public static List<String> asLines(String resource, Charset charset) throws IOException {
         List<String> result;
-        try (InputStream is = clazz.getClassLoader().getResourceAsStream(file)){
-            if (is == null) throw new IOException("unable to read file: " + file);
-            Stream<String> stream = new BufferedReader(new InputStreamReader(is,charset)).lines();
+        try (InputStream inputStream = resourceStream(resource)){
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream,charset);
+            Stream<String> stream = new BufferedReader(inputStreamReader).lines();
             result = stream.collect(Collectors.toList());
         } return result;
     }
-    
-    public List<String> asLines(String file) throws IOException {
-        return asLines(file, StandardCharsets.UTF_8);
+
+    public static String asString(String resource) throws IOException {
+        return asString(resource, StandardCharsets.UTF_8);
     }
-    
-    public String asString(String file, Charset charset) throws IOException {
+
+    public static String asString(String resource, Charset charset) throws IOException {
         StringBuilder builder = new StringBuilder();
-        try (InputStream is = clazz.getClassLoader().getResourceAsStream(file)){
-            if (is == null) throw new IOException("unable to read file: " + file);
-            BufferedReader bf = new BufferedReader(new InputStreamReader(is,charset));
-            String line;
-            while ((line = bf.readLine()) != null)
+        try (InputStream inputStream = resourceStream(resource)){
+            InputStreamReader inputStreamReader = new InputStreamReader(inputStream,charset);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader); String line;
+            while ((line = bufferedReader.readLine()) != null)
                 builder.append(line).append(System.lineSeparator());
         } return builder.toString();
     }
-    
-    public String asString(String file) throws IOException {
-        return asString(file,StandardCharsets.UTF_8);
+
+    private static InputStream resourceStream(String resource) throws IOException {
+        InputStream inputStream = getURL(resource).openStream();
+        if (inputStream != null) return inputStream;
+        throw new IOException("resource: " + resource + "not found");
     }
 
-    private InputStream getResourceAsStream(String resource) {
-        final InputStream is = getContextClassLoader().getResourceAsStream(resource);
-        return is == null ? getClass().getResourceAsStream(resource) : is;
+    private static URL getURL(String resource) throws IOException {
+        List<ClassLoader> classLoaders = classLoaders();
+        for (ClassLoader classLoader : classLoaders) {
+            URL url = classLoader.getResource(resource);
+            if (url != null) return url;
+        } throw new IOException("resource: " + resource + "not found");
     }
 
-    private ClassLoader getContextClassLoader() {
-        return Thread.currentThread().getContextClassLoader();
+    private static List<ClassLoader> classLoaders() {
+        List<ClassLoader> list = new ArrayList<>(2);
+        list.add(Thread.currentThread().getContextClassLoader());
+        list.add(Resources.class.getClassLoader());
+        return list;
     }
-    
+
+
 }

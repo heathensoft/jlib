@@ -25,7 +25,7 @@ public class OS {
         } else name = NAME.UNDEFINED;
     }
 
-    public static void openBrowser(String url) throws Exception { // temporary copy-paste from stack overflow
+    public static void openBrowser(String url) throws Exception { // copy-paste from stack overflow
         Runtime rt = Runtime.getRuntime();
         switch (name) {
             case WINDOWS -> rt.exec( "rundll32 url.dll,FileProtocolHandler " + url);

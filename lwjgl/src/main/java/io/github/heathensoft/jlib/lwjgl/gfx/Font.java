@@ -1,102 +1,63 @@
-package io.github.heathensoft.jlib.lwjgl.gfx.font;
+package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.io.External;
 import io.github.heathensoft.jlib.common.utils.RectPacker;
-import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.lwjgl.stb.STBImageWrite.stbi_write_png;
+import static io.github.heathensoft.jlib.common.utils.U.clamp;
+import static org.lwjgl.opengl.GL11.GL_LINEAR;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 import static org.lwjgl.stb.STBTruetype.*;
+import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointHMetrics;
 
 /**
  * @author Frederik Dahl
- * 01/10/2023
+ * 11/10/2023
  */
 
 
-public class Font implements Disposable {
+public class Font {
 
-    public static final char FIRST_CHARACTER_INCLUSIVE = 32;
-    public static final char FINAL_CHARACTER_EXCLUSIVE = 127;
+    public final ByteBuffer png;
+    public final ByteBuffer metrics;
 
-    // signed distance field
-    private boolean sdf;
-    int on_edge_value;
-    float pixel_distance_scale;
-
-
-
-    private boolean monospaced;
-    private int size_pixels;
-    private int num_characters;
-    private float ascent;
-    private float descent;
-    private float lineGap;
-    private Texture texture;
-    private Glyph[] glyphs;
-    private String name;
-
-    public boolean isMonospaced() {
-        return monospaced;
+    public Font(ByteBuffer png, ByteBuffer metrics) {
+        this.metrics = metrics;
+        this.png = png;
     }
 
-    public boolean isSdf() { return sdf; }
-
-    public int sizePixels() {
-        return size_pixels;
+    public String metricsString() {
+        return new String(metrics.array());
     }
 
-    public int numCharacters() {
-        return num_characters;
+    public Bitmap toBitmap() throws Exception { return new Bitmap(png); }
+
+    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion) throws Exception {
+        return create(name, ttf, size, spacing, protrusion, 0);
     }
 
-    public float ascent() {
-        return ascent;
+    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise) throws Exception {
+        return create(name, ttf, size, spacing, protrusion, noise, GL_LINEAR, GL_LINEAR);
     }
 
-    public float descent() {
-        return descent;
+    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise, int minFilter, int magFilter) throws Exception {
+        return create(name, ttf, size, spacing, protrusion, noise,minFilter, magFilter, false);
     }
 
-    public float lineGap() {
-        return lineGap;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public void dispose() {
-        Disposable.dispose(texture);
-    }
-
-
-    public static void extractAndWrite(String name, ByteBuffer ttf, String directory, int size, int spacing) throws Exception {
-        External dir = new External(directory);
-        dir.createDirectories();
-        StringBuilder builder = new StringBuilder();
-        FontData fontData = extractFontData(name,ttf,size,spacing);
-        String pngPathString = dir.path().resolve(name + ".png").toString();
-        External txtFile = dir.resolve(name + ".txt");
-        int image_width = fontData.bitmap_width;
-        int image_height = fontData.bitmap_height;
-        ByteBuffer image = fontData.bitmap;
-        String fontInfo = fontData.info;
-        stbi_write_png(pngPathString,image_width,image_height,1,image,image_width);
-        txtFile.write(fontInfo);
-        fontData.dispose();
-    }
-
-    public static FontData extractFontData(String name, ByteBuffer ttf, int size, int spacing) throws Exception {
+    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise, int minFilter, int magFilter, boolean mipMap) throws Exception {
+        name = name == null || name.isBlank() ? "UnnamedFont" : name;
+        name = name.trim();
         size = Math.max(1,size);
         spacing = Math.max(0,spacing);
+        noise = clamp(noise);
+        protrusion = clamp(protrusion,-1.0f,1.0f);
         STBTTFontinfo info = STBTTFontinfo.create();
         if (!stbtt_InitFont(info,ttf)) {
             throw new Exception("Failed to extract font information");
@@ -110,17 +71,22 @@ public class Font implements Disposable {
             ascent = Ascent.get(0) * scale;
             descent = -Descent.get(0) * scale;
             lineGap = LineGap.get(0) * scale;
-        } Map<Character,GlyphMetrics> map = extractGlyphs(info,scale,ascent);
+        } Map<Character, GlyphMetrics> map = extractGlyphs(info,scale,ascent);
         int num_glyphs = map.size();
         boolean monospaced = true;
+        float maxAdvance = 0;
+        float avgAdvance = 0;
         GlyphMetrics space = map.get(' ');
         for (var entry : map.entrySet()) {
             GlyphMetrics glyph = entry.getValue();
-            if (glyph.advance != space.advance) {
-                monospaced = false;
-                break;
+            avgAdvance += glyph.advance;
+            maxAdvance = Math.max(glyph.advance,maxAdvance);
+            if (monospaced) {
+                if (glyph.advance != space.advance) {
+                    monospaced = false;
+                }
             }
-        }
+        } avgAdvance /= map.size();
         IntBuffer rectangles = IntBuffer.allocate(map.size() * 5);
         IntBuffer bounds = IntBuffer.allocate(2);
         for (var entry : map.entrySet()) {
@@ -140,57 +106,68 @@ public class Font implements Disposable {
             int y = rectangles.get();
             GlyphMetrics metrics = map.get((char)id);
             if (metrics != null) {
-                metrics.x0 = x + spacing;
-                metrics.y0 = y + spacing;
+                metrics.x = x; // + spacing (unnecessary)
+                metrics.y = y; // + spacing (unnecessary)
             }
         }
         StringBuilder builder = new StringBuilder(8 * 1024);
-        builder.append("#\n");
-        builder.append("#\n");
-        builder.append("#f <name> <size> <monospaced> <width> <height> <ascent> <descent> <gap> <characters>").append('\n');
-        builder.append("#g <ascii> <char> <x0> <y0< <width> <height> <xOff> <yOff> <advance>").append('\n');
-        builder.append("#\n");
-        builder.append("#\n");
-        builder.append("f ");
+        builder.append("# https://github.com/heathensoft\n");
+        builder.append("# Font: <name> <size> <characters> <width> <height> <protrusion> <noise> <maxAdvance> <avgAdvance> <ascent> <descent> <lineGap> <monospaced>\n");
+        builder.append("# Texture: <minFilter> <magFilter> <textureWrap> <mipMap>\n");
+        builder.append("# Glyph: <ascii_value> <x> <y> <width> <height> <xOff> <yOff> <advance>\n\n");
+        builder.append("F ");
         builder.append(name).append(' ');
         builder.append(size).append(' ');
-        builder.append(monospaced ? 1 : 0).append(' ');
+        builder.append(num_glyphs).append(' ');
         builder.append(image_width).append(' ');
         builder.append(image_height).append(' ');
+        builder.append(protrusion).append(' ');
+        builder.append(noise).append(' ');
+        builder.append(maxAdvance).append(' ');
+        builder.append(avgAdvance).append(' ');
         builder.append(ascent).append(' ');
         builder.append(descent).append(' ');
         builder.append(lineGap).append(' ');
-        builder.append(num_glyphs).append("\n\n");
+        builder.append(monospaced ? 1 : 0).append('\n');
+        builder.append("T ");
+        builder.append(minFilter).append(' ');
+        builder.append(magFilter).append(' ');
+        builder.append(GL_CLAMP_TO_EDGE).append(' ');
+        builder.append(mipMap ? 1 : 0).append("\n\n");
+
         ByteBuffer image = MemoryUtil.memCalloc(image_width * image_height);
-        for (char c = FIRST_CHARACTER_INCLUSIVE; c < FINAL_CHARACTER_EXCLUSIVE; c++) {
+        for (char c = 32; c < 127; c++) {
             GlyphMetrics glyphMetrics = map.get(c);
             if (glyphMetrics != null) {
-                builder.append("g ");
+                builder.append("G ");
                 builder.append((int) glyphMetrics.character).append(' ');
-                builder.append(c).append(' ');
-                builder.append(glyphMetrics.x0).append(' ');
-                builder.append(glyphMetrics.y0).append(' ');
+                builder.append(glyphMetrics.x).append(' ');
+                builder.append(glyphMetrics.y).append(' ');
                 builder.append(glyphMetrics.width).append(' ');
                 builder.append(glyphMetrics.height).append(' ');
-                builder.append(glyphMetrics.xOffset).append(' ');
-                builder.append(glyphMetrics.yOffset).append(' ');
+                builder.append(glyphMetrics.xOff).append(' ');
+                builder.append(glyphMetrics.yOff).append(' ');
                 builder.append(glyphMetrics.advance).append('\n');
                 ByteBuffer bm = glyphMetrics.bitmap;
                 for (int ly = 0; ly < glyphMetrics.height; ly++) {
                     for (int lx = 0; lx < glyphMetrics.width; lx++) {
-                        int x = glyphMetrics.x0 + lx;
-                        int y = glyphMetrics.y0 + ly;
+                        int x = glyphMetrics.x + lx;
+                        int y = glyphMetrics.y + ly;
                         byte color = bm.get(ly * glyphMetrics.width + lx);
                         image.put(y * image_width + x,color);
                     }
                 } glyphMetrics.dispose();
             }
-        } return new FontData(image,builder.toString(),image_width,image_height);
+        }
+        Bitmap bitmap = new Bitmap(image,image_width,image_height,1);
+        ByteBuffer png = bitmap.compress(); bitmap.dispose();
+        byte[] string = builder.toString().getBytes();
+        return new Font(png,ByteBuffer.wrap(string));
     }
 
-    private static Map<Character,GlyphMetrics> extractGlyphs(STBTTFontinfo info, float scale, float fontAscent) throws Exception {
-        int numCharacters = FINAL_CHARACTER_EXCLUSIVE - FIRST_CHARACTER_INCLUSIVE; // 95 [32 -> 127)
-        Map<Character,GlyphMetrics> map = new HashMap<>((int) (numCharacters * 1.75f));
+    private static Map<Character, GlyphMetrics> extractGlyphs(STBTTFontinfo info, float scale, float fontAscent) throws Exception {
+        int numCharacters = 127 - 32; // 95
+        Map<Character, GlyphMetrics> map = new HashMap<>((int) (numCharacters * 1.75f));
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer stb_width  = stack.mallocInt(1);
             IntBuffer stb_height  = stack.mallocInt(1);
@@ -200,15 +177,15 @@ public class Font implements Disposable {
             IntBuffer stb_bearing  = stack.mallocInt(1);
             {
                 // SPACE CHARACTER
-                char space = FIRST_CHARACTER_INCLUSIVE;
+                char space = 32;
                 ByteBuffer bitmap = stbtt_GetCodepointBitmap(info,0,scale,space,stb_width,stb_height,stb_offset_x,stb_offset_y);
                 stbtt_GetCodepointHMetrics(info,space,stb_advance,stb_bearing);
                 GlyphMetrics glyph = new GlyphMetrics();
                 glyph.character = space;
                 if (bitmap == null) {
                     glyph.stb_allocated = false;
-                    glyph.xOffset = 0;
-                    glyph.yOffset = 0;
+                    glyph.xOff = 0;
+                    glyph.yOff = 0;
                     glyph.advance = stb_advance.get(0) * scale;
                     glyph.width = (int) glyph.advance;
                     glyph.height = (int) fontAscent;
@@ -218,13 +195,13 @@ public class Font implements Disposable {
                 } else { glyph.stb_allocated = true;
                     glyph.height = stb_height.get(0);
                     glyph.width = stb_width.get(0);
-                    glyph.xOffset = stb_bearing.get(0) * scale;
-                    glyph.yOffset = - glyph.height - stb_offset_y.get(0);
+                    glyph.xOff = stb_bearing.get(0) * scale;
+                    glyph.yOff = - glyph.height - stb_offset_y.get(0);
                     glyph.advance = stb_advance.get(0) * scale;
                     glyph.bitmap = bitmap;
                 } map.put(space,glyph);
             }
-            for (char c = FIRST_CHARACTER_INCLUSIVE + 1; c < FINAL_CHARACTER_EXCLUSIVE; c++) {
+            for (char c = 32 + 1; c < 127; c++) {
                 ByteBuffer bitmap = stbtt_GetCodepointBitmap(info,0,scale,c,stb_width,stb_height,stb_offset_x,stb_offset_y);
                 // ByteBuffer bitmap = stbtt_GetCodepointSDF(info,scale,c,3,(byte) 128,64,stb_width,stb_height,stb_offset_x,stb_offset_y);
                 if (bitmap != null) {
@@ -234,8 +211,8 @@ public class Font implements Disposable {
                     glyph.stb_allocated = true;
                     glyph.height = stb_height.get(0);
                     glyph.width = stb_width.get(0);
-                    glyph.xOffset = stb_bearing.get(0) * scale;
-                    glyph.yOffset = -glyph.height - stb_offset_y.get(0);
+                    glyph.xOff = stb_bearing.get(0) * scale;
+                    glyph.yOff = -glyph.height - stb_offset_y.get(0);
                     glyph.advance = stb_advance.get(0) * scale;
                     glyph.bitmap = bitmap;
                     map.put(c,glyph);
@@ -245,17 +222,9 @@ public class Font implements Disposable {
         return map;
     }
 
-    public record FontData(ByteBuffer bitmap, String info, int bitmap_width,
-                           int bitmap_height) implements Disposable {
-        public void dispose() { MemoryUtil.memFree(bitmap); }
-    }
-
     private static final class GlyphMetrics implements Disposable {
-        char character;
-        int x0, y0;
-        int width, height;
-        float xOffset, yOffset, advance;
-        boolean stb_allocated;
+        char character; int x, y, width, height;
+        float xOff, yOff, advance; boolean stb_allocated;
         ByteBuffer bitmap;
         public void dispose() {
             if (bitmap != null) {

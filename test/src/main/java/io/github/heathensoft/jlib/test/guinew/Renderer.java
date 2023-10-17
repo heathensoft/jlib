@@ -57,8 +57,7 @@ public class Renderer implements Disposable {
          */
 
 
-        Resources io = new Resources(Text.class);
-        Bitmap bitmap = io.image("res/jlib/gui/amiga_font.png");
+        Bitmap bitmap = Resources.image("res/jlib/gui/amiga_font.png");
         font_texture = bitmap.asTexture(false);
         font_texture.clampToBorder();
         font_texture.filter(GL_LINEAR,GL_LINEAR);

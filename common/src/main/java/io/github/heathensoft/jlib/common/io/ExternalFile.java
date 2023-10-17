@@ -28,15 +28,15 @@ import java.util.stream.Stream;
  */
 
 
-public class External {
+public class ExternalFile {
 
     private Path path;
 
-    public External(String path) throws InvalidPathException {
+    public ExternalFile(String path) throws InvalidPathException {
         this(Path.of(path));
     }
 
-    public External(Path path) {
+    public ExternalFile(Path path) {
         this.path = path;
     }
 
@@ -175,15 +175,15 @@ public class External {
                 Files.delete(path);
                 Files.createFile(path);}
         } else {
-            External parent = new External(path.getParent());
+            ExternalFile parent = new ExternalFile(path.getParent());
             if (parent.path() != null) {
                 parent.createDirectories();
             } Files.createFile(path);
         }
     }
 
-    public External resolve(String other) throws InvalidPathException {
-        return new External(path.resolve(other));
+    public ExternalFile resolve(String other) throws InvalidPathException {
+        return new ExternalFile(path.resolve(other));
     }
 
     public void createDirectories() throws IOException {
@@ -221,11 +221,11 @@ public class External {
         }return 0;
     }
 
-    public External copy(Path to, boolean replace) throws IOException {
+    public ExternalFile copy(Path to, boolean replace) throws IOException {
         if (exist()) {
-            External destinationFolder = new External(to);
+            ExternalFile destinationFolder = new ExternalFile(to);
             destinationFolder.createDirectories();
-            External copy = new External(destinationFolder.path.resolve(name()));
+            ExternalFile copy = new ExternalFile(destinationFolder.path.resolve(name()));
             if (isFile()) {
                 if (copy.exist()) {
                     if (copy.isFile()) {
@@ -328,11 +328,9 @@ public class External {
         if (root == null) {
             throw new IOException("Unable to locate user.home");
         } Path path = Path.of(root);
-        try {
-            if (folders != null) {
+        try { if (folders != null)
                 for (String folder : folders)
                     path = path.resolve(folder);
-            }
         } catch (InvalidPathException e) {
             throw new IOException("invalid path",e);
         } return path;
@@ -357,11 +355,9 @@ public class External {
         } if (root == null) {
             throw new IOException("Unable to locate user.home");
         } Path path = Path.of(root);
-        try {
-            if (folders != null) {
+        try { if (folders != null)
                 for (String folder : folders)
                     path = path.resolve(folder);
-            }
         } catch (InvalidPathException e) {
             throw new IOException("invalid path",e);
         } return path;
@@ -377,11 +373,9 @@ public class External {
         URI jarFileUri = URI.create("jar:file:" + path.toUri().getPath());
         FileSystem fs = FileSystems.newFileSystem(jarFileUri, Collections.emptyMap());
         path = fs.getPath("");
-        try {
-            if (folders != null) {
+        try { if (folders != null)
                 for (String folder : folders)
                     path = path.resolve(folder);
-            }
         } catch (InvalidPathException e) {
             throw new IOException("invalid path",e);
         } return path;
@@ -394,11 +388,9 @@ public class External {
     public static Path JAR_ADJACENT(Class<?> clazz, String... folders) throws IOException{
         String url = clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
         Path path = Path.of(new java.io.File(url).getPath().replace('\\', '/')).getParent();
-        try {
-            if (folders != null) {
+        try { if (folders != null)
                 for (String folder : folders)
                     path = path.resolve(folder);
-            }
         } catch (InvalidPathException e) {
             throw new IOException("invalid path",e);
         } return path;

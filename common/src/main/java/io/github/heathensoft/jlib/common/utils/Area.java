@@ -1,9 +1,6 @@
 package io.github.heathensoft.jlib.common.utils;
 
 
-import io.github.heathensoft.jlib.common.Defined;
-
-import java.nio.ByteBuffer;
 
 /**
  * Discrete area
@@ -12,7 +9,7 @@ import java.nio.ByteBuffer;
  */
 
 
-public class Area implements Defined {
+public class Area {
     
     protected int minX;
     protected int minY;
@@ -284,19 +281,4 @@ public class Area implements Defined {
     }
 
 
-    public void setProperties(ByteBuffer buffer) {
-        minX = buffer.getInt();
-        minY = buffer.getInt();
-        maxX = buffer.getInt();
-        maxY = buffer.getInt();
-    }
-
-    public void getProperties(ByteBuffer buffer) {
-        buffer.putInt(minX).putInt(minY);
-        buffer.putInt(maxX).putInt(maxY);
-    }
-
-    public int sizeOfProperties() {
-        return 16;
-    }
 }

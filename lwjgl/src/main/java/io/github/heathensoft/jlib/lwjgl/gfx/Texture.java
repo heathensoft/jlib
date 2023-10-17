@@ -1,9 +1,8 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.io.Repository;
+import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.Math;
 import org.lwjgl.stb.STBIWriteCallback;
@@ -24,6 +23,9 @@ import static org.lwjgl.opengl.GL42.*;
 import static org.lwjgl.stb.STBImageWrite.stbi_flip_vertically_on_write;
 
 /**
+ *
+ * TEXTURE SLOTS = 0- > 31
+ *
  * @author Frederik Dahl
  * 12/01/2023
  */
@@ -352,6 +354,7 @@ public class Texture implements Disposable {
 
     public void bindToSlot(int slot) {
         if (slot != active_slot) {
+            // todo: if slot > client max slots -> log warn
             glActiveTexture(slot + GL_TEXTURE0);
             active_slot = slot;
         } bindToActiveSlot();
