@@ -164,21 +164,15 @@ public abstract class Box implements BoxContent {
 
     public abstract void resizeVertical(float dy);
 
-    /**
-     * must set current size to desired size
-     */
+    /** must set current size to desired size */
     public abstract void restore();
 
-    /**
-     * @return current width / desired width. desired cannot be 0
-     */
+    /** @return current width / desired width. desired cannot be 0 */
     public float totalScaleX() {
         return currentSize().width() / desiredSize().width();
     }
 
-    /**
-     * @return current height / desired height. desired cannot be 0
-     */
+    /** @return current height / desired height. desired cannot be 0 */
     public float totalScaleY() {
         return currentSize().height() / desiredSize().height();
     }
@@ -191,18 +185,14 @@ public abstract class Box implements BoxContent {
         return currentSize().height() - desiredSize().height();
     }
 
-    /**
-     * @return scale of the actual content x
-     */
+    /** @return scale of the actual content x */
     public float contentScaleX() {
         float contentCurrent = currentSize().width() - outerSize.width();
         float desiredCurrent = desiredSize().width() - outerSize.width();
         return contentCurrent / desiredCurrent;
     }
 
-    /**
-     * @return scale of the actual content y
-     */
+    /** @return scale of the actual content y */
     public float contentScaleY() {
         float contentCurrent = currentSize().height() - outerSize.height();
         float desiredCurrent = currentSize().height() - outerSize.height();

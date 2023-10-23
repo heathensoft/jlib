@@ -1,3 +1,7 @@
+
+-javaagent:libs/debug/lwjglx-debug-1.0.0.jar/lwjglx-debug-1.0.0.jar
+
+
 The following configuration properties are available to configure the library:
 
 validate - Perform argument validation and check for GL errors on each GL call (enabled by default, set via system property -Dorg.lwjglx.VALIDATE or via Agent argument v)

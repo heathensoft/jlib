@@ -95,7 +95,9 @@ public class Keyboard {
         if (textProcessor != processor) {
             queued_chars.clear();
             queued_keys.clear();
+            textProcessor.onTextProcessorDeactivated();
             textProcessor = processor;
+            textProcessor.onTextProcessorActivated();
         }
     }
     
@@ -103,5 +105,7 @@ public class Keyboard {
         public void keyPress(int key, int mods) {}
         public void keyRelease(int key, int mods) {}
         public void characterStream(byte character) {}
+        public void onTextProcessorActivated() {}
+        public void onTextProcessorDeactivated() {}
     };
 }

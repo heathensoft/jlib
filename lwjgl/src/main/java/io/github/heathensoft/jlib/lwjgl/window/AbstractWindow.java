@@ -62,6 +62,7 @@ abstract class AbstractWindow implements PublicWindow {
     protected abstract void freeErrorCallback();
     protected abstract void freeInputCallbacks();
     protected abstract void freeDisplayCallbacks();
+    protected abstract void freeCursorObjects();
     protected final InputProcessor placeholder_processor = new InputProcessor() {};
     
     protected Exception failInit(String message) {

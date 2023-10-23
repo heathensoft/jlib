@@ -15,14 +15,24 @@ public interface TextProcessor {
      * @param key "non-printable-key"
      */
     void keyPress(int key, int mods);
-    
     /**
      * @param key "non-printable-key"
      */
     void keyRelease(int key, int mods);
-    
     /**
      * @param character ascii  [00 - 127]
      */
     void characterStream(byte character);
+
+    void onTextProcessorActivated();
+
+    void onTextProcessorDeactivated();
+
+    default void activateProcessor() {
+        Engine.get().input().keys().setTextProcessor(this);
+    }
+
+    default void deactivateProcessor() {
+        Engine.get().input().keys().setTextProcessor(null);
+    }
 }

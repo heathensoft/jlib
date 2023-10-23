@@ -108,9 +108,9 @@ public class GUI implements Disposable {
         CURSORS = new CursorObject[CURSOR_COUNT];
         Window window = Engine.get().window();
         for (int i = 0; i < CURSOR_COUNT; i++) {
-            Optional<CursorObject> opt =
-            window.createCursor(GLFW_ARROW_CURSOR + i);
-            if (opt.isPresent()) CURSORS[i] = opt.get();
+            //Optional<CursorObject> opt =
+            //window.createCursor(GLFW_ARROW_CURSOR + i);
+            //if (opt.isPresent()) CURSORS[i] = opt.get();
         } GUIHelp.initialize(this);
     }
 

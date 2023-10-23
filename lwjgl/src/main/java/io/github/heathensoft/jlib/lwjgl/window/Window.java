@@ -12,9 +12,7 @@ import org.tinylog.Logger;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.GL_TRUE;
@@ -28,6 +26,7 @@ import static org.lwjgl.opengl.GL11.GL_TRUE;
 public class Window extends AbstractWindow {
 
     private InputProcessor current_processor;
+    private Map<String,CursorObject> cursorObjects;
     private List<Resolution> app_res_options;
     private Resolution app_resolution;
     private Viewport viewport;
@@ -208,6 +207,8 @@ public class Window extends AbstractWindow {
         current_processor = placeholder_processor;
         setDisplayCallbacks();
         setInputCallbacks();
+
+        cursorObjects = new HashMap<>(31);
     
         glfwMakeContextCurrent(window);
         Logger.debug("opengl-context current in Thread: {}",
@@ -307,6 +308,8 @@ public class Window extends AbstractWindow {
                 Logger.warn(e,"unable to save settings");
             }
         }
+        Logger.debug("freeing cursor objects");
+        freeCursorObjects();
         Logger.debug("clearing opengl capabilities");
         GL.setCapabilities(null);
         Logger.debug("freeing glfw input and display callbacks");
@@ -391,7 +394,14 @@ public class Window extends AbstractWindow {
         list.add(glfwSetFramebufferSizeCallback(window,null));
         for (Callback c : list) if (c != null) c.free();
     }
-    
+
+    @Override
+    protected void freeCursorObjects() {
+        for (var entry : cursorObjects.entrySet()) {
+            entry.getValue().dispose();
+        }
+    }
+
     @Override
     public boolean setDisplay(long monitor, Resolution resolution, int hz) {
         Logger.info("attempting to set display");
@@ -695,8 +705,11 @@ public class Window extends AbstractWindow {
     }
     
     @Override
-    public Optional<CursorObject> createCursor(Bitmap image, int hotspotX, int hotspotY) {
-        try { return Optional.of(new CursorObject(image,window,hotspotX,hotspotY));
+    public Optional<CursorObject> createCursor(String name, Bitmap image, int hotspotX, int hotspotY) {
+        try { CursorObject cursor = new CursorObject(name,image,window,hotspotX,hotspotY);
+            CursorObject previous = cursorObjects.put(name,cursor);
+            if (previous != null) previous.dispose();
+            return Optional.of(cursor);
         } catch (Exception e) {
             Logger.warn(e,"unable to create cursor");
             return Optional.empty();
@@ -704,12 +717,20 @@ public class Window extends AbstractWindow {
     }
     
     @Override
-    public Optional<CursorObject> createCursor(int shape) {
-        try { return Optional.of(new CursorObject(window,shape));
+    public Optional<CursorObject> createCursor(String name, int shape) {
+        try { CursorObject cursor = new CursorObject(name, window,shape);
+            CursorObject previous = cursorObjects.put(name,cursor);
+            if (previous != null) previous.dispose();
+            return Optional.of(cursor);
         } catch (Exception e) {
             Logger.warn(e,"unable to create cursor");
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Optional<CursorObject> getCursor(String name) {
+        return Optional.of(cursorObjects.get(name));
     }
 
     private final GLFWDropCallback drop_callback = new GLFWDropCallback() {

@@ -125,7 +125,7 @@ interface PublicWindow {
      * @param hotspotY the cursor hotspot offset x
      * @return a cursor if nothing goes wrong. check the logs.
      */
-    Optional<CursorObject> createCursor(Bitmap image, int hotspotX, int hotspotY);
+    Optional<CursorObject> createCursor(String name, Bitmap image, int hotspotX, int hotspotY);
     
     /**
      * Creates a standard cursor object. Cursors are freed on window termination.
@@ -133,6 +133,8 @@ interface PublicWindow {
      * @return a cursor if you use a valid enum
      * @see <a href="https://www.glfw.org/docs/3.3/group__shapes.html">standard shapes</a>
      */
-    Optional<CursorObject> createCursor(int shape);
+    Optional<CursorObject> createCursor(String name, int shape);
+
+    Optional<CursorObject> getCursor(String name);
     
 }

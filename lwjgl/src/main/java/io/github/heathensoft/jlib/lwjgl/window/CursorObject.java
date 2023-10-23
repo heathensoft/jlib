@@ -21,16 +21,19 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 
 
 public class CursorObject implements Disposable {
-    
+
+    private final String name;
+    private boolean disposed;
     private final long cursor;
     private final long window;
+    private Bitmap bitmap;
     
     /**
      * @param window handle
      * @param shape enum
      * @throws Exception caught and logged by Window.
      */
-    protected CursorObject(long window, int shape) throws Exception {
+    protected CursorObject(String name, long window, int shape) throws Exception {
         cursor = glfwCreateStandardCursor(shape);
         if (cursor == 0L) {
             String message;
@@ -40,6 +43,7 @@ public class CursorObject implements Disposable {
             } else message = "could not create cursor";
             throw new Exception(message);
         } this.window = window;
+        this.name = name;
     }
     
     /**
@@ -49,7 +53,7 @@ public class CursorObject implements Disposable {
      * @param yH hotspot
      * @throws Exception caught and logged by Window.
      */
-    protected CursorObject(Bitmap image, long window, int xH, int yH) throws Exception {
+    protected CursorObject(String name, Bitmap image, long window, int xH, int yH) throws Exception {
         ByteBuffer rgba = image.pixels();
         int w = image.width();
         int h = image.height();
@@ -57,20 +61,29 @@ public class CursorObject implements Disposable {
         if (c != 4) throw new Exception("image must have 4 color components");
         try (MemoryStack stack = stackPush()) {
             GLFWImage img = GLFWImage.malloc(stack).set(w,h,rgba);
-            image.dispose();
             cursor = glfwCreateCursor(img,xH,yH);
             if (cursor == 0L) {
                 throw new Exception("could not create cursor");
             } this.window = window;
-        }
+            this.bitmap = image;
+        } this.name = name;
     }
+
     
     public void use() {
+        if (disposed) throw new IllegalStateException("cursor is disposed");
         glfwSetCursor(window, cursor);
     }
-    
+
+    public String name() {
+        return name;
+    }
+
     @Override
     public void dispose() {
-        glfwDestroyCursor(cursor);
+        if (!disposed) {
+            Disposable.dispose(bitmap);
+            glfwDestroyCursor(cursor);
+        }
     }
 }

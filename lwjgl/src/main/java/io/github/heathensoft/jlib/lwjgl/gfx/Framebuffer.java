@@ -385,6 +385,16 @@ public class Framebuffer implements Disposable {
         } return null;
     }
 
+    public static Bitmap screenshot(int colorAttachment) {
+        if (usingDefaultReadBuffer()) return screenshot();
+        Texture t = readBuffer.texture(colorAttachment);
+        Framebuffer.readBuffer(colorAttachment);
+        ByteBuffer buffer = MemoryUtil.memAlloc(t.width()*t.height()*t.format().channels);
+        glPixelStorei(GL_PACK_ALIGNMENT,t.format().pack_alignment);
+        glReadPixels(0,0,t.width(),t.height(),t.format().pixel_format,t.format().pixel_data_type, buffer);
+        return new Bitmap(buffer,t.width(),t.height(),t.format().channels);
+    }
+
     /** Bitmap is flipped vertically */
     public static Bitmap screenshot() {
         Logger.debug("Attempting to take screenshot of default framebuffer, backbuffer");
