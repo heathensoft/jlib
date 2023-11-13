@@ -3,10 +3,13 @@ package io.github.heathensoft.jlib.gui.text;
 
 
 import io.github.heathensoft.jlib.gui.gfx.Fonts;
-import io.github.heathensoft.jlib.gui.gfx.TextBatch;
+import io.github.heathensoft.jlib.gui.gfx.TextBatchGUI;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.TextProcessor;
 import io.github.heathensoft.jlib.lwjgl.window.Window;
+import org.joml.Vector4f;
 
 import static io.github.heathensoft.jlib.common.utils.U.round;
 import static org.lwjgl.glfw.GLFW.*;
@@ -26,23 +29,23 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
     protected int cursor_character_index;
     protected boolean valid_field_value;
     protected double last_input_time;
-    protected int color_index_valid;
-    protected int color_index_invalid;
     protected boolean active_processor;
+    protected Vector4f color_valid;
+    protected Vector4f color_invalid;
 
     public CommandLine() {
         this(Integer.MAX_VALUE);
     }
 
     public CommandLine(int capacity) {
-        this(Word.Type.REGULAR.colorIndex, Word.Type.FAILURE.colorIndex,capacity);
+        this(new Vector4f(Word.Type.REGULAR.color),new Vector4f(Word.Type.FAILURE.color),capacity);
     }
 
-    public CommandLine(int colorIndexValid, int colorIndexInvalid, int capacity) {
-        this(null,colorIndexValid,colorIndexInvalid,capacity);
+    public CommandLine(Vector4f color_valid, Vector4f color_invalid, int capacity) {
+        this(null,color_valid,color_invalid,capacity);
     }
 
-    public CommandLine(String string, int colorIndexValid, int colorIndexInvalid, int capacity) {
+    public CommandLine(String string, Vector4f color_valid, Vector4f color_invalid, int capacity) {
         capacity = Math.max(1,capacity);
         if (string != null && string.length() > capacity) {
             string = string.substring(0,capacity);
@@ -52,51 +55,59 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
         this.cursor_character_index = Math.max(0,length());
         this.valid_field_value = onFieldEdit(toString());
         this.last_input_time = System.currentTimeMillis();
+        this.color_invalid = color_invalid;
+        this.color_valid = color_valid;
     }
-    public void draw(TextBatch batch, float x, float y, float width, int size, boolean centered) {
+
+    public void drawDynamicSize(TextBatchGUI batch, float x, float y, float width, float size, boolean centered, float alpha) {
         Fonts fonts = batch.fonts();
         float scale = fonts.relativeScale(size);
-        float desired_width = widthPixels(fonts) * scale;
+        float width_pixels = widthPixels(fonts) + fonts.averageAdvance();
+        float desired_width = width_pixels * scale;
         float ratio = width / desired_width;
         y -= fonts.ascent() * scale;
         if (ratio < 1) {
-            size = round(size * ratio);
+            size = size * ratio;
             scale = fonts.relativeScale(size);
-        } if (centered) x += centeredOffset(fonts,size);
-        float space = scale * fonts.advance(' ');
-        boolean cursor_visible;
-        if (active_processor) {
-            double time_since_last = lastInputMillis();
-            if (time_since_last >= CURSOR_WAIT) {
-                double time = (time_since_last) * 0.001d;
-                double sin = Math.sin(time * 1.5d * Math.PI);
-                cursor_visible = sin > 0.0d;
-            } else cursor_visible = true;
-        } else cursor_visible = false;
-        int base_info = transparent() ? 0x8000_0000 : 0;
-        base_info |= (fonts.currentFont() << 29);
-        base_info |= (((size - 1) & 0xFF) << 21);
-        int inverted_mask = (1 << 13);
-        int cursor_glow_mask = ((round(CURSOR_GLOW * 127.0f) & 0x7F) << 12);
-        int glow_mask = ((round(glow() * 127.0f) & 0x7F) << 12);
-        int character_index = 0;
-        for (Word word : words) {
-            int word_color_mask = ((colorIndexOf(word) & 0x3F) << 7);
-            byte[] bytes = word.get();
-            for (byte b : bytes) {
-                char c = (char) (b & 0xFF);
-                int info = base_info | word_color_mask;
-                if (character_index == cursor_character_index && cursor_visible) {
-                    batch.pushVertex(x, y, info | cursor_glow_mask);
-                    batch.pushVertex(x, y, info | glow_mask | inverted_mask | c);
-                } else { batch.pushVertex(x, y, info | glow_mask | c);
-                } x += fonts.advance(c) * scale;
-                character_index++;
-            } if (character_index == cursor_character_index && cursor_visible) {
-                int info = base_info | word_color_mask;
-                batch.pushVertex(x, y, info | cursor_glow_mask);
-            } character_index++;
-            x += space;
+            desired_width = width_pixels * scale;
+        } if (centered) x += TextUtils.centeredOffsetX(fonts,desired_width,width);
+        if (size > 1f) {
+            float space = scale * fonts.advance(' ');
+            boolean cursor_visible;
+            if (active_processor) {
+                double time_since_last = lastInputMillis();
+                if (time_since_last >= CURSOR_WAIT) {
+                    double time = (time_since_last) * 0.001d;
+                    double sin = Math.sin(time * 1.5d * Math.PI);
+                    cursor_visible = sin > 0.0d;
+                } else cursor_visible = true;
+            } else cursor_visible = false;
+            int info_bits = (fonts.currentFont() << 29);
+            info_bits |= (((round(size )- 1) & 0xFF) << 21);
+            int inverted_mask = (1 << 20);
+            int cursor_glow_mask = ((round(CURSOR_GLOW * 127.0f) & 0x7F) << 13);
+            int glow_mask = ((round(glow() * 127.0f) & 0x7F) << 13);
+            int character_index = 0;
+
+            Vector4f color_vec4 = MathLib.vec4(color());
+            color_vec4.w *= alpha;
+            float color = Color.rgb_to_floatBits(color_vec4);
+
+            for (Word word : words) {
+                byte[] bytes = word.get();
+                for (byte b : bytes) {
+                    char character = (char) (b & 0xFF);
+                    if (character_index == cursor_character_index && cursor_visible) {
+                        batch.pushVertex(x, y, color,info_bits | cursor_glow_mask);
+                        batch.pushVertex(x, y, color,info_bits | glow_mask | inverted_mask | character);
+                    } else { batch.pushVertex(x, y, color, info_bits | glow_mask | character);
+                    } x += fonts.advance(character) * scale;
+                    character_index++;
+                } if (character_index == cursor_character_index && cursor_visible) {
+                    batch.pushVertex(x, y, color, info_bits | cursor_glow_mask);
+                } character_index++;
+                x += space;
+            }
         }
     }
 
@@ -171,13 +182,11 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
         }
     }
 
-    public void setColorIndexInvalid(int colorIndex) {
-        this.color_index_invalid = colorIndex;
-    }
+    public Vector4f validColor() { return color_valid; }
 
-    public void setColorIndexValid(int colorIndex) {
-        this.color_index_valid = colorIndex;
-    }
+    public Vector4f invalidColor() { return color_invalid; }
+
+    public boolean isActiveInputProcessor() { return active_processor; }
 
     public void onTextProcessorActivated() { active_processor = true; }
 
@@ -210,10 +219,8 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
 
     protected void onKeyDown() { }
 
-    public int colorIndex() {
-        if (valid_field_value)
-        return color_index_valid;
-        else return color_index_invalid;
+    public Vector4f color() {
+        return valid_field_value ? color_valid : color_invalid;
     }
 
     public float glow() { return 0; }

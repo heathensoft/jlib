@@ -28,6 +28,7 @@ public class U {
         return v < 0 ? 0 : (v > 1 ? 1 : v);
     }
 
+
     public static float remap(float v, float v_min, float v_max, float out_min, float out_max) {
         return lerp(out_min,out_max,unlerp(v_min,v_max,v));
     }
@@ -78,7 +79,6 @@ public class U {
     }
 
     public static float lerp(float a, float b, float t) {
-        //return a+(b-a)*t;
         return a * (1-t) + b * t;
     }
 

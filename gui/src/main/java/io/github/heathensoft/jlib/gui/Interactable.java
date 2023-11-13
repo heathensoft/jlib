@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.gui;
 
 
-import static io.github.heathensoft.jlib.gui.Interactables.*;
+import static io.github.heathensoft.jlib.gui.GUI.State.*;
 
 /**
  * @author Frederik Dahl
@@ -11,7 +11,7 @@ import static io.github.heathensoft.jlib.gui.Interactables.*;
 
 public interface Interactable {
 
-    int interactableID();
+    default int interactableID() { return 0; }
 
     default void iReturnID() {
         if (interactableID() == 0)
@@ -24,6 +24,8 @@ public interface Interactable {
             throw new IllegalStateException("interactable id already obtained");
         return obtainID();
     }
+
+    default void iSetCursorIcon(int index) { setCursorIcon(index); }
 
     default void iYieldFocus() {
         yieldFocus(interactableID());
@@ -48,21 +50,80 @@ public interface Interactable {
         return hasFocus(interactableID());
     }
 
-    default boolean iIsHovered() {
+    default boolean iAnyInteractableFocused() {
+        return anyInteractableFocused();
+    }
+
+    default boolean iHovered() {
         if (interactableID() == 0) return false;
         return isHovered(interactableID());
     }
 
-    default boolean iIsPressed(int button) {
+    default boolean iAnyInteractableHovered() {
+        return anyInteractableHovered();
+    }
+
+    default boolean iPressed(int button) {
         if (interactableID() == 0) return false;
         return isPressed(interactableID(),button);
     }
 
-    default boolean iIsGrabbed() {
+    default boolean iPressed() {
+        if (interactableID() == 0) return false;
+        return isPressed(interactableID());
+    }
+
+    default boolean iJustPressed(int button) {
+        if (interactableID() == 0) return false;
+        return justPressed(interactableID(),button);
+    }
+
+    default boolean iJustPressed() {
+        if (interactableID() == 0) return false;
+        return justPressed(interactableID());
+    }
+
+    default boolean iJustReleased(int button) {
+        if (interactableID() == 0) return false;
+        return justReleased(interactableID(),button);
+    }
+
+    default boolean iJustReleased() {
+        if (interactableID() == 0) return false;
+        return justReleased(interactableID());
+    }
+
+    default boolean iClicked(int button) {
+        if (interactableID() == 0) return false;
+        return clicked(interactableID(),button);
+    }
+
+    default boolean iClickedNotGrabbed(int button) {
+        if (interactableID() == 0) return false;
+        return clickedNotGrabbed(interactableID(),button);
+    }
+
+    default boolean iAnyInteractablePressed() { return anyInteractablePressed(); }
+
+    default boolean iGrabbed() {
         if (interactableID() == 0) return false;
         return isGrabbed(interactableID());
     }
 
+    default boolean iGrabbed(int button) {
+        if (interactableID() == 0) return false;
+        return isGrabbed(interactableID(),button);
+    }
+
+    default boolean iJustGrabbed(int button) {
+        if (interactableID() == 0) return false;
+        return justGrabbed(interactableID(),button);
+    }
+
+    default boolean iJustGrabbed() {
+        if (interactableID() == 0) return false;
+        return justGrabbed(interactableID());
+    }
 
 
 }

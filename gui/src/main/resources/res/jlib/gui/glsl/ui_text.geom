@@ -11,7 +11,6 @@ struct TextureRegion {
     float glow;             // strength of glow-effect
     uint texSlot;           // 0 -> (NUM_FONTS - 1)
     bool cursor;            // Special case, no texture
-    bool transparent;       //
 };
 in VS_OUT {
     Char character;
@@ -22,7 +21,6 @@ out GS_OUT {
     float glow;
     flat uint texture_slot;
     flat bool cursor;
-    flat bool transparent;
 } gs_out;
 void main() {
     Char charObject = gs_in[0].character;
@@ -33,7 +31,6 @@ void main() {
         gs_out.texture_slot = charObject.texSlot;
         gs_out.cursor = charObject.cursor;
         gs_out.color = charObject.color;
-        gs_out.transparent = charObject.transparent;
         EmitVertex();
     } EndPrimitive();
 }

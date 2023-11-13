@@ -2,14 +2,13 @@ package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
-import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.joml.Math;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBIWriteCallback;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
-import org.tinylog.Logger;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -534,15 +533,15 @@ public class Bitmap implements Disposable {
     }
 
     public ColorPalette palette() {
-        ArrayList<Color32> list = new ArrayList<>();
-        Set<Color32> set = new HashSet<>((int)(128 * 1.75f));
+        ArrayList<Vector4f> list = new ArrayList<>();
+        Set<Integer> set = new HashSet<>((int)(128 * 1.75f));
         if (channels == 1) {
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     int idx = (y * width + x) * channels;
                     int r = pixels.get(idx) & 0xFF;
-                    Color32 c = new Color32(r,0,0,255);
-                    if (set.add(c)) list.add(c);
+                    int c = Color.rgb_to_intBits(r,0,0,255);
+                    if (set.add(c)) list.add(Color.intBits_to_rgb(c,new Vector4f()));
                 }
             }
         } else if (channels == 2) {
@@ -551,8 +550,8 @@ public class Bitmap implements Disposable {
                     int idx = (y * width + x) * channels;
                     int r = pixels.get(idx + 0) & 0xFF;
                     int g = pixels.get(idx + 1) & 0xFF;
-                    Color32 c = new Color32(r,g,0,255);
-                    if (set.add(c)) list.add(c);
+                    int c = Color.rgb_to_intBits(r,g,0,255);
+                    if (set.add(c)) list.add(Color.intBits_to_rgb(c,new Vector4f()));
                 }
             }
         } else if (channels == 3) {
@@ -562,16 +561,16 @@ public class Bitmap implements Disposable {
                     int r = pixels.get(idx + 0) & 0xFF;
                     int g = pixels.get(idx + 1) & 0xFF;
                     int b = pixels.get(idx + 2) & 0xFF;
-                    Color32 c = new Color32(r,g,b,255);
-                    if (set.add(c)) list.add(c);
+                    int c = Color.rgb_to_intBits(r,g,b,255);
+                    if (set.add(c)) list.add(Color.intBits_to_rgb(c,new Vector4f()));
                 }
             }
         } else if (channels == 4) {
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     int idx = (y * width + x) * channels;
-                    Color32 c = new Color32(pixels.getInt(idx));
-                    if (set.add(c)) list.add(c);
+                    int c = pixels.getInt(idx);
+                    if (set.add(c)) list.add(Color.intBits_to_rgb(c,new Vector4f()));
                 }
             }
         } else throw new IllegalStateException("color channels: " + channels);
@@ -648,107 +647,6 @@ public class Bitmap implements Disposable {
                 } return new Bitmap(dst,b0.width,b0.height,channels);
             } else throw new Exception("Combining bitmaps != dimensions");
         } else throw new Exception("Combining bitmaps with sum channels > 4");
-    }
-
-    public record ColorPalette(List<Color32> colors) {
-
-        public Bitmap bitmap() {
-            List<Color32> list;
-            if (colors.isEmpty()) {
-                list = new ArrayList<>(1);
-                list.add(Color32.ERROR);
-            } else list = colors;
-            int width = list.size();
-            int size = Integer.BYTES * width;
-            ByteBuffer buffer;
-            buffer = MemoryUtil.memAlloc(size);
-            for (Color32 color : list) {
-                buffer.putInt(color.intBits());
-            } buffer.flip();
-            return new Bitmap(buffer,width,1,4);
-        }
-
-        public Texture texture1D(int min_filter, int mag_filter) {
-            Texture texture;
-            if (colors.isEmpty()) {
-                Logger.warn("Creating Texture of empty palette");
-                texture = Texture.generate1D(1);
-                texture.bindToActiveSlot();
-                texture.filter(min_filter,mag_filter);
-                texture.clampToEdge();
-                texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
-                try (MemoryStack stack = MemoryStack.stackPush()) {
-                    IntBuffer buffer = stack.mallocInt(1);
-                    buffer.put(Color32.ERROR.intBits()).flip();
-                    texture.uploadData(buffer);
-                }
-            } else {
-                int width = colors.size();
-                texture = Texture.generate1D(width);
-                texture.bindToActiveSlot();
-                texture.filter(min_filter,mag_filter);
-                texture.clampToEdge();
-                texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
-                try (MemoryStack stack = MemoryStack.stackPush()) {
-                    IntBuffer buffer = stack.mallocInt(width);
-                    for (Color32 color : colors) {
-                        buffer.put(color.intBits());
-                    } texture.uploadData(buffer.flip());
-                }
-            }
-            GLContext.checkError();
-            return texture;
-        }
-
-        public Texture texture3D(int texture_size, int min_filter, int mag_filter) {
-            Texture texture = Texture.generate3D(texture_size, texture_size, texture_size);
-            texture.bindToActiveSlot();
-            texture.filter(min_filter, mag_filter);
-            texture.clampToEdge();
-            texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
-            int num_pixels = texture_size * texture_size * texture_size;
-            int bytes = num_pixels * 3;
-            ByteBuffer buffer = MemoryUtil.memAlloc(bytes);
-            if (colors.isEmpty()) {
-                Logger.warn("Creating Texture of empty palette");
-                byte r = (byte) Color32.ERROR.redBits();
-                byte g = (byte) Color32.ERROR.greenBits();
-                byte b = (byte) Color32.ERROR.blueBits();
-                for (int i = 0; i < num_pixels; i++) {
-                    buffer.put(r).put(g).put(b);
-                }
-            } else {
-                int num_palette_colors = colors.size();
-                List<Vector3f> paletteLAB = new ArrayList<>(num_palette_colors);
-                for (Color32 color : colors) {
-                    paletteLAB.add(color.lab(new Vector3f()));
-                }
-                Color32 closestColor = new Color32();
-                Vector3f size = new Vector3f(texture_size);
-                Vector3f sampleLAB = new Vector3f();
-                for (int r = 0; r < texture_size; r++) {
-                    for (int g = 0; g < texture_size; g++) {
-                        for (int b = 0; b < texture_size; b++) {
-                            sampleLAB.set(b, g, r).div(size);
-                            Color32.rgbToLab(sampleLAB);
-                            float d_min = Float.MAX_VALUE;
-                            for (int i = 0; i < num_palette_colors; i++) {
-                                float d = paletteLAB.get(i).distance(sampleLAB);
-                                if (d < d_min) {
-                                    closestColor.set(colors.get(i));
-                                    d_min = d;
-                                }
-                            }
-                            closestColor.getRGB(buffer);
-                        }
-                    }
-                }
-            }
-            texture.uploadData(buffer.flip());
-            MemoryUtil.memFree(buffer);
-            GLContext.checkError();
-            return texture;
-        }
     }
 
 

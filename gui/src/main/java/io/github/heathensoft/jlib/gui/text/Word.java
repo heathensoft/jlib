@@ -2,6 +2,8 @@ package io.github.heathensoft.jlib.gui.text;
 
 
 import io.github.heathensoft.jlib.gui.gfx.Fonts;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import org.joml.Vector4f;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -15,48 +17,39 @@ import java.util.Arrays;
 public class Word {
 
     public enum Type {
-        REGULAR(0,"Regular"),
-        VALUE(1,"Value"),
-        KEYWORD(2,"Keyword"),
-        INLINE_COMMENT(3,"Inline Comment"),
-        ENTITY_PLAYER(4,"Player Entity"),
-        ENTITY_OTHER(5,"Other Entity"),
-        LOCATION(6,"Location"),
-        OBJECT(7,"Object"),
-        ITEM(8,"Item"),
-        ACTION(9,"Action"),
-        SUCCESS(10,"Success"),
-        FAILURE(11,"Failure");
+        REGULAR(        Color.hex_to_rgb("A9B7C6FF",new Vector4f()),"Regular"),
+        VALUE(          Color.hex_to_rgb("6897BBFF",new Vector4f()),"Value"),
+        KEYWORD(        Color.hex_to_rgb("CC7832FF",new Vector4f()),"Keyword"),
+        INLINE_COMMENT( Color.hex_to_rgb("808080FF",new Vector4f()),"Inline Comment"),
+        ENTITY_PLAYER(  Color.hex_to_rgb("9876AAFF",new Vector4f()),"Player Entity"),
+        ENTITY_OTHER(   Color.hex_to_rgb("9876AAFF",new Vector4f()),"Other Entity"),
+        LOCATION(       Color.hex_to_rgb("9876AAFF",new Vector4f()),"Location"),
+        OBJECT(         Color.hex_to_rgb("9876AAFF",new Vector4f()),"Object"),
+        ITEM(           Color.hex_to_rgb("9876AAFF",new Vector4f()),"Item"),
+        ACTION(         Color.hex_to_rgb("FFC66DFF",new Vector4f()),"Action"),
+        SUCCESS(        Color.hex_to_rgb("77B767FF",new Vector4f()),"Success"),
+        FAILURE(        Color.hex_to_rgb("FF0000FF",new Vector4f()),"Failure");
         public final String name;
-        public final int colorIndex;
-        Type(int colorIndex, String name) {
-            this.colorIndex = colorIndex;
+        public final Vector4f color;
+        Type(Vector4f color, String name) {
+            this.color = color;
             this.name = name;
         }
     }
 
     private byte[] value;
-
     protected Word(String string) {
         this(string.getBytes(StandardCharsets.US_ASCII));
     }
-
     protected Word(byte[] value) {
         this.value = value;
     }
-
     protected Word(byte c) { this(new byte[]{c}); }
-
     public Type type() { return Type.REGULAR; }
-
     public byte get(int index) throws ArrayIndexOutOfBoundsException { return value[index]; }
-
     public byte lastChar() { return value[length() - 1]; }
-
     public byte firstChar() { return value[0]; }
-
     public int length() { return value.length; }
-
     public String toString() { return new String(value); }
 
     public boolean equals(Object o) {

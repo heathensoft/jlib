@@ -6,15 +6,11 @@ import io.github.heathensoft.jlib.test.graphicsOld.Framebuffer;
 import io.github.heathensoft.jlib.test.graphicsOld.IDBuffer;
 import io.github.heathensoft.jlib.test.graphicsOld.SpriteBatch;
 import io.github.heathensoft.jlib.test.gui.window.GUIWindow;
-import io.github.heathensoft.jlib.lwjgl.window.CursorObject;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Window;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 
-import java.util.Optional;
-
-import static org.lwjgl.glfw.GLFW.GLFW_ARROW_CURSOR;
 import static org.lwjgl.opengl.GL11.*;
 
 /**
@@ -89,7 +85,7 @@ public class GUI implements Disposable {
     public final GUIShader SHADER;
     public final IDBuffer ID_BUFFER;
     public final GUIFramebuffer FRAMEBUFFER;
-    private final CursorObject[] CURSORS;
+    //private final CursorObjectOld[] CURSORS;
     private int current_cursor;
 
 
@@ -105,7 +101,7 @@ public class GUI implements Disposable {
         GRAPHICS = new GUIGraphics();
         ID_BUFFER = new IDBuffer(width, height);
         FRAMEBUFFER = new GUIFramebuffer(ID_BUFFER,width,height);
-        CURSORS = new CursorObject[CURSOR_COUNT];
+        //CURSORS = new CursorObjectOld[CURSOR_COUNT];
         Window window = Engine.get().window();
         for (int i = 0; i < CURSOR_COUNT; i++) {
             //Optional<CursorObject> opt =
@@ -141,11 +137,14 @@ public class GUI implements Disposable {
         if (cursor < 0 || cursor >= CURSOR_COUNT)
             cursor = CURSOR_ARROW;
         if (cursor != current_cursor) {
-            CursorObject object = CURSORS[cursor];
+            /*
+            CursorObjectOld object = CURSORS[cursor];
             if (object != null) {
                 current_cursor = cursor;
                 object.use();
             }
+
+             */
         }
     }
 
@@ -170,8 +169,7 @@ public class GUI implements Disposable {
         Disposable.dispose(GRAPHICS);
         Disposable.dispose(ID_BUFFER);
         Disposable.dispose(FRAMEBUFFER);
-        for (CursorObject cursor : CURSORS)
-            cursor.dispose();
+        //for (CursorObjectOld cursor : CURSORS) cursor.dispose();
     }
 
 }

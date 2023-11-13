@@ -13,7 +13,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public class Mouse {
 
     private static final float FRAME_TIME = 0.01666667f;
-    private static final float DRAG_TIME = 3 * FRAME_TIME;
+    private static final float DRAG_TIME = 6 * FRAME_TIME;
     private static final int NUM_BUTTONS = 3;
 
     public static final int LEFT  = GLFW_MOUSE_BUTTON_LEFT;
@@ -83,7 +83,7 @@ public class Mouse {
                     Vector2f d_vec = drag_vector[b];
                     d_vec.set(current_position).sub(drag_origin[b]);
                     if (!current_dragging[b]) {
-                        if (timer[b] > DRAG_TIME && drag_vector[b].length() > 0.005f) {
+                        if (timer[b] > DRAG_TIME && drag_vector[b].length() > 0.008f) {
                             current_dragging[b] = true;
                         }
                     }

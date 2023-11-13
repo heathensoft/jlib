@@ -1,6 +1,6 @@
 package io.github.heathensoft.jlib.gui.text;
 
-import io.github.heathensoft.jlib.gui.gfx.TextBatch;
+import io.github.heathensoft.jlib.gui.gfx.TextBatchGUI;
 import org.joml.primitives.Rectanglef;
 
 /**
@@ -11,7 +11,7 @@ import org.joml.primitives.Rectanglef;
 
 public interface Text {
 
-    void draw(TextBatch batch, Rectanglef quad, int font, int size);
+    void draw(TextBatchGUI batch, Rectanglef bounds);
 
     boolean isBlank();
 }

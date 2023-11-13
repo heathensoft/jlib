@@ -23,10 +23,8 @@ import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 public class Fonts implements Disposable {
 
     public static final int FONT_SLOTS = 4;
-    public static final int FONTS_NUM_COLORS = 64;
     public static final int FONTS_NUM_CHARACTERS = 95;
     public static final int FONT_STD140_SIZE = 3088;
-    public static final int FONTS_COLORS_STD140_SIZE = FONTS_NUM_COLORS * Integer.BYTES; // 256
     public static final int FONTS_UNIFORM_BUFFER_SIZE = FONT_STD140_SIZE * FONT_SLOTS; //12352;
 
     private int currentFont;
@@ -60,14 +58,8 @@ public class Fonts implements Disposable {
         this.font_sizePixels = new float[FONT_SLOTS];
         this.uniformsBindingPoint = bindingPoint;
         this.uniformBuffer = new BufferObject(GL_UNIFORM_BUFFER,GL_STATIC_DRAW).bind();
-        this.uniformBuffer.bufferData((long) FONTS_UNIFORM_BUFFER_SIZE + FONTS_COLORS_STD140_SIZE);
+        this.uniformBuffer.bufferData(FONTS_UNIFORM_BUFFER_SIZE);
         this.uniformBuffer.bindBufferBase(uniformsBindingPoint);
-        try (MemoryStack stack = MemoryStack.stackPush()){
-            IntBuffer buffer = stack.mallocInt(FONTS_COLORS_STD140_SIZE);
-            int white = Color32.WHITE.intBits();
-            for (int i = 0; i < FONTS_NUM_COLORS; i++) buffer.put(white);
-            uniformBuffer.bufferSubData(buffer.flip(), FONTS_UNIFORM_BUFFER_SIZE);
-        }
     }
 
     public void uploadFont(Font font, int slot) throws Exception {
@@ -205,12 +197,6 @@ public class Fonts implements Disposable {
         metrics.cursor = new Glyph(cursorRegion,' ',
                 0,-metrics.descent,metrics.avgAdvance);
         return metrics;
-    }
-
-    public void uploadColors(IntBuffer colorBuffer) {
-        if (colorBuffer.remaining() > FONTS_NUM_COLORS) {
-            Logger.warn("Can't upload color scheme to shader : buffer > NUM_COLORS");
-        } else uniformBuffer.bind().bufferSubData(colorBuffer, FONTS_UNIFORM_BUFFER_SIZE);
     }
 
     public void bindFontMetrics(int font) {

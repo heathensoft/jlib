@@ -12,7 +12,7 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 
 
 import java.util.ArrayList;
@@ -762,51 +762,57 @@ public class WorldGen {
             case LOW -> v = .35f;
             case MID -> v = .50f;
             case HIGH -> v = .75f;
-        } return Color32.SHARED.set(h,s,v).intBits();
+        }
+        return Color.rgb_to_intBits(Color.hsv_to_rgb(Color.SHARED.set(h,s,v,1.0f)));
+        //return Color.SHARED.setHSV(h,s,v).intBits();
     }
 
     private int get_region_color(int region_data) {
+        return 1;
+        /*
         int color = 0;
         switch (Elevation.get(region_data)) {
             case LOW -> {
                 switch (Temperature.get(region_data)) {
-                    case COLD -> { color = Color32.SHARED.set("9bbbbf").intBits(); }
-                    default -> { color = Color32.SHARED.set("26465c").intBits(); }
+                    case COLD -> { color = Color.SHARED.set("9bbbbf").intBits(); }
+                    default -> { color = Color.SHARED.set("26465c").intBits(); }
                 }
             }
             case MID -> {
                 switch (Temperature.get(region_data)) {
                     case COLD -> {
                         switch (Humidity.get(region_data)) {
-                            case DRY -> { color = Color32.SHARED.set("596555").intBits(); }
-                            default -> { color = Color32.SHARED.set("384235").intBits(); }
+                            case DRY -> { color = Color.SHARED.set("596555").intBits(); }
+                            default -> { color = Color.SHARED.set("384235").intBits(); }
                         }
                     }
                     case TEMPERATE -> {
                         switch (Humidity.get(region_data)) {
-                            case DRY -> { color = Color32.SHARED.set("858b81").intBits(); }
-                            case MODERATE -> { color = Color32.SHARED.set("88965d").intBits(); }
-                            case WET -> { color = Color32.SHARED.set("566e3a").intBits(); }
+                            case DRY -> { color = Color.SHARED.set("858b81").intBits(); }
+                            case MODERATE -> { color = Color.SHARED.set("88965d").intBits(); }
+                            case WET -> { color = Color.SHARED.set("566e3a").intBits(); }
                         }
                     }
                     case HOT -> {
                         switch (Humidity.get(region_data)) {
-                            case DRY -> { color = Color32.SHARED.set("bba67d").intBits(); }
-                            case MODERATE -> { color = Color32.SHARED.set("babc81").intBits(); }
-                            case WET -> { color = Color32.SHARED.set("244716").intBits(); }
+                            case DRY -> { color = Color.SHARED.set("bba67d").intBits(); }
+                            case MODERATE -> { color = Color.SHARED.set("babc81").intBits(); }
+                            case WET -> { color = Color.SHARED.set("244716").intBits(); }
                         }
                     }
                 }
             }
             case HIGH -> {
                 switch (Temperature.get(region_data)) {
-                    case COLD -> { color = Color32.SHARED.set("a1a3af").intBits(); }
-                    case TEMPERATE -> { color = Color32.SHARED.set("7d858f").intBits(); }
-                    case HOT -> { color = Color32.SHARED.set("957557").intBits(); }
+                    case COLD -> { color = Color.SHARED.set("a1a3af").intBits(); }
+                    case TEMPERATE -> { color = Color.SHARED.set("7d858f").intBits(); }
+                    case HOT -> { color = Color.SHARED.set("957557").intBits(); }
                 }
             }
         }
         return color;
+
+         */
     }
 
 

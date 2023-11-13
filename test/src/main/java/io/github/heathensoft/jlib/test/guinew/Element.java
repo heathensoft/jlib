@@ -2,10 +2,11 @@ package io.github.heathensoft.jlib.test.guinew;
 
 import io.github.heathensoft.jlib.gui.Interactable;
 import io.github.heathensoft.jlib.gui.gfx.Fonts;
-import io.github.heathensoft.jlib.gui.gfx.UIRenderer;
+import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.text.Paragraph;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
+import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 
 /**
@@ -16,45 +17,76 @@ import org.joml.primitives.Rectanglef;
 
 public class Element implements Interactable {
 
+    private static final float color_transition_duration = 0.27f;
     private static final int text_size = 32;
     private Rectanglef bounds;
-    private Color32 color;
+    private Vector4f color1;
+    private Vector4f color2;
     private int id;
 
 
-    public Element(float x, float y, float w, float h, Color32 color) {
+    public Element(float x, float y, float w, float h, String color1, String color2) {
         bounds = new Rectanglef(x,y - h,x+w,y);
-        this.color = color;
+        this.color1 = Color.hex_to_rgb(color1,new Vector4f());
+        this.color2 = Color.hex_to_rgb(color2,new Vector4f());
         this.id = iObtainID();
     }
 
-    public void draw(UIRenderer renderer) {
+    public void draw(RendererGUI renderer) {
 
-        renderer.drawElement(bounds,color,id);
+
+
         Fonts fonts = renderer.fonts();
         float scale = fonts.relativeScale(text_size);
         float line_height = (fonts.ascent() + fonts.descent() + fonts.lineGap()) * scale;
         float x0 = bounds.minX + 16;
         float y0 = bounds.maxY - 16;
-        String duration;
+        String duration_string;
 
-        if (iIsHovered()) {
-            duration = String.format("%.2f", iHoveredDuration());
-            renderer.drawLine(new Paragraph("Hovered Duration: " + duration),x0,y0,800,0,text_size,false);
+
+        boolean hovered = iHovered();
+        boolean pressed = iPressed(Mouse.LEFT);
+
+        if (pressed) {
+
+            renderer.drawElement(bounds,Color.rgb_to_intBits(color1),id);
+
+
+        } else if (hovered) {
+
+            if (iAnyInteractablePressed()) {
+                renderer.drawElement(bounds,Color.rgb_to_intBits(color1),id);
+            } else {
+                float t = iHoveredDuration() / color_transition_duration;
+                Vector4f rgb = Color.lerp(color1,color2,t);
+                renderer.drawElement(bounds,Color.rgb_to_intBits(rgb),id);
+            }
+
+
+        } else {
+
+            renderer.drawElement(bounds,Color.rgb_to_intBits(color1),id);
+
+        }
+
+
+        if (iHovered()) {
+
+            duration_string = String.format("%.1f", iHoveredDuration());
+            //renderer.drawParagraphDynamic(new Paragraph("Hovered Duration: " + duration_string),x0,y0,800,0,text_size,false,1);
             y0 -= line_height;
         }
-        if (iIsPressed(Mouse.LEFT)) {
-            duration = String.format("%.2f", iPressedDuration());
-            renderer.drawLine(new Paragraph("Pressed Duration:" + duration),x0,y0,800,0,text_size,false);
+        if (iPressed(Mouse.LEFT)) {
+
+            duration_string = String.format("%.1f", iPressedDuration());
+            //renderer.drawParagraphDynamic(new Paragraph("Pressed Duration: " + duration_string),x0,y0,800,0,text_size,false,1);
             y0 -= line_height;
-            if (iIsGrabbed()) {
-                duration = String.format("%.2f", iPressedDuration());
-                renderer.drawLine(new Paragraph("Grabbed: :" + duration),x0,y0,800,0,text_size,false);
+            if (iGrabbed()) {
+                //renderer.drawParagraphDynamic(new Paragraph("Grabbed"),x0,y0,800,0,text_size,false,1);
                 y0 -= line_height;
 
             }
         }
-
 
 
     }

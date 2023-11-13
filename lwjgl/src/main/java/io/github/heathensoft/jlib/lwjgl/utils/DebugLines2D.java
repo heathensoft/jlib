@@ -26,7 +26,7 @@ public class DebugLines2D {
     private static final int MAX_LINES = 128;
     private static final int VERTEX_SIZE = 3;
     private static final int LINE_SIZE = VERTEX_SIZE * 2;
-    private static float color = Color32.WHITE.floatBits();
+    private static float color = Color.intBits_to_floatBits(Color.WHITE_BITS);
     private static int line_count = 0;
     private static int draw_calls = 0;
     private static boolean rendering;
@@ -138,8 +138,8 @@ public class DebugLines2D {
         }
     }
     
-    public static void setColor(Color32 color) {
-        DebugLines2D.color = color.floatBits();
+    public static void setColor(int abgr) {
+        DebugLines2D.color = Color.intBits_to_floatBits(abgr);
     }
     
     public static int draw_calls() {

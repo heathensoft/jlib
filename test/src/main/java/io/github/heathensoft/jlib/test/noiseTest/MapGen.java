@@ -9,7 +9,7 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 
@@ -41,8 +41,8 @@ public class MapGen implements Disposable {
         this.tile_set_texture = Resources.image(tile_set_img_path,false);
         this.tile_set_texture.premultiplyAlpha();
         this.map_output_texture = new Bitmap(width*16,height*16,4);
-        this.grass_color = Color32.abgr8("596555");
-        this.dirt_color = Color32.abgr8("695e51");
+        this.grass_color = Color.hex_to_intBits("596555");
+        this.dirt_color = Color.hex_to_intBits("695e51");
         this.width = width;
         this.height = height;
         TextureRegion tr = new TextureRegion(road_tiles_texture.width(), road_tiles_texture.height());

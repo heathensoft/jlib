@@ -10,7 +10,6 @@ in GS_OUT {
     float glow;
     flat uint texture_slot;
     flat bool cursor;
-    flat bool transparent;
 } fs_in;
 
 uniform sampler2D[NUM_FONTS] u_font_textures;
@@ -29,8 +28,6 @@ void main() {
         diffuse.a *= font_sample.a;
         normals = font_sample.rgb;
     }
-
-    if(fs_in.transparent) diffuse.a *= TRANSPARENT_ALPHA;
 
     float c = glow * diffuse.a;
 

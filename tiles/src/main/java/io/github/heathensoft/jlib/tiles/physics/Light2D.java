@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.tiles.physics;
 
 
 import io.github.heathensoft.jlib.common.utils.Coordinate;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
+import io.github.heathensoft.jlib.tiles.graphics.Color32;
 import org.joml.Vector2f;
 
 import java.nio.FloatBuffer;

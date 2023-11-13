@@ -1,5 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
+import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.OS;
 import io.github.heathensoft.jlib.common.io.Settings;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
@@ -26,8 +27,8 @@ import static org.lwjgl.opengl.GL11.GL_TRUE;
 public class Window extends AbstractWindow {
 
     private InputProcessor current_processor;
-    private Map<String,CursorObject> cursorObjects;
     private List<Resolution> app_res_options;
+    private CursorObjects cursorObjects;
     private Resolution app_resolution;
     private Viewport viewport;
     private Settings user;
@@ -208,14 +209,14 @@ public class Window extends AbstractWindow {
         setDisplayCallbacks();
         setInputCallbacks();
 
-        cursorObjects = new HashMap<>(31);
-    
         glfwMakeContextCurrent(window);
         Logger.debug("opengl-context current in Thread: {}",
         Thread.currentThread().getName());
         glfwSetInputMode(window, GLFW_CURSOR,
         cursor_enabled ? GLFW_CURSOR_NORMAL: GLFW_CURSOR_DISABLED);
         glfwSwapInterval(vsync_enabled ? 1 : 0);
+        Logger.debug("initializing standard cursor objects");
+        cursorObjects = new CursorObjects(window);
         glfwShowWindow(window);
         GL.createCapabilities();
         
@@ -397,9 +398,7 @@ public class Window extends AbstractWindow {
 
     @Override
     protected void freeCursorObjects() {
-        for (var entry : cursorObjects.entrySet()) {
-            entry.getValue().dispose();
-        }
+        Disposable.dispose(cursorObjects);
     }
 
     @Override
@@ -637,7 +636,7 @@ public class Window extends AbstractWindow {
     
     @Override
     public boolean isVSyncEnabled() {
-        return cursor_enabled;
+        return vsync_enabled;
     }
     
     @Override
@@ -703,34 +702,10 @@ public class Window extends AbstractWindow {
     public Viewport viewport() {
         return viewport;
     }
-    
-    @Override
-    public Optional<CursorObject> createCursor(String name, Bitmap image, int hotspotX, int hotspotY) {
-        try { CursorObject cursor = new CursorObject(name,image,window,hotspotX,hotspotY);
-            CursorObject previous = cursorObjects.put(name,cursor);
-            if (previous != null) previous.dispose();
-            return Optional.of(cursor);
-        } catch (Exception e) {
-            Logger.warn(e,"unable to create cursor");
-            return Optional.empty();
-        }
-    }
-    
-    @Override
-    public Optional<CursorObject> createCursor(String name, int shape) {
-        try { CursorObject cursor = new CursorObject(name, window,shape);
-            CursorObject previous = cursorObjects.put(name,cursor);
-            if (previous != null) previous.dispose();
-            return Optional.of(cursor);
-        } catch (Exception e) {
-            Logger.warn(e,"unable to create cursor");
-            return Optional.empty();
-        }
-    }
 
     @Override
-    public Optional<CursorObject> getCursor(String name) {
-        return Optional.of(cursorObjects.get(name));
+    public CursorObjects cursorObjects() {
+        return cursorObjects;
     }
 
     private final GLFWDropCallback drop_callback = new GLFWDropCallback() {

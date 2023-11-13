@@ -116,25 +116,7 @@ interface PublicWindow {
      * @return the viewport
      */
     Viewport viewport();
-    
-    /**
-     * Creates and returns a cursor object. Cursors are freed on window termination.
-     * If the image format is wrong, no cursor is created.
-     * @param image a rgba8 format image (4 channels).
-     * @param hotspotX the cursor hotspot offset x
-     * @param hotspotY the cursor hotspot offset x
-     * @return a cursor if nothing goes wrong. check the logs.
-     */
-    Optional<CursorObject> createCursor(String name, Bitmap image, int hotspotX, int hotspotY);
-    
-    /**
-     * Creates a standard cursor object. Cursors are freed on window termination.
-     * @param shape one of the glfw standard shapes. i.e. GLFW_ARROW_CURSOR
-     * @return a cursor if you use a valid enum
-     * @see <a href="https://www.glfw.org/docs/3.3/group__shapes.html">standard shapes</a>
-     */
-    Optional<CursorObject> createCursor(String name, int shape);
 
-    Optional<CursorObject> getCursor(String name);
+    CursorObjects cursorObjects();
     
 }

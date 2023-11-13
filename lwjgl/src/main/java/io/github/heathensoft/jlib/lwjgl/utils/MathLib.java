@@ -31,7 +31,7 @@ public class MathLib {
     public static final Vector3f UP_VECTOR;
     public static final Matrix4f BIAS_MATRIX;
 
-    private static final byte rfCount = 4;
+    private static final byte rfCount = 8;
     private static final byte riCount = 4;
     private static final byte v4Count = 16;
     private static final byte v3Count = 16;
@@ -132,6 +132,11 @@ public class MathLib {
 
     public static Vector4f vec4() {
         return vec4[++v4Idx % v4Count];
+    }
+
+    public static Vector4f vec4(Vector4f vec) {
+        Vector4f v = vec4[++v4Idx % v4Count];
+        return v.set(vec);
     }
     
     public static Vector4f vec4(float x, float y, float z, float w) {

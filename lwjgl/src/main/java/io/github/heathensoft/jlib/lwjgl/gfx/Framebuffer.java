@@ -231,8 +231,8 @@ public class Framebuffer implements Disposable {
         }
     }
 
-    public static void setClearColor(Color32 color) {
-        setClearColor(color.r(),color.g(),color.b(),color.a());
+    public static void setClearColor(Vector4f color) {
+        setClearColor(color.x(),color.y(),color.z(),color.w());
     }
 
     public static void setClearColor(float r, float g, float b, float a) {

@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.test.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import org.joml.Math;
 import org.lwjgl.system.MemoryUtil;
 import org.tinylog.Logger;
@@ -18,7 +19,7 @@ import static io.github.heathensoft.jlib.lwjgl.gfx.Sprite.*;
 
 public class SpriteBatch implements Disposable {
 
-    public static final float DEFAULT_COLOR_BITS = DEFAULT_COLOR.floatBits();
+    public static final float DEFAULT_COLOR_BITS = Color.rgb_to_floatBits(DEFAULT_COLOR);
     public static final int MAX_CAPACITY = Short.MAX_VALUE / 4;
     
     private final SpriteVertexData vertexData;

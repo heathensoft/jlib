@@ -1,7 +1,10 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import org.joml.Math;
+import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
+
+import static io.github.heathensoft.jlib.common.utils.U.clamp;
 
 /**
  *
@@ -36,7 +39,7 @@ public class Sprite {
     public static final int SIZE = VERTICES * VERTEX_SIZE;
     
 
-    public static final Color32 DEFAULT_COLOR = Color32.WHITE;
+    public static final Vector4f DEFAULT_COLOR = Color.intBits_to_rgb(Color.WHITE_BITS,new Vector4f());
     
     protected static final int X1 = 0;     // x
     protected static final int Y1 = 1;     // y + h
@@ -64,7 +67,7 @@ public class Sprite {
     protected static final int I4 = 23;
     
     private final float[] data = new float[SIZE];
-    private final Color32 color = Color32.WHITE.cpy();
+    private final Vector4f color = new Vector4f(DEFAULT_COLOR);
     private TextureRegion region;
     private float x;
     private float y;
@@ -311,9 +314,9 @@ public class Sprite {
         data[I4] = id;
     }
     
-    public void setColor(Color32 color) {
+    public void setColor(Vector4f color) {
         this.color.set(color);
-        float floatBits = color.floatBits();
+        float floatBits = Color.rgb_to_floatBits(color);
         data[C1] = floatBits;
         data[C2] = floatBits;
         data[C3] = floatBits;
@@ -322,7 +325,7 @@ public class Sprite {
     
     public void setColorDefault() {
         this.color.set(DEFAULT_COLOR);
-        float floatBits = color.floatBits();
+        float floatBits = Color.rgb_to_floatBits(color);
         data[C1] = floatBits;
         data[C2] = floatBits;
         data[C3] = floatBits;
@@ -330,8 +333,8 @@ public class Sprite {
     }
     
     public void setAlpha (float a) {
-        color.setAlpha(a);
-        float floatBits = color.floatBits();
+        color.w = clamp(a);
+        float floatBits = Color.rgb_to_floatBits(color);
         data[C1] = floatBits;
         data[C2] = floatBits;
         data[C3] = floatBits;
@@ -465,7 +468,7 @@ public class Sprite {
         return rotation;
     }
     
-    public Color32 colorReadOnly() {
+    public Vector4f colorReadOnly() {
         return color;
     }
     
@@ -482,7 +485,7 @@ public class Sprite {
     
     private void setData(float x, float y, float x2, float y2, float w, float h,
                          float u, float v, float u2, float v2) {
-        float floatBits = color.floatBits();
+        float floatBits = Color.rgb_to_floatBits(color);
         data[X1] = x;
         data[Y1] = y2;
         data[U1] = u;

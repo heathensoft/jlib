@@ -183,7 +183,7 @@ public class TextureRegion {
         return v > v2;
     }
 
-    public TextureRegion cpy() {
+    public TextureRegion copy() {
         return new TextureRegion(this);
     }
     

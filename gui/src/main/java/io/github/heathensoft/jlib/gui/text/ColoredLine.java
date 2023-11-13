@@ -1,5 +1,7 @@
 package io.github.heathensoft.jlib.gui.text;
 
+import org.joml.Vector4f;
+
 /**
  * @author Frederik Dahl
  * 19/10/2023
@@ -8,9 +10,8 @@ package io.github.heathensoft.jlib.gui.text;
 
 public interface ColoredLine {
 
-    int colorIndex();
+    Vector4f color();
 
     float glow();
 
-    boolean transparent();
 }

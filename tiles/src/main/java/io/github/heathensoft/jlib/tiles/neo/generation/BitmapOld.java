@@ -2,10 +2,10 @@ package io.github.heathensoft.jlib.tiles.neo.generation;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color32;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureFormat;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
+import io.github.heathensoft.jlib.tiles.graphics.Color32;
 import org.joml.Math;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;

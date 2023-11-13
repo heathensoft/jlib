@@ -21,16 +21,19 @@ import java.util.*;
 
 public class TextureAtlas { // extend texture 
 
+    private static final int DIFFUSE_SLOT = 0;
+    private static final int NORMALS_SLOT = 1;
+    private static final int LIGHTING_SLOT = 2; // I.e. height, emissive, specular
+
+    private Texture[] textures;
 
 
-
-    public TextureAtlas(Bitmap bitmap, String atlasInfo) throws Exception {
+    public TextureAtlas(Bitmap diffuse, Bitmap normals, Bitmap lighting, String atlasInfo) throws Exception {
 
     }
 
 
-
-    public static Wrapper create(String name, String directory, int spacing, int wrap, int min_filter, int mag_filter, boolean mip_map) throws Exception {
+    public static AtlasData create(String name, String directory, int spacing, int wrap, int min_filter, int mag_filter, boolean mip_map) throws Exception {
         WorkingDirectory workingDirectory = new WorkingDirectory(directory,".png");
         int region_count = workingDirectory.validFileCount();
         if (region_count == 0) throw new Exception("No valid images in directory: " + directory);
@@ -46,9 +49,9 @@ public class TextureAtlas { // extend texture
             int channels = 0;
             builder = new StringBuilder(8 * 1024);
             builder.append("# https://github.com/heathensoft\n");
-            builder.append("# atlas: <name> <width> <height> <channels> <sprites>\n");
-            builder.append("# texture: <minFilter> <magFilter> <textureWrap> <mipMap>\n");
-            builder.append("# region: <x> <y> <width> <height> <name>\n\n");
+            builder.append("# Atlas: <name> <width> <height> <channels> <sprites>\n");
+            builder.append("# Texture: <minFilter> <magFilter> <textureWrap> <mipMap>\n");
+            builder.append("# Region: <x> <y> <width> <height> <name>\n\n");
             for (int i = 0; i < region_count; i++) {
                 Path path = workingDirectory.resolveFile(region_names.get(i));
                 ByteBuffer image_data = new ExternalFile(path).readToBuffer();
@@ -96,14 +99,14 @@ public class TextureAtlas { // extend texture
             }
         } finally { Disposable.dispose(region_bitmaps);
         }
-        return new Wrapper(bitmap,builder.toString());
+        return new AtlasData(bitmap,builder.toString());
     }
 
 
-    public static final class Wrapper implements Disposable {
+    public static final class AtlasData implements Disposable {
         private final Bitmap bitmap;
         private final String info;
-        public Wrapper(Bitmap bitmap, String info) {
+        public AtlasData(Bitmap bitmap, String info) {
             this.bitmap = bitmap;
             this.info = info;
         } public void dispose() { Disposable.dispose(bitmap); }
