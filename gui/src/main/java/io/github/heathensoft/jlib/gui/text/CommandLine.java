@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.gui.text;
 
 
 
-import io.github.heathensoft.jlib.gui.gfx.Fonts;
+import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.gui.gfx.TextBatchGUI;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
@@ -60,7 +60,7 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
     }
 
     public void drawDynamicSize(TextBatchGUI batch, float x, float y, float width, float size, boolean centered, float alpha) {
-        Fonts fonts = batch.fonts();
+        FontsGUI fonts = batch.fonts();
         float scale = fonts.relativeScale(size);
         float width_pixels = widthPixels(fonts) + fonts.averageAdvance();
         float desired_width = width_pixels * scale;
@@ -70,7 +70,7 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
             size = size * ratio;
             scale = fonts.relativeScale(size);
             desired_width = width_pixels * scale;
-        } if (centered) x += TextUtils.centeredOffsetX(fonts,desired_width,width);
+        } if (centered) x += TextUtils.center_offset_x(fonts,desired_width,width);
         if (size > 1f) {
             float space = scale * fonts.advance(' ');
             boolean cursor_visible;

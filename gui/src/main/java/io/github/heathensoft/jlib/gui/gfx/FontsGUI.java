@@ -20,7 +20,7 @@ import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
  */
 
 
-public class Fonts implements Disposable {
+public class FontsGUI implements Disposable {
 
     public static final int FONT_SLOTS = 4;
     public static final int FONTS_NUM_CHARACTERS = 95;
@@ -44,7 +44,7 @@ public class Fonts implements Disposable {
     private final float[] font_sizePixels;
 
 
-    public Fonts(int bindingPoint) {
+    public FontsGUI(int bindingPoint) {
         this.font_texture = new Texture[FONT_SLOTS];
         this.font_name = new String[FONT_SLOTS];
         this.font_loaded = new boolean[FONT_SLOTS];
@@ -62,7 +62,7 @@ public class Fonts implements Disposable {
         this.uniformBuffer.bindBufferBase(uniformsBindingPoint);
     }
 
-    public void uploadFont(Font font, int slot) throws Exception {
+    public void uploadFont(BitmapFont font, int slot) throws Exception {
         uploadFont(font.png,font.metricsString(),slot);
     }
 

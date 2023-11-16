@@ -4,6 +4,7 @@ import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.joml.Math;
 import org.lwjgl.stb.STBIWriteCallback;
 import org.lwjgl.stb.STBImageWrite;
@@ -608,5 +609,126 @@ public class Texture implements Disposable {
     public static void unbind(int slot, int target) {
         setActiveSlot(slot);
         unbindActiveSlot(target);
+    }
+
+    public static Texture generateTilemapBlendTexture(int size) throws Exception {
+
+        Texture blendMapTexture = generate2D(size);
+        blendMapTexture.bindToActiveSlot();
+        blendMapTexture.wrapST(GL_REPEAT);
+        blendMapTexture.filter(GL_LINEAR,GL_LINEAR);
+        blendMapTexture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
+        GLContext.checkError();
+
+        Framebuffer framebuffer = new Framebuffer(size,size);
+        Framebuffer.bind(framebuffer);
+        Framebuffer.attachColor(blendMapTexture,0,false);
+        Framebuffer.checkStatus();
+
+        final String VERTEX_SHADER = "#version 440 core\n" +
+                "layout (location = 0) in vec2 a_uv;\n" +
+                "out vec2 uv;\n" +
+                "void main() {\n" +
+                "    uv = a_uv;\n" +
+                "    vec2 pos = vec2(uv.x,1.0 - uv.y);\n" +
+                "    pos = pos * 2.0 - 1.0;\n" +
+                "    gl_Position = vec4(pos,0.0,1.0);\n" +
+                "}";
+
+
+        final String FRAGMENT_SHADER = "#version 440 core\n" +
+                "#define SQRT_2 1.41421356\n" +
+                "#define CORNER_WEIGHT .25\n" +
+                "#define EDGES_WEIGHT .50\n" +
+                "layout (location=0) out vec4 f_color;\n" +
+                "in vec2 uv;\n" +
+                "float _clamp(float v) { return v > 1.0 ? 1.0 : (v < 0.0 ? 0.0 : v); }\n" +
+                "float _lerp(float a, float b, float t) { return a * (1.0 - t) + b * t; }\n" +
+                "float _smooth(float v) { return v * v * (3.0 - 2.0 * v); }\n" +
+                "void main() {\n" +
+                "    float edge_x;\n" +
+                "    float edge_y;\n" +
+                "    float dist_x;\n" +
+                "    float dist_y; \n" +
+                "    float dist_c; \n" +
+                "    if(uv.x < 0.5) {\n" +
+                "        edge_x = 0.0;\n" +
+                "        dist_x = (0.5 - uv.x) * 2.0;\n" +
+                "    } else {\n" +
+                "        edge_x = 1.0;\n" +
+                "        dist_x = (uv.x - 0.5) * 2.0;\n" +
+                "    }if(uv.y < 0.5) {\n" +
+                "        edge_y = 0.0;\n" +
+                "        dist_y = (0.5 - uv.y) * 2.0;\n" +
+                "    } else {\n" +
+                "        edge_y = 1.0;\n" +
+                "        dist_y = (uv.y - 0.5) * 2.0;\n" +
+                "    }\n" +
+                "    dist_c = 1.0 -_clamp((2.0 * distance(vec2(edge_x,edge_y),uv))/SQRT_2);\n" +
+                "    float value_c = _smooth(dist_c) * CORNER_WEIGHT;\n" +
+                "    float value_x = max(0.0,(_smooth(dist_x) * EDGES_WEIGHT) - value_c);\n" +
+                "    float value_y = max(0.0,(_smooth(dist_y) * EDGES_WEIGHT) - value_c);\n" +
+                "    f_color = vec4(value_x,value_y,value_c,1.0);\n" +
+                "}";
+
+
+        ShaderProgram shader = new ShaderProgram(VERTEX_SHADER,FRAGMENT_SHADER);
+
+        Vao vao = new Vao().bind();
+        BufferObject vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_STATIC_DRAW);
+        BufferObject indexBuffer = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
+
+        float[] vertices = {1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,};
+        indexBuffer.bind().bufferData(new short[]{ 2, 1, 0, 0, 1, 3});
+        vertexBuffer.bind().bufferData(vertices);
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * Float.BYTES, 0);
+        glEnableVertexAttribArray(0);
+
+        shader.use();
+        Framebuffer.viewport();
+        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
+        Framebuffer.bindDefault();
+        Framebuffer.viewport();
+
+        Disposable.dispose(vao,vertexBuffer,shader,framebuffer,indexBuffer);
+        return blendMapTexture;
+    }
+
+    public static String glWrapEnumToString(int glEnum) {
+        return switch (glEnum) {
+            case GL_REPEAT -> "GL_REPEAT";
+            case GL_MIRRORED_REPEAT -> "GL_MIRRORED_REPEAT";
+            case GL_CLAMP_TO_BORDER -> "GL_CLAMP_TO_BORDER";
+            case GL_CLAMP_TO_EDGE -> "GL_CLAMP_TO_EDGE";
+            default -> "INVALID_ENUM";
+        };
+    }
+
+    public static String glFilterEnumToString(int glEnum) {
+        return switch (glEnum) {
+            case GL_LINEAR -> "GL_LINEAR";
+            case GL_NEAREST -> "GL_NEAREST";
+            case GL_NEAREST_MIPMAP_NEAREST -> "GL_NEAREST_MIPMAP_NEAREST";
+            case GL_NEAREST_MIPMAP_LINEAR -> "GL_NEAREST_MIPMAP_LINEAR";
+            case GL_LINEAR_MIPMAP_NEAREST -> "GL_LINEAR_MIPMAP_NEAREST";
+            case GL_LINEAR_MIPMAP_LINEAR -> "GL_LINEAR_MIPMAP_LINEAR";
+            default -> "INVALID_ENUM";
+        };
+    }
+
+    public static boolean glWrapEnumIsValid(int glEnum) {
+        return glEnum == GL_REPEAT ||
+                glEnum == GL_MIRRORED_REPEAT ||
+                glEnum == GL_CLAMP_TO_EDGE ||
+                glEnum == GL_CLAMP_TO_BORDER;
+    }
+
+    public static boolean glFilterEnumIsValid(int glEnum) {
+        return glEnum == GL_LINEAR ||
+                glEnum == GL_NEAREST ||
+                glEnum == GL_NEAREST_MIPMAP_NEAREST ||
+                glEnum == GL_NEAREST_MIPMAP_LINEAR ||
+                glEnum == GL_LINEAR_MIPMAP_NEAREST ||
+                glEnum == GL_LINEAR_MIPMAP_LINEAR;
     }
 }

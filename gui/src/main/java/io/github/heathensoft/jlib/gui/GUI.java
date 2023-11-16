@@ -3,7 +3,7 @@ package io.github.heathensoft.jlib.gui;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.IDPool;
 import io.github.heathensoft.jlib.gui.dev.ColorPickerWindow;
-import io.github.heathensoft.jlib.gui.gfx.Fonts;
+import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.window.WindowGUI;
 import io.github.heathensoft.jlib.lwjgl.gfx.Framebuffer;
@@ -28,7 +28,7 @@ public class GUI {
 
 
     private static boolean GUI_INITIALIZED;
-    public static Fonts Fonts;
+    public static FontsGUI Fonts;
     public static RendererGUI Renderer;
     public static ScreenQuad ScreenQuad;
 

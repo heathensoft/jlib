@@ -10,7 +10,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import static io.github.heathensoft.jlib.common.utils.U.clamp;
 import static io.github.heathensoft.jlib.common.utils.U.round;
-import static io.github.heathensoft.jlib.gui.text.TextUtils.widthPixels;
+import static io.github.heathensoft.jlib.gui.text.TextUtils.width_pixels;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_DYNAMIC_DRAW;
@@ -28,9 +28,9 @@ public class TextBatchGUI extends BatchGUI {
     public static final String SHADER_VERT = "res/jlib/gui/glsl/ui_text.vert";
     public static final String SHADER_GEOM = "res/jlib/gui/glsl/ui_text.geom";
     public static final String SHADER_FRAG = "res/jlib/gui/glsl/ui_text.frag";
-    private final Fonts fonts;
+    private final FontsGUI fonts;
 
-    TextBatchGUI(Fonts fonts, int capacity, int width, int height) throws Exception {
+    TextBatchGUI(FontsGUI fonts, int capacity, int width, int height) throws Exception {
         int vertex_size = 4;
         int vertex_size_bytes = vertex_size * Float.BYTES;
         this.fonts = fonts;
@@ -52,21 +52,21 @@ public class TextBatchGUI extends BatchGUI {
         setResolutionUniform(width, height);
     }
 
-    public Fonts fonts() {
+    public FontsGUI fonts() {
         return fonts;
     }
 
     public void drawDynamicSize(String string, float x, float y, float width, float size, int abgr, float glow, boolean centered) {
         float color = Color.intBits_to_floatBits(abgr);
         float scale = fonts.relativeScale(size);
-        float width_pixels = widthPixels(string,fonts);
+        float width_pixels = width_pixels(string,fonts);
         float desired_width = width_pixels * scale;
         float ratio = width / desired_width;
         y -= fonts.ascent() * scale;
         if (ratio < 1) { size = size * ratio;
             scale = fonts.relativeScale(size);
             desired_width = width_pixels * scale;
-        } if (centered) x += TextUtils.centeredOffsetX(fonts,desired_width,width);
+        } if (centered) x += TextUtils.center_offset_x(fonts,desired_width,width);
         if (size >= 1f) { int info_bits = (fonts.currentFont() << 29);
             info_bits |= (((round(size) - 1) & 0xFF) << 21);
             info_bits |= ((round(clamp(glow) * 127.0f) & 0x7F) << 13);
@@ -81,7 +81,7 @@ public class TextBatchGUI extends BatchGUI {
     public void drawFixedSize(String string, float x, float y, float width, float size, int abgr, float glow) {
         float color = Color.intBits_to_floatBits(abgr);
         float scale = fonts.relativeScale(size);
-        float width_pixels = widthPixels(string,fonts);
+        float width_pixels = width_pixels(string,fonts);
         float desired_width = width_pixels * scale;
         float bounds_x = x + width;
         int info_bits = (fonts.currentFont() << 29);

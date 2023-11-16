@@ -83,7 +83,7 @@ public class RendererGUI implements Disposable {
     protected int pixelID;
 
     // 
-    protected Fonts fonts;
+    protected FontsGUI fonts;
     protected SpriteBatchGUI spriteBatch;
     protected TextBatchGUI textBatch;
     protected Framebuffer framebuffer;
@@ -136,25 +136,24 @@ public class RendererGUI implements Disposable {
         }
     }
 
-    /*
-    public void drawText(Text text, Rectanglef quad, int font, int font_size, float alpha) {
-        if (rendering && font_size > 0 && !text.isBlank() && quad.isValid()) {
+
+    public void drawText(Text text, Rectanglef quad) {
+        if (rendering && !text.isBlank() && quad.isValid()) {
             if (active_batch != TEXT_BATCH) {
                 if (active_batch == SPRITE_BATCH) {
                     spriteBatch.flush();
                     shader_swaps++;
                 } active_batch = TEXT_BATCH;
                 Framebuffer.drawBuffers(0,1,2);
-            } fonts.bindFontMetrics(font);
-            textBatch.flush();
+            } textBatch.flush();
             enableScissor(quad);
-            text.draw(textBatch,quad,font,font_size,alpha);
+            text.draw(textBatch,quad);
             textBatch.flush();
             glDisable(GL_SCISSOR_TEST);
         }
     }
 
-     */
+
 
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -371,7 +370,7 @@ public class RendererGUI implements Disposable {
         if (x2 > x1 && y2 > y1) drawParagraphDynamicSize(paragraph, font, x1, y2, x2 - x1, y2 - y1, alpha, centered);
     }
 
-    public void uploadFont(Font font, int slot) throws Exception { fonts.uploadFont(font,slot); }
+    public void uploadFont(BitmapFont font, int slot) throws Exception { fonts.uploadFont(font,slot); }
 
     public void uploadFont(ByteBuffer png, String metrics, int slot) throws Exception { fonts.uploadFont(png, metrics, slot); }
 
@@ -393,7 +392,7 @@ public class RendererGUI implements Disposable {
         Disposable.dispose(framebuffer,fonts);
     }
 
-    public Fonts fonts() { return fonts; }
+    public FontsGUI fonts() { return fonts; }
     public Framebuffer framebuffer() { return framebuffer; }
     public Texture framebufferDiffuseTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_DIFFUSE); }
     public Texture framebufferNormalsTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_NORMALS); }
@@ -406,8 +405,8 @@ public class RendererGUI implements Disposable {
     protected void initializeFontCollection() throws Exception {
         if (fonts == null) {
             Repository font_repo = Repository.loadFromResources(DEFAULT_FONT_PATH + DEFAULT_FONT_NAME + ".repo");
-            Font font = font_repo.getFont(DEFAULT_FONT_NAME);
-            fonts = new Fonts(FONT_UNIFORM_BUFFER_BINDING_POINT);
+            BitmapFont font = font_repo.getFont(DEFAULT_FONT_NAME);
+            fonts = new FontsGUI(FONT_UNIFORM_BUFFER_BINDING_POINT);
             fonts.uploadFont(font,0);
         }
     }

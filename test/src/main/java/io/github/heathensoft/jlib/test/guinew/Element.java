@@ -1,9 +1,8 @@
 package io.github.heathensoft.jlib.test.guinew;
 
 import io.github.heathensoft.jlib.gui.Interactable;
-import io.github.heathensoft.jlib.gui.gfx.Fonts;
+import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
-import io.github.heathensoft.jlib.gui.text.Paragraph;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector4f;
@@ -36,7 +35,7 @@ public class Element implements Interactable {
 
 
 
-        Fonts fonts = renderer.fonts();
+        FontsGUI fonts = renderer.fonts();
         float scale = fonts.relativeScale(text_size);
         float line_height = (fonts.ascent() + fonts.descent() + fonts.lineGap()) * scale;
         float x0 = bounds.minX + 16;

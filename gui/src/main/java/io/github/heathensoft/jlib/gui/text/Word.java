@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.gui.text;
 
 
-import io.github.heathensoft.jlib.gui.gfx.Fonts;
+import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import org.joml.Vector4f;
 
@@ -61,7 +61,7 @@ public class Word {
 
     public int hashCode() { return Arrays.hashCode(value); }
 
-    public float widthPixels(Fonts boundFont) {
+    public float widthPixels(FontsGUI boundFont) {
         if (boundFont.isMonospaced()) {
             float advance = boundFont.advance('x');
             return length() * advance;

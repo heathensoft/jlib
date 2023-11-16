@@ -31,14 +31,16 @@ public class MathLib {
     public static final Vector3f UP_VECTOR;
     public static final Matrix4f BIAS_MATRIX;
 
-    private static final byte rfCount = 8;
+    // todo: Put in common.utils.U instead
+
+    private static final byte rfCount = 16;
     private static final byte riCount = 4;
     private static final byte v4Count = 16;
     private static final byte v3Count = 16;
-    private static final byte v2Count = 8;
+    private static final byte v2Count = 16;
     private static final byte m4Count = 8;
     private static final byte m3Count = 4;
-    private static final byte rayCount = 4;
+    private static final byte rayCount = 8;
     private static final byte rayAbbCount = 4;
     private static final byte frustumCount = 4;
 

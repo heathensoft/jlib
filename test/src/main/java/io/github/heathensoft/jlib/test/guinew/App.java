@@ -1,12 +1,20 @@
 package io.github.heathensoft.jlib.test.guinew;
 
+import io.github.heathensoft.jlib.common.io.ExternalFile;
 import io.github.heathensoft.jlib.gui.GUI;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.gui.dev.TextBox;
+import io.github.heathensoft.jlib.gui.text.Text;
+import io.github.heathensoft.jlib.gui.window.*;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.gfx.TextureAtlas;
 import io.github.heathensoft.jlib.lwjgl.window.*;
-import org.joml.primitives.Rectanglef;
+import org.joml.Vector4f;
 
 import java.util.List;
 import java.util.Objects;
+
+import static org.lwjgl.opengl.GL11.GL_LINEAR;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 
 /**
  * @author Frederik Dahl
@@ -14,6 +22,8 @@ import java.util.Objects;
  */
 
 public class App extends Application {
+
+    private Text text;
 
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         config.settings_width = 1280;
@@ -27,22 +37,41 @@ public class App extends Application {
     }
 
     protected void on_start(Resolution resolution) throws Exception {
-       GUI.INITIALIZE_GUI(resolution);
-       Objects.requireNonNull(GUI.Windows.gui_windows_get("ColorPicker")).open();
+        GUI.INITIALIZE_GUI(resolution);
+        Objects.requireNonNull(GUI.Windows.gui_windows_get("ColorPicker")).open();
+
+        if (true == true) {
+           text = new Text(20);
+           text.useWordWrap(true);
+           text.set("Nunc hendrerit ornare rhoncus. Mauris eget diam placerat, " +
+                   "venenatis augue vitae, mollis nibh. Aenean blandit dolor ac lectus tincidunt, " +
+                   "id malesuada turpis volutpat. Pellentesque pulvinar iaculis arcu, eu varius sapien fermentum quis. " +
+                   "Etiam at tortor lectus. Sed sollicitudin metus vel tortor consequat fermentum. Morbi viverra dapibus lobortis. " +
+                   "Mauris tellus metus, porta id faucibus id, imperdiet aliquam massa. In libero augue, commodo vitae risus at");
+           RootContainer rootContainer = new RootTest(5);
+           EmptyBox emptyBox = new EmptyBox(200,32);
+           emptyBox.lockVertical();
+           VBoxContainer vBoxContainer = new VBoxContainer(0);
+           vBoxContainer.addBox(emptyBox);
+           TextBox textBox = new TextBox(new Vector4f(0,0,0,0.0f),200,200,5);
+           textBox.setText(text);
+           textBox.useParentID(true);
+           vBoxContainer.addBox(textBox);
+           rootContainer.add(vBoxContainer);
+           WindowGUI textWindow = new WindowGUI("TextBox", Anchor.NONE);
+           textWindow.create(rootContainer);
+           textWindow.open();
+       }
+
+
     }
 
+
     protected void on_update(float delta) {
+
         GUI.gui_pre_render_update(delta);
         GUI.gui_start_rendering();
         GUI.gui_render_windows(delta);
-        Rectanglef bounds = MathLib.rectf(40,140 - 40,100,140);
-
-        GUI.Renderer.drawElement(bounds,0xFF000000);
-        GUI.Renderer.drawStringDynamicSize("FFFFF",bounds,0,0xFFFFFFFF,0,true);
-        //GUI.Renderer.drawStringFixedSize("|128| gg",0,0xFFFFFFFF,40,720,1000,40,0);
-        //GUI.Renderer.drawStringDynamicSize("FFFFF",0,0xFFFFFFFF,40 ,360,100,40,0,false);
-        //GUI.Renderer.drawStringDynamicSize("FFFFF",0,0xFFFFFFFF,40 ,200,80,40,0,false);
-        //GUI.Renderer.drawStringDynamicSize("FFFFF",0,0xFFFFFFFF,40 ,140,60,40,0,false);
         GUI.gui_stop_rendering();
     }
 

@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.gfx.Font;
+import io.github.heathensoft.jlib.lwjgl.gfx.BitmapFont;
 import org.tinylog.Logger;
 
 import java.io.IOException;
@@ -50,11 +50,11 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
         put(key, bitmap.compress(), replace);
     }
 
-    public void put(String key, Font font) {
+    public void put(String key, BitmapFont font) {
         put(key, font, true);
     }
 
-    public void put(String key, Font font, boolean replace) {
+    public void put(String key, BitmapFont font, boolean replace) {
         put(key + ".png",font.png,replace);
         put(key + ".txt",font.metrics,replace);
     }
@@ -135,12 +135,12 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
         } return new Bitmap(png);
     }
 
-    public Font getFont(String font) throws Exception {
+    public BitmapFont getFont(String font) throws Exception {
         ByteBuffer png = map.get(font + ".png");
         ByteBuffer txt = map.get(font + ".txt");
         if (png == null || txt == null) {
             throw new Exception("font not in repository: " + font);
-        } return new Font(png,txt);
+        } return new BitmapFont(png,txt);
     }
 
     public String getString(String key) throws Exception {

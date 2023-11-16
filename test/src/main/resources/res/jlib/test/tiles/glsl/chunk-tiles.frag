@@ -117,6 +117,7 @@ float noise(vec2 v){
 }
 
 const mat2 m2 = mat2(0.8,-0.6,0.6,0.8);
+
 float fbm( in vec2 p ){
     float f = 0.0;
     f += 0.5000*noise( p ); p = m2*p*2.02;

@@ -13,7 +13,7 @@ import org.joml.Vector2f;
  */
 
 
-public abstract class RootContainer extends BoxContainer {
+public class RootContainer extends BoxContainer {
 
     protected Size max_desired_size = new Size();
     protected int drag_area;
@@ -109,29 +109,21 @@ public abstract class RootContainer extends BoxContainer {
                     case CENTER -> {
                         Vector2f drag_vector = context.mouse_drag_vector(MathLib.vec2(),Mouse.LEFT);
                         if (grabbed) context.move(drag_vector);
-                    } case TOP -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                    } case TOP -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                         if (grabbed) context.dragTop();
-                    } case TOP_RIGHT -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case TOP_RIGHT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragTop(); context.dragRight();}
-                    } case RIGHT -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
-                        if (grabbed) context.dragRight();
-                    } case BOTTOM_RIGHT -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case RIGHT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                        if (grabbed) { context.dragRight(); }
+                    } case BOTTOM_RIGHT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragBottom(); context.dragRight();}
-                    } case BOTTOM -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                    } case BOTTOM -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                         if (grabbed) context.dragBottom();
-                    } case BOTTOM_LEFT -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case BOTTOM_LEFT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragBottom(); context.dragLeft();}
-                    } case LEFT -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
-                        if (grabbed) context.dragLeft();
-                    } case TOP_LEFT -> {
-                        GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case LEFT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                        if (grabbed) { context.dragLeft();}
+                    } case TOP_LEFT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragTop(); context.dragLeft();}
                     }default -> {}
                 }

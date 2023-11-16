@@ -2,14 +2,12 @@ package io.github.heathensoft.jlib.gui.text;
 
 
 
-import io.github.heathensoft.jlib.gui.gfx.Fonts;
+import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.gui.gfx.TextBatchGUI;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import org.joml.Vector4f;
-import org.joml.primitives.Rectanglef;
 
-import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
@@ -282,11 +280,11 @@ public class Paragraph implements Iterable<Word> {
         } return sb.deleteCharAt(sb.length() - 1).toString();
     }
 
-    public float desiredWidth(Fonts fonts, float height) {
+    public float desiredWidth(FontsGUI fonts, float height) {
         return widthPixels(fonts) * fonts.relativeScale(height);
     }
 
-    public float widthPixels(Fonts fonts) {
+    public float widthPixels(FontsGUI fonts) {
         if (!isBlank()) {
             float space = fonts.advance(' ');
             float width = 0;
@@ -302,7 +300,7 @@ public class Paragraph implements Iterable<Word> {
 
 
     public void drawFixedSize(TextBatchGUI batch, float x, float y, float width, float size, float alpha) {
-        Fonts fonts = batch.fonts();
+        FontsGUI fonts = batch.fonts();
         float scale = fonts.relativeScale(size);
         float width_pixels = widthPixels(fonts);
         float desired_width = width_pixels * scale;
@@ -338,7 +336,7 @@ public class Paragraph implements Iterable<Word> {
     }
 
     public void drawDynamicSize(TextBatchGUI batch, float x, float y, float width, float size, boolean centered, float alpha) {
-        Fonts fonts = batch.fonts();
+        FontsGUI fonts = batch.fonts();
         float scale = fonts.relativeScale(size);
         float width_pixels = widthPixels(fonts);
         float desired_width = width_pixels * scale;
@@ -347,7 +345,7 @@ public class Paragraph implements Iterable<Word> {
         if (ratio < 1) { size = size * ratio;
             scale = fonts.relativeScale(size);
             desired_width = width_pixels * scale;
-        } if (centered) x += TextUtils.centeredOffsetX(fonts,desired_width,width);
+        } if (centered) x += TextUtils.center_offset_x(fonts,desired_width,width);
         if (size >= 1f) { float space = scale * fonts.advance(' ');
 
             int info_bits = (fonts.currentFont() << 29);
@@ -377,7 +375,7 @@ public class Paragraph implements Iterable<Word> {
 
     }
 
-    public float calculateHeight(Fonts fonts, int size, float width, boolean wrap) {
+    public float calculateHeight(FontsGUI fonts, int size, float width, boolean wrap) {
         if (!isBlank()) {
             float scale = fonts.relativeScale(size);
             float ascent = fonts.ascent() * scale;
@@ -414,7 +412,7 @@ public class Paragraph implements Iterable<Word> {
                             if (word.charAt(0) == '0' && word.length() > 3) {
                                 if (word.charAt(1) == 'x') {
                                     String hex = word.substring(2,word.length()-1);
-                                    if (TextUtils.isHexadecimal(hex)) {
+                                    if (TextUtils.is_hexadecimal(hex)) {
                                         hex = "0x"+hex.toUpperCase();
                                         list.add(new Keyword(hex, Keyword.Type.VALUE));
                                         continue;
@@ -429,7 +427,7 @@ public class Paragraph implements Iterable<Word> {
                                     number = number.substring(0,number.length() - 1);
                                 }
                             }
-                            if (TextUtils.isNumeric(number)) {
+                            if (TextUtils.is_numeric(number)) {
                                 list.add(new Keyword(word, Keyword.Type.VALUE));
                                 continue;
                             }
@@ -461,135 +459,6 @@ public class Paragraph implements Iterable<Word> {
             return type.color;
         } else return wordType.color;
     }
-
-
-    /*
-
-    public void drawWrap(TextBatch batch, float x, float y, float width, int size) {
-        Fonts fonts = batch.fonts();
-        float scale = fonts.relativeScale(size);
-        float space = scale * fonts.advance(' ');
-        float ascent = fonts.ascent() * scale;
-        float descent = fonts.descent() * scale;
-        float gap = fonts.lineGap() * scale;
-        float line_height = ascent + descent + gap;
-        float pointer_y = ascent;
-        float pointer_x = 0;
-        float glow = 0;
-        boolean transparent = false;
-        if (this instanceof CustomColored custom) {
-            transparent = custom.transparent();
-            glow = clamp(custom.glow());
-        } int base_info = transparent ? 0x8000_0000 : 0;
-        base_info |= (fonts.currentFont() << 29);
-        base_info |= (((size - 1) & 0xFF) << 21);
-        //base_info |= (1 << 13); //invert color here
-        base_info |= ((round(glow * 127.0f) & 0x7F) << 12);
-        for (Word word : words) {
-            float word_width = word.widthPixels(fonts) * scale;
-            float pointer_x_next = pointer_x + word_width;
-            if (pointer_x_next > width) {
-                pointer_y += line_height;
-                pointer_x = 0;
-                if (word_width > width) continue;
-            } int info = base_info;
-            info |= ((colorIndexOf(word) & 0x3F) << 7);
-            byte[] bytes = word.get();
-            for (byte b : bytes) {
-                char c = (char) (b & 0xFF);
-                batch.pushVertex(x + pointer_x, y - pointer_y, info | c);
-                pointer_x += fonts.advance(c) * scale;
-            } pointer_x += space;
-
-        }
-
-    }
-    */
-
-
-
-        /*
-    public void drawNoWrap(TextBatch batch, float x, float y, float width, int size) {
-        Fonts fonts = batch.fonts();
-        float desired_width = widthPixels(fonts) * fonts.relativeScale(size);
-        if (desired_width > width) {
-            float scale = fonts.relativeScale(size);
-            float space = scale * fonts.advance(' ');
-            float glow = 0;
-            boolean transparent = false;
-            if (this instanceof CustomColored custom) {
-                transparent = custom.transparent();
-                glow = clamp(custom.glow());
-            } int base_info = transparent ? 0x8000_0000 : 0;
-            base_info |= (fonts.currentFont() << 29);
-            base_info |= (((size - 1) & 0xFF) << 21);
-            //base_info |= (1 << 13); //invert color here
-            base_info |= ((round(glow * 127.0f) & 0x7F) << 12);
-            y -= fonts.ascent() * scale;
-            float bounds = x + width;
-            for (Word word : words) {
-                int info = base_info;
-                info |= ((colorIndexOf(word) & 0x3F) << 7);
-                byte[] bytes = word.get();
-                for (byte b : bytes) {
-                    char c = (char) (b & 0xFF);
-                    float x2 = x + fonts.advance(c) * scale;
-                    if (x2 <= bounds) {
-                        batch.pushVertex(x, y, info | c);
-                    } else return;
-                    x = x2;
-                } x += space;
-            }
-        } else draw(batch, x, y, size);
-    }
-
-
-    public void drawWrap(TextBatch batch, Rectanglef quad, int size) {
-        Fonts fonts = batch.fonts();
-        float scale = fonts.relativeScale(size);
-        float space = scale * fonts.advance(' ');
-        float ascent = fonts.ascent() * scale;
-        float descent = fonts.descent() * scale;
-        float gap = fonts.lineGap() * scale;
-        float line_height = ascent + descent + gap;
-        float width = quad.lengthX();
-        float height = quad.lengthY();
-        float x = quad.minX;
-        float y = quad.maxY;
-        float pointer_y = ascent;
-        float pointer_x = 0;
-        float glow = 0;
-        boolean transparent = false;
-        if (this instanceof CustomColored custom) {
-            transparent = custom.transparent();
-            glow = clamp(custom.glow());
-        } int base_info = transparent ? 0x8000_0000 : 0;
-        base_info |= (fonts.currentFont() << 29);
-        base_info |= (((size - 1) & 0xFF) << 21);
-        //base_info |= (1 << 13); //invert color here
-        base_info |= ((round(glow * 127.0f) & 0x7F) << 12);
-        for (Word word : words) {
-            if ((pointer_y + descent) > height) return;
-            float word_width = word.widthPixels(fonts) * scale;
-            float pointer_x_next = pointer_x + word_width;
-            if (pointer_x_next > width) {
-                if (pointer_x > 0) {
-                    pointer_y += line_height;
-                    if ((pointer_y + descent) > height) return;
-                    pointer_x = 0;
-                }
-            } int info = base_info;
-            info |= ((colorIndexOf(word) & 0x3F) << 7);
-            byte[] bytes = word.get();
-            for (byte b : bytes) {
-                char c = (char) (b & 0xFF);
-                batch.pushVertex(x + pointer_x, y - pointer_y, info | c);
-                pointer_x += fonts.advance(c) * scale;
-            } pointer_x += space;
-        }
-    }
-     */
-
 
 
 }

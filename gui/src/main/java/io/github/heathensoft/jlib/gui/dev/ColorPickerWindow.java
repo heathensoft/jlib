@@ -4,7 +4,6 @@ import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.text.CommandLine;
-import io.github.heathensoft.jlib.gui.text.Paragraph;
 import io.github.heathensoft.jlib.gui.text.TextUtils;
 import io.github.heathensoft.jlib.gui.window.*;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
@@ -27,7 +26,7 @@ public class ColorPickerWindow extends WindowGUI {
     private final HexInputField inputField;
 
     public ColorPickerWindow() throws Exception {
-        super("ColorPicker");
+        super("ColorPicker",Anchor.NONE);
         this.picker = new ColorPicker();
         this.inputField = new HexInputField(picker);
         this.inputField.set(Color.rgb_to_hex(picker.getRgb()));
@@ -79,7 +78,7 @@ public class ColorPickerWindow extends WindowGUI {
         public void renderBackground(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
             Rectanglef quad = bounds(MathLib.rectf(),x,y);
             int abgr = Color.rgb_to_intBits(colorPicker.getRgb());
-            renderer.drawElement(quad,abgr,id);
+            renderer.drawElement(quad,abgr,id,0,true);
         }
     }
 
@@ -159,7 +158,7 @@ public class ColorPickerWindow extends WindowGUI {
             this.colorPicker = colorPicker;
         }
         protected boolean onFieldEdit(String value) {
-            return TextUtils.isHexadecimal(value) && (value.length() == 6 || value.length() == 8);
+            return TextUtils.is_hexadecimal(value) && (value.length() == 6 || value.length() == 8);
         }
         protected void onKeyEnter(String value, boolean isValid) {
             if (isValid) { colorPicker.setRGB(Color.hex_to_rgb(value,MathLib.vec4())); }

@@ -205,7 +205,7 @@ public class WindowGUI implements Disposable {
 
     public void dragLeft() {
         if (!content.isLockedHorizontal()) {
-            if (!anchor.anchored_right) {
+            if (!anchor.anchored_left) {
                 if (!dragging) {
                     dragging = true;
                     bounds(transform_initial);

@@ -23,12 +23,12 @@ import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointHMetrics;
  */
 
 
-public class Font {
+public class BitmapFont {
 
     public final ByteBuffer png;
     public final ByteBuffer metrics;
 
-    public Font(ByteBuffer png, ByteBuffer metrics) {
+    public BitmapFont(ByteBuffer png, ByteBuffer metrics) {
         this.metrics = metrics;
         this.png = png;
     }
@@ -39,19 +39,19 @@ public class Font {
 
     public Bitmap toBitmap() throws Exception { return new Bitmap(png); }
 
-    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion) throws Exception {
+    public static BitmapFont create(String name, ByteBuffer ttf, int size, int spacing, float protrusion) throws Exception {
         return create(name, ttf, size, spacing, protrusion, 0);
     }
 
-    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise) throws Exception {
+    public static BitmapFont create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise) throws Exception {
         return create(name, ttf, size, spacing, protrusion, noise, GL_LINEAR, GL_LINEAR);
     }
 
-    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise, int minFilter, int magFilter) throws Exception {
+    public static BitmapFont create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise, int minFilter, int magFilter) throws Exception {
         return create(name, ttf, size, spacing, protrusion, noise,minFilter, magFilter, false);
     }
 
-    public static Font create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise, int minFilter, int magFilter, boolean mipMap) throws Exception {
+    public static BitmapFont create(String name, ByteBuffer ttf, int size, int spacing, float protrusion, float noise, int minFilter, int magFilter, boolean mipMap) throws Exception {
         name = name == null || name.isBlank() ? "UnnamedFont" : name;
         name = name.trim();
         size = Math.max(1,size);
@@ -162,7 +162,7 @@ public class Font {
         Bitmap bitmap = new Bitmap(image,image_width,image_height,1);
         ByteBuffer png = bitmap.compress(); bitmap.dispose();
         byte[] string = builder.toString().getBytes();
-        return new Font(png,ByteBuffer.wrap(string));
+        return new BitmapFont(png,ByteBuffer.wrap(string));
     }
 
     private static Map<Character, GlyphMetrics> extractGlyphs(STBTTFontinfo info, float scale, float fontAscent) throws Exception {
