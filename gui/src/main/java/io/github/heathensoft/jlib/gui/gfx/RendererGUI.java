@@ -88,14 +88,12 @@ public class RendererGUI implements Disposable {
     protected TextBatchGUI textBatch;
     protected Framebuffer framebuffer;
 
-
     public RendererGUI(int width, int height) throws Exception {
         initializeFramebuffer(width, height);
         initializePixelBuffer(width,height);
         initializeFontCollection();
         initializeRenderBatches(width,height);
     }
-
 
     public void begin(Vector2f mouse) {
         if (!rendering) {
@@ -136,7 +134,6 @@ public class RendererGUI implements Disposable {
         }
     }
 
-
     public void drawText(Text text, Rectanglef quad) {
         if (rendering && !text.isBlank() && quad.isValid()) {
             if (active_batch != TEXT_BATCH) {
@@ -152,8 +149,6 @@ public class RendererGUI implements Disposable {
             glDisable(GL_SCISSOR_TEST);
         }
     }
-
-
 
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -246,7 +241,6 @@ public class RendererGUI implements Disposable {
             } else spriteBatch.draw(diffuse, null, region, quad, abgr, id, glow, invisible_id);
         }
     }
-
 
     public void drawElement(Rectanglef quad, int abgr) { drawElement(quad, abgr, 0); }
     public void drawElement(Rectanglef quad, int abgr, int id) { drawElement(quad, abgr, id,0f); }

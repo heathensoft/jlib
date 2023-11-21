@@ -3,7 +3,6 @@ package io.github.heathensoft.jlib.lwjgl.gfx;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.ExternalFile;
 import io.github.heathensoft.jlib.common.io.WorkingDirectory;
-import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.utils.RectPacker;
 import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.lwjgl.system.MemoryUtil;
@@ -12,13 +11,10 @@ import org.tinylog.Logger;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.file.Path;
 import java.util.*;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
-import static org.lwjgl.opengl.GL13.GL_CLAMP_TO_BORDER;
-import static org.lwjgl.opengl.GL14.GL_MIRRORED_REPEAT;
 
 /**
  *
@@ -179,11 +175,10 @@ public class TextureAtlas implements Disposable {
     public void dispose() { Disposable.dispose(textures); }
 
     public static AtlasData pack(String name, String directory, int spacing, int wrap, int min_filter, int mag_filter, boolean mip_map, boolean srgb) throws Exception {
-        WorkingDirectory workingDirectory = new WorkingDirectory(directory,".png");
-        int region_count = workingDirectory.validFileCount();
+        WorkingDirectory working_directory = new WorkingDirectory(directory);
+        List<String> region_names = working_directory.getFileNames(new LinkedList<>(),"png");
+        int region_count = region_names.size();
         if (region_count == 0) throw new Exception("No valid images in directory: " + directory);
-        List<String> region_names = new ArrayList<>(region_count);
-        workingDirectory.getValidFiles(region_names);
         Bitmap[] region_bitmaps = new Bitmap[region_count];
         StringBuilder builder;
         Bitmap bitmap;
@@ -209,17 +204,23 @@ public class TextureAtlas implements Disposable {
             builder.append("# Texture: <minFilter> <magFilter> <textureWrap> <mipMap> <srgb>\n");
             builder.append("# Region: <x> <y> <width> <height> <name>\n\n");
 
-            for (int i = 0; i < region_count; i++) {
-                Path path = workingDirectory.resolveFile(region_names.get(i));
-                ByteBuffer image_data = new ExternalFile(path).readToBuffer();
-                try { region_bitmaps[i] = new Bitmap(image_data);
-                } catch (Exception exception) {
-                    Logger.error("Unreadable png: " + path.toString());
-                    throw exception;
-                } channels = Math.max(channels,region_bitmaps[i].channels());
-                rectangles.put(i).put(region_bitmaps[i].width() + spacing).put(region_bitmaps[i].height() + spacing);
-                MemoryUtil.memFree(image_data);
-            } IntBuffer bounds = IntBuffer.allocate(2);
+            for (int i = 0; i < region_names.size(); i++) {
+                Optional<ExternalFile> optional = working_directory.resolveFile(region_names.get(i));
+                if (optional.isPresent()) {
+                    ExternalFile file = optional.get();
+                    ByteBuffer image_data = file.readToBuffer();
+                    try { region_bitmaps[i] = new Bitmap(image_data);
+                    } catch (Exception exception) {
+                        String path = file.toString();
+                        Logger.error("Unreadable png: " + path);
+                        throw exception;
+                    } channels = Math.max(channels,region_bitmaps[i].channels());
+                    rectangles.put(i).put(region_bitmaps[i].width() + spacing).put(region_bitmaps[i].height() + spacing);
+                    MemoryUtil.memFree(image_data);
+                } else throw new Exception("missing file: " + region_names.get(i));
+            }
+
+            IntBuffer bounds = IntBuffer.allocate(2);
             RectPacker.pack(rectangles.flip(),bounds);
             bitmap = new Bitmap(bounds.get(0),bounds.get(1),channels);
             builder.append("A: ");
@@ -252,7 +253,8 @@ public class TextureAtlas implements Disposable {
                 builder.append(y).append(' ');
                 builder.append(w).append(' ');
                 builder.append(h).append(' ');
-                builder.append(region_names.get(id)).append('\n');
+                //builder.append(region_names.get(id)).append('\n');
+                builder.append(region_name.replace(".png","")).append('\n');
             }
         } finally { Disposable.dispose(region_bitmaps);
         } return new AtlasData(bitmap,builder.toString(),name);

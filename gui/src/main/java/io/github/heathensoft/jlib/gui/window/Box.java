@@ -65,6 +65,8 @@ public abstract class Box implements Interactable, Disposable {
 
     protected void onWindowClose(WindowGUI context) { }
 
+    public void onWindowFocus(WindowGUI context) { }
+
     public int interactableID() { return id; }
 
     public void dispose() { if (iHasID()) iReturnID(); }

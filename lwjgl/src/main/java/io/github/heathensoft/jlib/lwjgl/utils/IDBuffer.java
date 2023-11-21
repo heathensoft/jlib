@@ -1,6 +1,10 @@
-package io.github.heathensoft.jlib.lwjgl.gfx;
+package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
+import io.github.heathensoft.jlib.lwjgl.gfx.Framebuffer;
+import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
+import io.github.heathensoft.jlib.lwjgl.gfx.TextureFormat;
 import org.joml.Vector2f;
 import org.lwjgl.system.MemoryUtil;
 

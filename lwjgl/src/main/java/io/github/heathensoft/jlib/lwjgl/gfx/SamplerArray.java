@@ -29,8 +29,7 @@ public class SamplerArray {
 
     /**
      * Assigns a shader texture slot to texture
-     * If the array is full it
-     * returns the array capacity (length)
+     * If the array is full it returns the array capacity (length)
      * @param texture texture to bind
      * @return assigned slot to upload to shader
      */

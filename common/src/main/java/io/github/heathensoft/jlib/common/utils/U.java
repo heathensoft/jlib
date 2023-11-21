@@ -24,6 +24,14 @@ public class U {
 
     public static int[][] adj_8 = new int[][] {{-1,0},{ 0,1},{ 1,0},{ 0,-1},{-1,1},{1,1},{-1,1},{-1,-1}};
 
+    public static boolean float_equals(double a, double b) {
+        return float_equals(a, b,(1e-9));
+    }
+
+    public static boolean float_equals(double a, double b, double epsilon) {
+        return Math.abs(a - b) < epsilon;
+    }
+
     public static float clamp(float v) {
         return v < 0 ? 0 : (v > 1 ? 1 : v);
     }
@@ -39,6 +47,10 @@ public class U {
 
     public static float smooth(float v) {
         return v * v * (3.0f - 2.0f * v);
+    }
+
+    public static float quadratic_erase_out(float v) {
+        return 1.0f - (1.0f - v) * (1.0f - v);
     }
 
     public static float fract(float v) {

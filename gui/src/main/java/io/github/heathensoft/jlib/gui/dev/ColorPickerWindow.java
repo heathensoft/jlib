@@ -46,7 +46,7 @@ public class ColorPickerWindow extends WindowGUI {
         return dst.set(picker.getRgb());
     }
 
-    public void pre_render_update(float dt) { picker.refreshHsvWindowTexture(); }
+    public void prepare(float dt) { picker.refreshHsvWindowTexture(); }
 
     public void dispose() {
         super.dispose();

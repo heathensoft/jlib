@@ -133,7 +133,8 @@ public class Bitmap implements Disposable {
 
     public int height() { return height; }
 
-    /** src channels must <= dst channels */
+    /** src channels must <= dst channels.
+     * if src == 2 channel and dst == 4, we assume the src is 16-bit grayscale. where the red channel is value and green channel is alpha */
     public void drawNearest(Bitmap source, float x, float y, float w, float h, float u1, float v1, float u2, float v2) {
         float x2 = x + w;
         float y2 = y + h;
@@ -162,13 +163,28 @@ public class Bitmap implements Disposable {
             }
         } else if (source.channels < channels) {
             if (channels == 4) {
-                for (int r = iy1; r < iy2; r++) {
-                    float v = remap(r,y,y2,v1,v2);
-                    for (int c = ix1; c < ix2; c++) {
-                        float u = remap(c,x,x2,u1,u2);
-                        int dst = getPixelUnchecked(c,r);
-                        int src = source.sampleNearest(u,v) | 0xFF000000;
-                        setPixelUnchecked(c,r,alphaBlend(src,dst));
+                if (source.channels == 2) {
+                    for (int r = iy1; r < iy2; r++) {
+                        float v = remap(r,y,y2,v1,v2);
+                        for (int c = ix1; c < ix2; c++) {
+                            float u = remap(c,x,x2,u1,u2);
+                            int dst = getPixelUnchecked(c,r);
+                            int src = source.sampleNearest(u,v);
+                            int src_red = Color.rBits(src);
+                            int src_gre = Color.gBits(src);
+                            src = Color.rgb_to_intBits(src_red,src_red,src_red,src_gre);
+                            setPixelUnchecked(c,r,alphaBlend(src,dst));
+                        }
+                    }
+                } else {
+                    for (int r = iy1; r < iy2; r++) {
+                        float v = remap(r,y,y2,v1,v2);
+                        for (int c = ix1; c < ix2; c++) {
+                            float u = remap(c,x,x2,u1,u2);
+                            int dst = getPixelUnchecked(c,r);
+                            int src = source.sampleNearest(u,v) | 0xFF000000;
+                            setPixelUnchecked(c,r,alphaBlend(src,dst));
+                        }
                     }
                 }
             } else {
@@ -184,7 +200,8 @@ public class Bitmap implements Disposable {
         }
     }
 
-    /** src channels must <= dst channels */
+    /** src channels must <= dst channels.
+     * if src == 2 channel and dst == 4, we assume the src is 16-bit grayscale. where the red channel is value and green channel is alpha */
     public void drawLinear(Bitmap source, float x, float y, float w, float h, float u1, float v1, float u2, float v2) {
         float x2 = x + w;
         float y2 = y + h;
@@ -213,13 +230,28 @@ public class Bitmap implements Disposable {
             }
         } else if (source.channels < channels) {
             if (channels == 4) {
-                for (int r = iy1; r < iy2; r++) {
-                    float v = remap(r,y,y2,v1,v2);
-                    for (int c = ix1; c < ix2; c++) {
-                        float u = remap(c,x,x2,u1,u2);
-                        int dst = getPixelUnchecked(c,r);
-                        int src = source.sampleLinear(u,v) | 0xFF000000;
-                        setPixelUnchecked(c,r,alphaBlend(src,dst));
+                if (source.channels == 2) {
+                    for (int r = iy1; r < iy2; r++) {
+                        float v = remap(r,y,y2,v1,v2);
+                        for (int c = ix1; c < ix2; c++) {
+                            float u = remap(c,x,x2,u1,u2);
+                            int dst = getPixelUnchecked(c,r);
+                            int src = source.sampleLinear(u,v);
+                            int src_red = Color.rBits(src);
+                            int src_gre = Color.gBits(src);
+                            src = Color.rgb_to_intBits(src_red,src_red,src_red,src_gre);
+                            setPixelUnchecked(c,r,alphaBlend(src,dst));
+                        }
+                    }
+                } else {
+                    for (int r = iy1; r < iy2; r++) {
+                        float v = remap(r,y,y2,v1,v2);
+                        for (int c = ix1; c < ix2; c++) {
+                            float u = remap(c,x,x2,u1,u2);
+                            int dst = getPixelUnchecked(c,r);
+                            int src = source.sampleLinear(u,v) | 0xFF000000;
+                            setPixelUnchecked(c,r,alphaBlend(src,dst));
+                        }
                     }
                 }
             } else {

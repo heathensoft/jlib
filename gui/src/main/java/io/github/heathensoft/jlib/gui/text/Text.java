@@ -201,4 +201,6 @@ public class Text implements RenderableText, Iterable<Paragraph> {
         stringBuilder.deleteCharAt(length - 1);
         return stringBuilder.toString();
     }
+
+    public void clear() { lines.clear(); }
 }

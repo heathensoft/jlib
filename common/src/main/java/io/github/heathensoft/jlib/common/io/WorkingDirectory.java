@@ -1,345 +1,266 @@
 package io.github.heathensoft.jlib.common.io;
 
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Utility class for simple file browsing in a GUI.
- * Can filter file extensions/types
- *
  * @author Frederik Dahl
- * 15/01/2023
+ * 19/11/2023
  */
 
 
 public class WorkingDirectory {
-    
-    protected Path path;
-    protected Path parent;
-    protected final Set<String> validFiles;
-    protected final Set<String> subFolders;
-    protected final Set<String> fileTypes;
 
+    private Path path;
+    private Path parent;
+    private final List<String> files;
+    private final List<String> folders;
 
     public WorkingDirectory(String location) throws Exception {
-        this(location,(List<String>) null);
-    }
-
-    public WorkingDirectory(String location, String validFileExtensions) throws Exception {
-        this(location,List.of(validFileExtensions.split(" ")));
-    }
-
-    public WorkingDirectory(String location, List<String> validFileExtensions) throws Exception {
-        this(Path.of(location),validFileExtensions);
+        try {this.path = Path.of(location);
+            if (Files.isDirectory(path)) {
+                this.parent = path.getParent();
+                this.files = new LinkedList<>();
+                this.folders = new LinkedList<>();
+                try (Stream<Path> stream = Files.list(path)){
+                    stream.forEach(path -> {
+                        String name = path.getFileName().toString();
+                        if (Files.isDirectory(path)) folders.add(name);
+                        else if (Files.isRegularFile(path)) files.add(name);});}
+            } else throw new Exception("working directory not a directory");
+        } catch (InvalidPathException e) { throw new Exception(e); }
     }
 
     public WorkingDirectory(Path location) throws Exception {
-        this(location,null);
-    }
-    
-    public WorkingDirectory(Path location, List<String> validFileExtensions) throws Exception {
-       path = location;
-       if (Files.isDirectory(path)) {
-           this.parent = path.getParent();
-           this.fileTypes = new HashSet<>();
-           this.validFiles = new HashSet<>();
-           this.subFolders = new HashSet<>();
-           if (validFileExtensions != null) {
-               for (String type : validFileExtensions) {
-                   if (type.isBlank()) continue;
-                   if (!type.startsWith(".")) {
-                       type = "." + type;
-                   } fileTypes.add(type);
-               }
-           }
-           try (Stream<Path> stream = Files.list(path)) {
-               stream.forEach(path -> {
-                   String name = path.getFileName().toString();
-                   if (Files.isDirectory(path)) {
-                       subFolders.add(name);
-                   } else if (Files.isRegularFile(path)) {
-                       if (fileTypes.isEmpty()) {
-                           validFiles.add(name);
-                       } else {
-                           for (String validType : fileTypes) {
-                               if (name.contains(validType)) { // todo ends on
-                                   validFiles.add(name);
-                               }
-                           }
-                       }
-                   }
-               });
-           }
-       } else throw new Exception("working directory not a directory");
-    }
-
-    public void newFolder(String name) throws Exception {
-        if (name == null) {
-            name = "folder";
-        } else {
-            name = name.replace(" ","");
-            name = name.length() == 0 ? "folder" : name;
-        } ExternalFile folder = new ExternalFile(path.resolve(name));
-        folder.createDirectories();
-        refresh();
+        if (Files.isDirectory(location)) {
+            this.path = location;
+            this.parent = path.getParent();
+            this.files = new LinkedList<>();
+            this.folders = new LinkedList<>();
+            try (Stream<Path> stream = Files.list(path)){
+                stream.forEach(path -> {
+                    String name = path.getFileName().toString();
+                    if (Files.isDirectory(path)) folders.add(name);
+                    else if (Files.isRegularFile(path)) files.add(name);});}
+        } else throw new Exception("working directory not a directory");
     }
 
     /**
-     * This will delete the folder and all its contents
-     * @param folderName name of the folder
-     * @return true if the folder was deleted successfully
-     * @throws Exception If an io exception occurred
+     * Refresh to reflect the contents. (If you manipulate
+     * the folder in the operating system at the same time).
+     * @throws Exception if working directory no longer exist,
+     * or some other io exception (like security exception)
      */
-    public boolean deleteFolder(String folderName) throws Exception {
-        if (subFolders.contains(folderName)) {
-            ExternalFile folder = new ExternalFile(path.resolve(folderName));
-            folder.delete();
-            refresh();
-            return true;
-        } return false;
-    }
-
-    /**
-     * This will delete the folder and all its contents
-     * @param fileName name of the folder
-     * @return true if the folder was deleted successfully
-     * @throws Exception If an io exception occurred
-     */
-    public boolean deleteFile(String fileName) throws Exception {
-        if (validFiles.contains(fileName)) {
-            ExternalFile file = new ExternalFile(path.resolve(fileName));
-            file.delete();
-            refresh();
-            return true;
-        } return false;
-    }
-    
-    public void clearValidFileTypes() throws Exception {
-        if (!fileTypes.isEmpty()) {
-            fileTypes.clear();
+    public void refresh() throws Exception {
+        if (Files.isDirectory(path)) {
+            List<String> prevFiles = getFileNames(new LinkedList<>());
+            List<String> prevFolders = getFolderNames(new LinkedList<>());
+            folders.clear();
+            files.clear();
             try (Stream<Path> stream = Files.list(path)) {
                 stream.forEach(path -> {
                     String name = path.getFileName().toString();
-                    if (Files.isRegularFile(path)) {
-                        validFiles.add(name);
-                    }
-                });
-            }
-            
-        }
-    }
-    
-    public void setValidFileTypes(List<String> validTypes) throws Exception {
-        fileTypes.clear();
-        for (String type : validTypes) {
-            if (type.isBlank()) continue;
-            if (!type.startsWith(".")) {
-                type = "." + type;
-            } fileTypes.add(type);
-        } if (fileTypes.isEmpty()) {
-            try (Stream<Path> stream = Files.list(path)) {
-                stream.forEach(path -> {
-                    String name = path.getFileName().toString();
-                    if (Files.isRegularFile(path)) {
-                        validFiles.add(name);
-                    }
-                });
-            }
-        } else {
-            try (Stream<Path> stream = Files.list(path)) {
-                stream.forEach(path -> {
-                    String name = path.getFileName().toString();
-                    if (Files.isRegularFile(path)) {
-                        for (String validType : fileTypes) {
-                            if (name.contains(validType)) {
-                                validFiles.add(name);
-                            }
-                        }
-                    }
-                });
-            }
-        }
-    }
-    
-    public void moveDown(String folder) throws Exception {
-        if (subFolders.contains(folder)) {
-            Path prevPath = Path.of(path.toString());
-            Path prevParent = parent == null ? null : Path.of(parent.toString());
-            List<String> prevFiles = new ArrayList<>();
-            List<String> prevFolders = new ArrayList<>();
-            getValidFiles(prevFiles);
-            getSubFolders(prevFolders);
-            validFiles.clear();
-            subFolders.clear();
-            try { parent = path;
-                path = prevPath.resolve(folder);
-                try (Stream<Path> stream = Files.list(path)) {
-                    stream.forEach(path -> {
-                        String name = path.getFileName().toString();
-                        if (Files.isDirectory(path)) {
-                            subFolders.add(name);
-                        } else if (Files.isRegularFile(path)) {
-                            if (fileTypes.isEmpty()) {
-                                validFiles.add(name);
-                            } else {
-                                for (String validType : fileTypes) {
-                                    if (name.contains(validType)) {
-                                        validFiles.add(name);
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
+                    if (Files.isDirectory(path)) folders.add(name);
+                    else if (Files.isRegularFile(path)) files.add(name);});
             } catch (Exception e) {
-                path = prevPath;
-                parent = prevParent;
-                validFiles.clear();
-                subFolders.clear();
-                validFiles.addAll(prevFiles);
-                subFolders.addAll(prevFolders);
-                throw new Exception(e);
-            }
-        }
+                files.clear();
+                folders.clear();
+                files.addAll(prevFiles);
+                folders.addAll(prevFolders);
+                throw new Exception(e); }
+        } else throw new Exception("Missing working directory");
     }
-    
-    
+
     public void moveUp() throws Exception {
         if (hasParent()) {
             Path prevPath = Path.of(path.toString());
-            Path prevParent = Path.of(parent.toString());
-            List<String> prevFiles = new ArrayList<>();
-            List<String> prevFolders = new ArrayList<>();
-            getValidFiles(prevFiles);
-            getSubFolders(prevFolders);
-            validFiles.clear();
-            subFolders.clear();
+            Path prevParent = parent == null ? null : Path.of(parent.toString());
+            List<String> prevFiles = getFileNames(new LinkedList<>());
+            List<String> prevFolders = getFolderNames(new LinkedList<>());
+            folders.clear();
+            files.clear();
             try { path = parent;
                 parent = path.getParent();
                 try (Stream<Path> stream = Files.list(path)) {
                     stream.forEach(path -> {
                         String name = path.getFileName().toString();
                         if (Files.isDirectory(path)) {
-                            subFolders.add(name);
+                            folders.add(name);
                         } else if (Files.isRegularFile(path)) {
-                            if (fileTypes.isEmpty()) {
-                                validFiles.add(name);
-                            } else {
-                                for (String validType : fileTypes) {
-                                    if (name.contains(validType)) {
-                                        validFiles.add(name);
-                                    }
-                                }
-                            }
+                            files.add(name);
                         }
                     });
                 }
             } catch (Exception e) {
                 path = prevPath;
                 parent = prevParent;
-                validFiles.clear();
-                subFolders.clear();
-                validFiles.addAll(prevFiles);
-                subFolders.addAll(prevFolders);
+                files.clear();
+                folders.clear();
+                files.addAll(prevFiles);
+                folders.addAll(prevFolders);
                 throw new Exception(e);
             }
         }
     }
 
+    public void moveDown(String folder) throws Exception {
+        if (folders.contains(folder)) {
+            Path prevPath = Path.of(path.toString());
+            Path prevParent = parent == null ? null : Path.of(parent.toString());
+            List<String> prevFiles = getFileNames(new LinkedList<>());
+            List<String> prevFolders = getFolderNames(new LinkedList<>());
+            folders.clear();
+            files.clear();
+            try { parent = path;
+                path = prevPath.resolve(folder);
+                try (Stream<Path> stream = Files.list(path)) {
+                    stream.forEach(path -> {
+                        String name = path.getFileName().toString();
+                        if (Files.isDirectory(path)) {
+                            folders.add(name);
+                        } else if (Files.isRegularFile(path)) {
+                           files.add(name);
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                path = prevPath;
+                parent = prevParent;
+                files.clear();
+                folders.clear();
+                files.addAll(prevFiles);
+                folders.addAll(prevFolders);
+                throw new Exception(e);
+            }
+        }
+    }
+
+
     /**
-     * If any files are removed or added, this can be used
-     * to refresh the working directory
-     * @throws Exception if failed to refresh directory
+     * Creates a new folder if no folder exist with the
+     * same name. spaces are removed form names.
+     * @param name of the folder
+     * @throws Exception If an io exception occurred
      */
-    public void refresh() throws Exception {
-        List<String> prevFiles = new ArrayList<>();
-        List<String> prevFolders = new ArrayList<>();
-        getValidFiles(prevFiles);
-        getSubFolders(prevFolders);
-        validFiles.clear();
-        subFolders.clear();
-        try {
-            try (Stream<Path> stream = Files.list(path)) {
-                stream.forEach(path -> {
-                    String name = path.getFileName().toString();
-                    if (Files.isDirectory(path)) {
-                        subFolders.add(name);
-                    } else if (Files.isRegularFile(path)) {
-                        if (fileTypes.isEmpty()) {
-                            validFiles.add(name);
-                        } else {
-                            for (String validType : fileTypes) {
-                                if (name.contains(validType)) {
-                                    validFiles.add(name);
-                                }
-                            }
+    public void newFolder(String name) throws Exception {
+        if (name == null || name.isBlank()) name = "folder";
+        else  name = name.replaceAll("\\s+","");
+        if (!folders.contains(name)) {
+            ExternalFile folder = new ExternalFile(path.resolve(name));
+            folder.createDirectories();
+            folders.add(name);
+        }
+    }
+
+    /**
+     * This will delete the folder and all its contents
+     * @param name of the folder
+     * @return true if the folder was deleted successfully
+     * @throws Exception If an io exception occurred
+     */
+    public boolean deleteFolder(String name) throws Exception {
+        if (folders.contains(name)) {
+            ExternalFile folder = new ExternalFile(path.resolve(name));
+            folder.delete();
+            folders.remove(name);
+            return true;
+        } return false;
+    }
+
+    public boolean deleteFile(String name) throws Exception {
+        if (files.contains(name)) {
+            ExternalFile file = new ExternalFile(path.resolve(name));
+            file.delete();
+            files.remove(name);
+            return true;
+        } return false;
+    }
+
+    public boolean delete(String name) throws Exception {
+        if (deleteFile(name)) return true;
+        else return deleteFolder(name);
+    }
+
+    public List<String> getFileNames(List<String> dst, String ... fileExtensions) {
+        if (!files.isEmpty() && fileExtensions != null && fileExtensions.length > 0) {
+            List<String> extensions = new LinkedList<>();
+            for (String string : fileExtensions) {
+                if (!string.isBlank()) {
+                    if (!string.startsWith(".")) {
+                        string = "." + string;
+                    } if (!extensions.contains(string)) {
+                        extensions.add(string);
+                    }
+                }
+            } if (!extensions.isEmpty()) {
+                for (String file : files) {
+                    for (String extension : extensions) {
+                        if (file.endsWith(extension)) {
+                            dst.add(file);
+                            break;
                         }
                     }
-                });
+                }
             }
-        } catch (Exception e) {
-            validFiles.clear();
-            subFolders.clear();
-            validFiles.addAll(prevFiles);
-            subFolders.addAll(prevFolders);
-            throw e;
-        }
+
+        } return dst;
     }
-    
-    public void getValidFileTypes(List<String> dest) {
-        dest.addAll(fileTypes);
+
+    public List<String> getFileNames(List<String> dst) {
+        dst.addAll(files);
+        return dst;
     }
-    
-    public void getValidFiles(List<String> dest) {
-        dest.addAll(validFiles);
+
+    public List<String> getFolderNames(List<String> dst) {
+        dst.addAll(folders);
+        return dst;
     }
-    
-    public void getSubFolders(List<String> dest) {
-        dest.addAll(subFolders);
+
+    public Optional<ExternalFile> resolveFolder(String name) {
+        if (folders.contains(name)) {
+            return Optional.of(new ExternalFile(path.resolve(name)));
+        } return Optional.empty();
     }
-    
-    public void getValidFiles(List<String> dest, String substring) {
-        for (String filename : validFiles) {
-            if (filename.contains(substring))
-                dest.add(filename);
-        }
+
+
+    public Optional<ExternalFile> resolveFile(String name) {
+        if (files.contains(name)) {
+            return Optional.of(new ExternalFile(path.resolve(name)));
+        } return Optional.empty();
     }
-    
+
+    public Optional<ExternalFile> resolve(String name) {
+        Optional<ExternalFile> optional = resolveFile(name);
+        return optional.isPresent() ? optional : resolveFolder(name);
+    }
+
+    public Optional<ExternalFile> parent() {
+        if (hasParent()) {
+            return Optional.of(new ExternalFile(parent));
+        } else return Optional.empty();
+    }
+
+    public ExternalFile asExternalFile() {
+        return new ExternalFile(path);
+    }
+
+    public int numRegularFiles() {
+        return files.size();
+    }
+
+    public int numSubFolders() {
+        return folders.size();
+    }
+
     public boolean hasParent() {
         return parent != null;
     }
-    
-    public boolean containsValidFile(String filename) {
-        return validFiles.contains(filename);
-    }
 
-    public Path resolveFile(String filename) {
-        if (containsValidFile(filename)) {
-            return path.resolve(filename);
-        } return null;
-    }
 
-    public Path resolveFolder(String folderName) {
-        if (subFolders.contains(folderName)) {
-            return path.resolve(folderName);
-        } return null;
-    }
-    
-    public Path path() {
-        return path;
-    }
-    
-    public Path parent() {
-        return parent;
-    }
 
-    public int validFileCount() {
-        return validFiles.size();
-    }
-    
 }

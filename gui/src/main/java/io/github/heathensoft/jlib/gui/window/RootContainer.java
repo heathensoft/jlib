@@ -76,11 +76,17 @@ public class RootContainer extends BoxContainer {
         Anchor anchor = context.anchor;
 
         if (iClickedNotGrabbed(Mouse.LEFT)) {
+            if (context.isMaximized()) {
+                context.restore();
+            } else context.maximize();
+            /*
             if (!context.isMaximized()) {
                 context.maximize();
             } else if (!context.isRestored()) {
                 context.restore();
             }
+
+             */
         }
         else if (iPressed(Mouse.LEFT)) {
 

@@ -29,6 +29,8 @@ public abstract class BoxContainer extends Box {
         return contents.size();
     }
 
+    public void onWindowFocus(WindowGUI context) { for (Box box : contents) box.onWindowFocus(context); }
+
     public void renderBackground(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {}
 
     public void render(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
