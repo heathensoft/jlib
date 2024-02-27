@@ -8,7 +8,6 @@ import org.tinylog.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.glGetIntegerv;
 
 /**
  *
@@ -43,7 +42,9 @@ public final class Engine {
             BootConfiguration config = new BootConfiguration();
             config.logger("writer","console");
             config.logger("writer.format","{date: HH:mm:ss.SS} {level}: {message}");
+            app.set_state(Application.State.INITIALIZING);
             app.engine_init(app_res,config,args);
+            app.set_state(Application.State.WAITING_TO_START);
             Logger.info("logger configured, welcome");
             int memory = (int)(Runtime.getRuntime().maxMemory() / 1000000L);
             int processors = Runtime.getRuntime().availableProcessors();
@@ -71,7 +72,9 @@ public final class Engine {
                 float accumulator = 0f;
                 glContext = new GLContext(window.handle());
                 Logger.info("starting application");
+                app.set_state(Application.State.STARTING_UP);
                 app.on_start(window.appResolution());
+                app.set_state(Application.State.MAIN_LOOP_WAITING);
                 Logger.info("application is running");
                 time.init();
                 while (!window.shouldClose()) {
@@ -83,15 +86,21 @@ public final class Engine {
                             threadPool.update();
                         if (!window.isMinimized()) {
                             window.processInput(delta);
-                        } app.on_update(delta);
+                        } app.set_state(Application.State.UPDATING);
+                        app.on_update(delta);
+                        app.set_state(Application.State.MAIN_LOOP_WAITING);
                         time.incUpsCount();
                         accumulator -= delta;
                     } alpha = accumulator / delta;
                     if (!window.isMinimized()) {
                         if (window.shouldUpdateRes()) {
+                            app.set_state(Application.State.UPDATING_RESOLUTION);
                             window.updateAppResolution();
+                            app.set_state(Application.State.MAIN_LOOP_WAITING);
                         } window.refreshViewport();
+                        app.set_state(Application.State.RENDERING);
                         app.on_render(frameTime,alpha);
+                        app.set_state(Application.State.MAIN_LOOP_WAITING);
                         window.swapBuffers();
                     } window.pollEvents();
                     time.incFpsCount();
@@ -109,11 +118,14 @@ public final class Engine {
                             }
                         }
                     }
-                } Logger.info("exiting main loop");
+                } app.set_state(Application.State.WAITING_TO_EXIT);
+                Logger.info("exiting main loop");
             } catch (Exception e) {
                 Logger.error(e);
+                Logger.error("App State: {}",app.state().description);
             } finally {
                 Logger.info("exiting application");
+                app.set_state(Application.State.EXITING);
                 app.on_exit();
                 Logger.info("terminating window");
                 window.terminate();
@@ -136,7 +148,7 @@ public final class Engine {
         instance.window().signalToClose();
         Logger.info("window signaled to close");
     }
-    
+
     public Time time() {
         return time;
     }

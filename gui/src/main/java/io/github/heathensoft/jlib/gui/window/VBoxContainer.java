@@ -18,14 +18,18 @@ public class VBoxContainer extends BoxContainer {
         float this_resting_width = restingSize.width();
         float box_resting_width = box.restingSize.width();
         float max_resting_width = Math.max(this_resting_width,box_resting_width);
-        this_resting_width = max_resting_width;
-        box_resting_width = max_resting_width;
-        box.restingSize.setWidth(box_resting_width);
-        restingSize.setWidth(this_resting_width);
+        contents.add(box);
+        for (Box content : contents) {
+            float resting_width = content.restingSize.width();
+            if (resting_width < max_resting_width) {
+                content.restingSize.setWidth(max_resting_width);
+                content.currentSize.setWidth(max_resting_width);
+            }
+
+        } restingSize.setWidth(max_resting_width);
         restingSize.addHeight(box.restingSize.height());
         if (!isEmpty()) restingSize.addHeight(spacing);
         if (box.lockedHorizontal) lockedHorizontal = true;
-        contents.add(box);
         boolean lock = true;
         for (Box b : contents) {
             if (!b.lockedVertical) {

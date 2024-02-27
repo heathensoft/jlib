@@ -1,5 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
+import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import org.joml.Vector3f;
@@ -7,6 +8,7 @@ import org.joml.Vector4f;
 
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
+import static java.lang.Math.min;
 
 /**
  * sRGB space color
@@ -21,7 +23,7 @@ public class Color {
 
     public static final int ERROR_BITS = 0xFF5E2ADC;
     public static final int WHITE_BITS = 0xFFFFFFFF;
-    public static final Vector4f SHARED = new Vector4f();
+    public static final int BLACK_BITS = 0xFF000000;
 
 
     public static int rgb_to_intBits(Vector4f rgb) {
@@ -44,16 +46,34 @@ public class Color {
         return intBits_to_floatBits(rgb_to_intBits(rgb));
     }
 
+    public static Vector4f rgb_to_hsl(Vector4f dst) {
+        float r = dst.x;
+        float g = dst.y;
+        float b = dst.z;
+        float max = Math.max(Math.max(r, g), b);
+        float min = min(min(r, g), b);
+        float range = max - min;
+        if (range == 0) dst.x = 0;
+        else if (max == r) dst.x = (60 * (g - b) / range + 360) % 360;
+        else if (max == g) dst. x = 60 * (b - r) / range + 120;
+        else dst.x = 60 * (r - g) / range + 240;
+        float minMax = (max + min);
+        dst.z = 0.5f * minMax;
+        if (dst.z < 1f) dst.y = range / (1 - abs(2 * dst.z - 1));
+        else dst.y = 0;
+        return dst;
+    }
+
     public static Vector4f rgb_to_hsv(Vector4f dst) {
         float r = dst.x;
         float g = dst.y;
         float b = dst.z;
         float max = Math.max(Math.max(r, g), b);
-        float min = Math.min(Math.min(r, g), b);
+        float min = min(min(r, g), b);
         float range = max - min;
         if (range == 0) dst.x = 0;
         else if (max == r) dst.x = (60 * (g - b) / range + 360) % 360;
-        else if (max == g)dst. x = 60 * (b - r) / range + 120;
+        else if (max == g) dst. x = 60 * (b - r) / range + 120;
         else dst.x = 60 * (r - g) / range + 240;
         if (max > 0) dst.y = 1 - min / max;
         else dst.y = 0;
@@ -102,6 +122,8 @@ public class Color {
         return intBits_to_hsv(hex_to_intBits(hex),dst);
     }
 
+    public static Vector4f hex_to_hsl(String hex, Vector4f dst) { return intBits_to_hsl(hex_to_intBits(hex),dst); }
+
     public static Vector4f intBits_to_rgb(int abgr, Vector4f dst) {
         dst.x = rBits(abgr) / 255f;
         dst.y = gBits(abgr) / 255f;
@@ -111,6 +133,8 @@ public class Color {
     }
 
     public static Vector4f intBits_to_hsv(int abgr, Vector4f dst) { return rgb_to_hsv(intBits_to_rgb(abgr,dst)); }
+
+    public static Vector4f intBits_to_hsl(int abgr, Vector4f dst) { return rgb_to_hsl(intBits_to_rgb(abgr,dst)); }
 
     public static Vector4f intBits_to_xyz(int abgr, Vector4f dst) { return rgb_to_xyz(intBits_to_rgb(abgr,dst)); }
 
@@ -150,27 +174,41 @@ public class Color {
         } return dst;
     }
 
-    public static String hsv_to_hex(Vector4f hsv) { return rgb_to_hex(hsv_to_rgb(SHARED.set(hsv))); }
+    public static Vector4f hsv_to_hsl(Vector4f dst) {
+        float l = dst.z - dst.z * dst.y * 0.5f;
+        if (l <= 0 || l >= 1) {
+            dst.y = 0;
+            dst.z = clamp(l);
+        } else {
+            dst.y = (dst.z - l) / min(l,1-l);
+            dst.z = l;
+        } return dst;
+    }
 
-    public static int hsv_to_intBits(Vector4f hsv) { return rgb_to_intBits(hsv_to_rgb(SHARED.set(hsv))); }
+    public static String hsv_to_hex(Vector4f hsv) { return rgb_to_hex(hsv_to_rgb(MathLib.vec4().set(hsv))); }
+
+    public static int hsv_to_intBits(Vector4f hsv) { return rgb_to_intBits(hsv_to_rgb(MathLib.vec4().set(hsv))); }
 
     public static float hsv_to_floatBits(Vector4f hsv) { return intBits_to_floatBits(hsv_to_intBits(hsv)); }
 
-    public static int rBits(int abgr) {
-        return abgr & 0xFF;
+    public static Vector4f hsl_to_hsv(Vector4f dst) {
+        float v = dst.z + dst.y * min(dst.z,1-dst.z);
+        if (v > 0) {
+            dst.y = 2 - (2 * dst.z) / v;
+        } else dst.y = 0;
+        dst.z = v;
+        return dst;
     }
 
-    public static int gBits(int abgr) {
-        return (abgr >> 8) & 0xFF;
-    }
+    public static Vector4f hsl_to_rgb(Vector4f dst) { return hsv_to_rgb(hsl_to_hsv(dst)); }
 
-    public static int bBits(int abgr) {
-        return (abgr >> 16) & 0xFF;
-    }
+    public static int rBits(int abgr) { return abgr & 0xFF; }
 
-    public static int aBits(int abgr) {
-        return (abgr >> 24) & 0xFF;
-    }
+    public static int gBits(int abgr) { return (abgr >> 8) & 0xFF; }
+
+    public static int bBits(int abgr) { return (abgr >> 16) & 0xFF; }
+
+    public static int aBits(int abgr) { return (abgr >> 24) & 0xFF; }
 
     // todo: probably not correct. clear alpha first?
     public static int floatBits_to_intBits(float floatBits) {
@@ -186,6 +224,8 @@ public class Color {
         dst.w = U.clamp(dst.w);
         return dst;
     }
+
+    public static Vector4f clamp_hsl(Vector4f dst) { return clamp_hsv(dst); }
 
     public static Vector4f clamp_hsv(Vector4f dst) {
         dst.x = dst.x % 360;
@@ -213,7 +253,7 @@ public class Color {
         return v1.distance(v2);
     }
 
-    public static Vector4f lerp(Vector4f a, Vector4f b, float t) { return lerp(a,b,t, SHARED); }
+    public static Vector4f lerp(Vector4f a, Vector4f b, float t) { return lerp(a,b,t, MathLib.vec4()); }
 
     public static Vector4f lerp(Vector4f a, Vector4f b, float t, Vector4f dst) {
         if (t <= 0) return dst.set(a);
@@ -239,9 +279,7 @@ public class Color {
         return U.lerp(a,a + (dt > 180 ? dt - 360 : dt), t);
     }
 
-    private static float hue_repeat(float t) {
-        return U.clamp(t - floor(t / 360f) * 360f,0,360f);
-    }
+    private static float hue_repeat(float t) { return U.clamp(t - floor(t / 360f) * 360f,0,360f); }
 
     public static Vector4f sRGB_to_linear(Vector4f dst) {
         dst.x = pow(dst.x,2.2f);
@@ -258,7 +296,7 @@ public class Color {
         return dst;
     }
 
-    public static Vector4f premultiplyAlpha(Vector4f dst) {
+    public static Vector4f premultiply_alpha(Vector4f dst) {
         if (dst.w < 1) {
             dst.x *= dst.w;
             dst.y *= dst.w;
@@ -266,7 +304,7 @@ public class Color {
         } return dst;
     }
 
-    public static Vector4f unMultiplyAlpha(Vector4f dst) {
+    public static Vector4f unMultiply_alpha(Vector4f dst) {
         if (dst.w > 0) { float a_inv = 1f / dst.w;
             dst.x *= a_inv;
             dst.y *= a_inv;
@@ -274,16 +312,18 @@ public class Color {
         } return dst;
     }
 
-    public static ColorPalette ramp(int abgr1, int abgr2, int samples) {
-        return ColorPalette.ramp(abgr1,abgr2,samples);
+    public static Vector4f random_opaque(Vector4f dst) {
+        dst.x = Rand.nextFloat();
+        dst.y = Rand.nextFloat();
+        dst.z = Rand.nextFloat();
+        dst.w = 1.0f;
+        return dst;
     }
 
-    public static ColorPalette ramp(String hex1, String hex2, int samples) {
-        return ColorPalette.ramp(hex1,hex2,samples);
-    }
+    public static ColorPalette ramp(int abgr1, int abgr2, int samples) { return ColorPalette.ramp(abgr1,abgr2,samples); }
 
-    public static ColorPalette ramp(Vector4f rgb1, Vector4f rgb2, int samples) {
-        return ColorPalette.ramp(rgb1,rgb2,samples);
-    }
+    public static ColorPalette ramp(String hex1, String hex2, int samples) { return ColorPalette.ramp(hex1,hex2,samples); }
+
+    public static ColorPalette ramp(Vector4f rgb1, Vector4f rgb2, int samples) { return ColorPalette.ramp(rgb1,rgb2,samples); }
 
 }

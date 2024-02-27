@@ -1,7 +1,8 @@
 package io.github.heathensoft.jlib.gui.dev;
 
-import io.github.heathensoft.jlib.gui.GUI;
+
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
+import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.text.CommandLine;
 import io.github.heathensoft.jlib.gui.window.Box;
 import io.github.heathensoft.jlib.gui.window.WindowGUI;
@@ -43,7 +44,7 @@ public class InputBox extends Box {
     public void render(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
         Rectanglef quad = bounds(MathLib.rectf(),x,y);
         renderer.drawElement(quad, 0x66000000,id);
-        if (iHovered()) GUI.State.setCursorIcon(CursorObjects.CURSOR_TEXT_INPUT);
+        if (iHovered()) GUI.state.useCursorIcon(CursorObjects.CURSOR_TEXT_INPUT);
         if (iJustPressed(Mouse.LEFT)) {
             if (!commandLine.isActiveInputProcessor()) {
                 commandLine.activateProcessor();

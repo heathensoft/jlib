@@ -22,12 +22,22 @@ import static org.lwjgl.system.MemoryStack.stackPush;
 public class CursorObjects implements Disposable {
 
     public static final int STANDARD_CURSOR_COUNT = 6;
+    public static final int MAXIMUM_CURSOR_COUNT = 14;
+    public static final int CURSOR_DEFAULT = 0;
     public static final int CURSOR_ARROW = 0;
     public static final int CURSOR_TEXT_INPUT = 1;
     public static final int CURSOR_CROSS_HAIR = 2;
     public static final int CURSOR_HAND = 3;
     public static final int CURSOR_H_RESIZE = 4;
     public static final int CURSOR_V_RESIZE = 5;
+    public static final int CURSOR_CUSTOM_0 = 6;
+    public static final int CURSOR_CUSTOM_1 = 7;
+    public static final int CURSOR_CUSTOM_2 = 8;
+    public static final int CURSOR_CUSTOM_3 = 9;
+    public static final int CURSOR_CUSTOM_4 = 10;
+    public static final int CURSOR_CUSTOM_5 = 11;
+    public static final int CURSOR_CUSTOM_6 = 12;
+    public static final int CURSOR_CUSTOM_7 = 13;
 
     private final long window;
     private Cursor currentCursor;
@@ -39,17 +49,24 @@ public class CursorObjects implements Disposable {
         this.window = window;
         this.customCursors = new HashMap<>(31);
         this.standardCursors = createStandardCursors(window);
+        this.currentCursor = standardCursors[CURSOR_DEFAULT];
+        this.currentCursor.use();
     }
 
+    public boolean validCursor(int slot) {
+        if (slot < 0 || slot >= MAXIMUM_CURSOR_COUNT) {
+            return false;
+        } return standardCursors[slot] != null;
+    }
 
-    public void useStandard(int shape) {
-        if (shape < 0 || shape >= STANDARD_CURSOR_COUNT) {
-            Logger.warn("cursor-shape: {} not recognized.", shape);
+    public void useCursor(int slot) {
+        if (slot < 0 || slot >= MAXIMUM_CURSOR_COUNT) {
+            Logger.warn("cursor-shape: {} not recognized.", slot);
             return;
         }
-        Cursor cursor = standardCursors[shape];
+        Cursor cursor = standardCursors[slot];
         if (cursor == null) {
-            Logger.warn("unable to set cursor-shape: {} (not created)", shape);
+            Logger.warn("unable to use cursor in slot: {} (null)", slot);
             return;
         }
         if (currentCursor != cursor) {
@@ -58,7 +75,7 @@ public class CursorObjects implements Disposable {
         }
     }
 
-    public void useCustom(String name) {
+    public void useCursor(String name) {
         Cursor cursor = customCursors.get(name);
         if (cursor == null) {
             Logger.warn("custom cursor: {} not recognized.", name);
@@ -70,19 +87,22 @@ public class CursorObjects implements Disposable {
         }
     }
 
-    public void createCustom(int standard_cursor_type, Bitmap image, int xH, int yH) {
-        Logger.info("Replacing standard cursor: {}",standard_cursor_type);
-        if (standard_cursor_type < 0 || standard_cursor_type >= STANDARD_CURSOR_COUNT) {
-            Logger.warn("cursor-slot: {} out-of-bounds", standard_cursor_type);
+    public void createCursor(int cursor_slot, Bitmap image, int xH, int yH) {
+        Logger.info("Creating CursorObject for cursor-slot: {}",cursor_slot);
+        if (cursor_slot < 0 || cursor_slot >= MAXIMUM_CURSOR_COUNT) {
+            Logger.warn("cursor-slot: {} out-of-bounds", cursor_slot);
         } else try { Cursor cursor = new Cursor(null,image,window,xH,yH);
-            Disposable.dispose(standardCursors[standard_cursor_type]);
-            standardCursors[standard_cursor_type] = cursor;
+            if (standardCursors[cursor_slot] != null) {
+                Logger.info("Replacing cursor in cursor-slot: {}",cursor_slot);
+                Disposable.dispose(standardCursors[cursor_slot]);
+            } standardCursors[cursor_slot] = cursor;
         } catch (Exception e) {
             Logger.warn(e,"Unable to create custom cursor");
         }
     }
 
-    public void createCustom(String name, Bitmap image, int xH, int yH) {
+    /** Avoid using named. Use slots instead **/
+    public void createCursor(String name, Bitmap image, int xH, int yH) {
         Logger.info("Creating new cursor: {}",name);
         try { Cursor cursor = new Cursor(name,image,window,xH,yH);
             Cursor previous = customCursors.put(name,cursor);
@@ -97,7 +117,7 @@ public class CursorObjects implements Disposable {
 
 
     private Cursor[] createStandardCursors(long window) {
-        Cursor[] cursorArray = new Cursor[STANDARD_CURSOR_COUNT];
+        Cursor[] cursorArray = new Cursor[MAXIMUM_CURSOR_COUNT];
         for (int i = 0; i < STANDARD_CURSOR_COUNT; i++) {
             try { cursorArray[i] = new Cursor(window,GLFW_ARROW_CURSOR + i);
             } catch (Exception e) {
@@ -109,7 +129,7 @@ public class CursorObjects implements Disposable {
     public void dispose() {
         for (var entry : customCursors.entrySet()) {
             Disposable.dispose(entry.getValue());
-        } for (int i = 0; i < STANDARD_CURSOR_COUNT; i++) {
+        } for (int i = 0; i < MAXIMUM_CURSOR_COUNT; i++) {
             Disposable.dispose(standardCursors[i]);
         }
     }

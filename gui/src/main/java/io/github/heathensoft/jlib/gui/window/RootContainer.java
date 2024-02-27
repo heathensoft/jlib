@@ -69,10 +69,10 @@ public class RootContainer extends BoxContainer {
         final int LEFT = 16;
 
         Vector2f mouse_position = context.mouse_position(MathLib.vec2());
-        float mouse_x = mouse_position.x;
-        float mouse_y = mouse_position.y;
-        float width = currentSize.width();
-        float height = currentSize.height();
+        final float mouse_x = mouse_position.x;
+        final float mouse_y = mouse_position.y;
+        final float width = currentSize.width();
+        final float height = currentSize.height();
         Anchor anchor = context.anchor;
 
         if (iClickedNotGrabbed(Mouse.LEFT)) {
@@ -98,11 +98,19 @@ public class RootContainer extends BoxContainer {
 
                 if (drag_area == NONE) {
                     if (!lockedHorizontal) {
-                        if (mouse_x <= (x + padding) &! anchor.anchored_left) { drag_area |= LEFT;
-                        } else if (mouse_x >= (x + width - padding) &! anchor.anchored_right) { drag_area |= RIGHT; }
+                        if (mouse_x <= (x + padding) &! anchor.anchored_left) {
+                            drag_area |= LEFT;
+                        }
+                        else if (mouse_x >= (x + width - padding) &! anchor.anchored_right) {
+                            drag_area |= RIGHT;
+                        }
                     } if (!lockedVertical) {
-                        if (mouse_y <= (y - height + padding) &! anchor.anchored_bottom) { drag_area |= BOTTOM;
-                        } else if (mouse_y >= (y - padding) &! anchor.anchored_top) { drag_area |= TOP; }
+                        if (mouse_y <= (y - height + padding) &! anchor.anchored_bottom) {
+                            drag_area |= BOTTOM;
+                        }
+                        else if (mouse_y >= (y - padding) &! anchor.anchored_top) {
+                            drag_area |= TOP;
+                        }
                     } if (drag_area == NONE) drag_area = CENTER;
                 }
 
@@ -115,21 +123,21 @@ public class RootContainer extends BoxContainer {
                     case CENTER -> {
                         Vector2f drag_vector = context.mouse_drag_vector(MathLib.vec2(),Mouse.LEFT);
                         if (grabbed) context.move(drag_vector);
-                    } case TOP -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                    } case TOP -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                         if (grabbed) context.dragTop();
-                    } case TOP_RIGHT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case TOP_RIGHT -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragTop(); context.dragRight();}
-                    } case RIGHT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                    } case RIGHT -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                         if (grabbed) { context.dragRight(); }
-                    } case BOTTOM_RIGHT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case BOTTOM_RIGHT -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragBottom(); context.dragRight();}
-                    } case BOTTOM -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                    } case BOTTOM -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                         if (grabbed) context.dragBottom();
-                    } case BOTTOM_LEFT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case BOTTOM_LEFT -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragBottom(); context.dragLeft();}
-                    } case LEFT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                    } case LEFT -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                         if (grabbed) { context.dragLeft();}
-                    } case TOP_LEFT -> { GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                    } case TOP_LEFT -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                         if (grabbed) { context.dragTop(); context.dragLeft();}
                     }default -> {}
                 }
@@ -141,35 +149,35 @@ public class RootContainer extends BoxContainer {
                     if (lockedHorizontal) {
                         if (!lockedVertical) {
                             if (mouse_y <= (y - height + padding)) {
-                                GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                                GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             } else if (mouse_y >= (y - padding)) {
-                                GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                                GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             }
                         }
                     } else {
                         if (lockedVertical) {
                             if (mouse_x <= (x + padding)) {
-                                GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                                GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                             } else if (mouse_x >= (x + width - padding)) {
-                                GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                                GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                             }
                         } else {
                             if (mouse_x <= (x + padding)) {
                                 if (mouse_y <= (y - height + padding)) {
-                                    GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                                 } else if (mouse_y >= (y - padding)) {
-                                    GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
-                                } else GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                                } else GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                             } else if (mouse_x >= (x + width - padding)) {
                                 if (mouse_y <= (y - height + padding)) {
-                                    GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                                 } else if (mouse_y >= (y - padding)) {
-                                    GUI.State.setCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
-                                } else GUI.State.setCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                                } else GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                             } else if (mouse_y <= (y - height + padding)) {
-                                GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                                GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             } else if (mouse_y >= (y - padding)) {
-                                GUI.State.setCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                                GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             }
                         }
                     }

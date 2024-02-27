@@ -1,10 +1,10 @@
-package io.github.heathensoft.jlib.gui.gfx;
+package io.github.heathensoft.jlib.gui.ny.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.gui.text.Paragraph;
-import io.github.heathensoft.jlib.gui.text.Text;
+
+import io.github.heathensoft.jlib.gui.ny.text.Text;
+import io.github.heathensoft.jlib.gui.ny.text.TextAlignment;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import org.joml.Vector2f;
@@ -135,21 +135,87 @@ public class RendererGUI implements Disposable {
         }
     }
 
-    public void drawText(Text text, Rectanglef quad) {
-        if (rendering && !text.isBlank() && quad.isValid()) {
+    public void drawText(Text text, Rectanglef bounds, int font, float size) { drawText(text, bounds, font, 0, size); }
+    public void drawText(Text text, Rectanglef bounds, int font, int padding, float size) { drawText(text, bounds, font, padding, size, false); }
+    public void drawText(Text text, Rectanglef bounds, int font, int padding, float size, boolean wrap) { drawText(text, bounds, font, padding, size, 0f, wrap); }
+    public void drawText(Text text, Rectanglef bounds, int font, int padding, float size, float glow, boolean wrap) {
+        if (rendering && size > 1f && !text.isBlank()) {
+            Rectanglef r = MathLib.rectf(
+                    bounds.minX + padding,
+                    bounds.minY + padding,
+                    bounds.maxX - padding,
+                    bounds.maxY - padding
+            ); if (r.isValid()) {
+                if (active_batch != TEXT_BATCH) {
+                    if (active_batch == SPRITE_BATCH) {
+                        spriteBatch.flush();
+                        shader_swaps++;
+                    } active_batch = TEXT_BATCH;
+                    Framebuffer.drawBuffers(0,1,2);
+                } fonts.bindFontMetrics(font);
+                textBatch.flush();
+                enableScissor(r);
+                text.draw(textBatch,r,size,glow,wrap);
+                textBatch.flush();
+                glDisable(GL_SCISSOR_TEST);
+            }
+        }
+    }
+
+    public void drawStringFixedSize(String string, int font, int abgr, float x, float y, float size) { drawStringFixedSize(string,font,abgr,x,y,Float.MAX_VALUE,size); }
+    public void drawStringFixedSize(String string, int font, int abgr, float x, float y, float width, float size) { drawStringFixedSize(string,TextAlignment.LEFT,font,abgr,x,y,width,size); }
+    public void drawStringFixedSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size) { drawStringFixedSize(string,alignment,font,abgr,x,y,width,size,0); }
+    public void drawStringFixedSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size, float glow) {
+        if (rendering && size > 1f && width > 0 && string != null && !string.isBlank()) {
             if (active_batch != TEXT_BATCH) {
                 if (active_batch == SPRITE_BATCH) {
                     spriteBatch.flush();
                     shader_swaps++;
                 } active_batch = TEXT_BATCH;
                 Framebuffer.drawBuffers(0,1,2);
-            } textBatch.flush();
-            enableScissor(quad);
-            text.draw(textBatch,quad);
-            textBatch.flush();
-            glDisable(GL_SCISSOR_TEST);
+            } fonts.bindFontMetrics(font);
+            textBatch.drawFixedSize(string,alignment,abgr,x,y,width,size,glow);
         }
     }
+
+    public void drawStringFixedSize(String string, Rectanglef bounds, int font, int abgr) { drawStringFixedSize(string,TextAlignment.LEFT,bounds,font,abgr); }
+    public void drawStringFixedSize(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr) { drawStringFixedSize(string,alignment,bounds,font,abgr,0); }
+    public void drawStringFixedSize(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr, int padding) { drawStringFixedSize(string,alignment,bounds,font,abgr,padding,0); }
+    public void drawStringFixedSize(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr, int padding, float glow) {
+        final float x1 = bounds.minX + padding;
+        final float y1 = bounds.minY + padding;
+        final float x2 = bounds.maxX - padding;
+        final float y2 = bounds.maxY - padding;
+        if (x2 > x1 && y2 > y1) drawStringFixedSize(string,alignment,font,abgr,x1,y2,x2 - x1,y2 - y1,glow);
+    }
+
+    public void drawStringDynamicSize(String string, int font, int abgr, float x, float y, float size) { drawStringDynamicSize(string,font,abgr,x,y,Float.MAX_VALUE,size); }
+    public void drawStringDynamicSize(String string, int font, int abgr, float x, float y, float width, float size) { drawStringDynamicSize(string,TextAlignment.LEFT,font,abgr,x,y,width,size); }
+    public void drawStringDynamicSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size) { drawStringDynamicSize(string,alignment,font,abgr,x,y,width,size,0); }
+    public void drawStringDynamicSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size, float glow) {
+        if (rendering && size > 1f && width > 0 && string != null && !string.isBlank()) {
+            if (active_batch != TEXT_BATCH) {
+                if (active_batch == SPRITE_BATCH) {
+                    spriteBatch.flush();
+                    shader_swaps++;
+                } active_batch = TEXT_BATCH;
+                Framebuffer.drawBuffers(0,1,2);
+            } fonts.bindFontMetrics(font);
+            textBatch.drawDynamicSize(string,alignment,abgr,x,y,width,size,glow);
+        }
+    }
+
+    public void drawStringDynamicSize(String string, Rectanglef bounds, int font, int abgr) { drawStringDynamicSize(string,TextAlignment.LEFT,bounds,font,abgr); }
+    public void drawStringDynamicSize(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr) { drawStringDynamicSize(string,alignment,bounds,font,abgr,0); }
+    public void drawStringDynamicSize(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr, int padding) { drawStringDynamicSize(string,alignment,bounds,font,abgr,padding,0); }
+    public void drawStringDynamicSize(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr, int padding, float glow) {
+        final float x1 = bounds.minX + padding;
+        final float y1 = bounds.minY + padding;
+        final float x2 = bounds.maxX - padding;
+        final float y2 = bounds.maxY - padding;
+        if (x2 > x1 && y2 > y1) drawStringDynamicSize(string,alignment,font,abgr,x1,y2,x2 - x1,y2 - y1,glow);
+    }
+
 
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -284,105 +350,7 @@ public class RendererGUI implements Disposable {
         }
     }
 
-    public void drawStringFixedSize(String string, int font, int abgr, float x, float y, float width, float size, float glow) {
-        if (rendering && size > 1f && width > 0 && string != null && !string.isBlank()) {
-            if (active_batch != TEXT_BATCH) {
-                if (active_batch == SPRITE_BATCH) {
-                    spriteBatch.flush();
-                    shader_swaps++;
-                } active_batch = TEXT_BATCH;
-                Framebuffer.drawBuffers(0,1,2);
-            } fonts.bindFontMetrics(font);
-            textBatch.drawFixedSize(string,x,y,width,size,abgr,glow);
-        }
-    }
 
-    public void drawStringFixedSize(String string, Rectanglef bounds, int font, int abgr, float glow) {
-        drawStringFixedSize(string, bounds,0, font, abgr, glow);
-    }
-
-    public void drawStringFixedSize(String string, Rectanglef bounds, int padding, int font, int abgr, float glow) {
-        final float x1 = bounds.minX + padding;
-        final float y1 = bounds.minY + padding;
-        final float x2 = bounds.maxX - padding;
-        final float y2 = bounds.maxY - padding;
-        if (x2 > x1 && y2 > y1) drawStringFixedSize(string, font, abgr, x1, y2, x2 - x1, y2 - y1, glow);
-    }
-
-    public void drawStringDynamicSize(String string, int font, int abgr, float x, float y, float width, float size, float glow, boolean centered) {
-        if (rendering && size > 1f && width > 0 && string != null && !string.isBlank()) {
-            if (active_batch != TEXT_BATCH) {
-                if (active_batch == SPRITE_BATCH) {
-                    spriteBatch.flush();
-                    shader_swaps++;
-                } active_batch = TEXT_BATCH;
-                Framebuffer.drawBuffers(0,1,2);
-            } fonts.bindFontMetrics(font);
-            textBatch.drawDynamicSize(string,x,y,width,size,abgr,glow,centered);
-        }
-    }
-
-    public void drawStringDynamicSize(String string, Rectanglef bounds, int font, int abgr, float glow, boolean centered) {
-        drawStringDynamicSize(string, bounds,0, font, abgr, glow, centered);
-    }
-
-    public void drawStringDynamicSize(String string, Rectanglef bounds, int padding, int font, int abgr, float glow, boolean centered) {
-        final float x1 = bounds.minX + padding;
-        final float y1 = bounds.minY + padding;
-        final float x2 = bounds.maxX - padding;
-        final float y2 = bounds.maxY - padding;
-        if (x2 > x1 && y2 > y1) drawStringDynamicSize(string, font, abgr, x1, y2, x2 - x1, y2 - y1, glow, centered);
-    }
-
-    public void drawParagraphFixedSize(Paragraph paragraph, int font, float x, float y, float width, float size, float alpha) {
-        if (rendering && size > 1f && !paragraph.isBlank() && width > 0) {
-            if (active_batch != TEXT_BATCH) {
-                if (active_batch == SPRITE_BATCH) {
-                    spriteBatch.flush();
-                    shader_swaps++;
-                } active_batch = TEXT_BATCH;
-                Framebuffer.drawBuffers(0,1,2);
-            } fonts.bindFontMetrics(font);
-            paragraph.drawFixedSize(textBatch,x,y,width,size,clamp(alpha));
-        }
-    }
-
-    public void drawParagraphFixedSize(Paragraph paragraph, Rectanglef bounds, int font, float alpha) {
-        drawParagraphFixedSize(paragraph, bounds, font, 0, alpha);
-    }
-
-    public void drawParagraphFixedSize(Paragraph paragraph, Rectanglef bounds, int font, float padding, float alpha) {
-        final float x1 = bounds.minX + padding;
-        final float y1 = bounds.minY + padding;
-        final float x2 = bounds.maxX - padding;
-        final float y2 = bounds.maxY - padding;
-        if (x2 > x1 && y2 > y1) drawParagraphFixedSize(paragraph, font, x1, y2, x2 - x1, y2 - y1, alpha);
-    }
-
-    public void drawParagraphDynamicSize(Paragraph paragraph, int font, float x, float y, float width, float size, float alpha, boolean centered) {
-        if (rendering && size > 1f && !paragraph.isBlank() && width > 0) {
-            if (active_batch != TEXT_BATCH) {
-                if (active_batch == SPRITE_BATCH) {
-                    spriteBatch.flush();
-                    shader_swaps++;
-                } active_batch = TEXT_BATCH;
-                Framebuffer.drawBuffers(0,1,2);
-            } fonts.bindFontMetrics(font);
-            paragraph.drawDynamicSize(textBatch,x,y,width,size,centered,clamp(alpha));
-        }
-    }
-
-    public void drawParagraphDynamicSize(Paragraph paragraph, Rectanglef bounds, int font, float alpha, boolean centered) {
-        drawParagraphDynamicSize(paragraph, bounds, font, 0, alpha,centered);
-    }
-
-    public void drawParagraphDynamicSize(Paragraph paragraph, Rectanglef bounds, int font, float padding, float alpha, boolean centered) {
-        final float x1 = bounds.minX + padding;
-        final float y1 = bounds.minY + padding;
-        final float x2 = bounds.maxX - padding;
-        final float y2 = bounds.maxY - padding;
-        if (x2 > x1 && y2 > y1) drawParagraphDynamicSize(paragraph, font, x1, y2, x2 - x1, y2 - y1, alpha, centered);
-    }
 
     public void uploadFont(BitmapFont font, int slot) throws Exception { fonts.uploadFont(font,slot); }
 

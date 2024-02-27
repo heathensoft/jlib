@@ -1,21 +1,18 @@
-package io.github.heathensoft.jlib.gui.text;
+package io.github.heathensoft.jlib.gui.ny.text;
 
-import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
-import io.github.heathensoft.jlib.gui.gfx.TextBatchGUI;
+import io.github.heathensoft.jlib.gui.ny.GUI;
+import io.github.heathensoft.jlib.gui.ny.gfx.FontsGUI;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import org.joml.Vector4f;
 
+import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.regex.Pattern;
 
-import static io.github.heathensoft.jlib.common.utils.U.clamp;
-import static io.github.heathensoft.jlib.common.utils.U.round;
-
 /**
  * @author Frederik Dahl
- * 18/10/2023
+ * 25/02/2024
  */
 
 
@@ -24,7 +21,7 @@ public class Paragraph implements Iterable<Word> {
     public enum Type {
         REGULAR(Color.hex_to_rgb("A9B7C6FF",new Vector4f()),"Regular"),
         COMMENT(Color.hex_to_rgb("808080FF",new Vector4f()),"Comment"),
-        DEBUG(  Color.hex_to_rgb("6A8759FF",new Vector4f()),"Debug"),
+        DEBUG  (Color.hex_to_rgb("6A8759FF",new Vector4f()),"Debug"),
         WARNING(Color.hex_to_rgb("FF0000FF",new Vector4f()),"Warning");
         public final Vector4f color;
         public final String name;
@@ -34,8 +31,15 @@ public class Paragraph implements Iterable<Word> {
         }
     }
 
+    public static Vector4f color_of(Paragraph paragraph, Word word) {
+        if (word.type() == Word.Type.REGULAR) {
+            return paragraph.type.color;
+        } else return word.type().color;
+    }
+
     protected Type type;
     protected LinkedList<Word> words;
+
     public Paragraph() { this((String) null); }
     public Paragraph(Type type) { this((String) null,type); }
     public Paragraph(String text) { this(text, Type.REGULAR); }
@@ -43,18 +47,17 @@ public class Paragraph implements Iterable<Word> {
         this.words = stringToWords(text,type);
         this.type = type;
     }
-
     protected Paragraph(LinkedList<Word> words, Type type) {
         this.words = words;
         this.type = type;
     }
 
-    public Paragraph copy() {
-        Paragraph copy = new Paragraph(type);
-        for (Word word : words) {
-            copy.words.addLast(word.copy());
-        } return copy;
-    }
+    public Iterator<Word> iterator() { return words.iterator(); }
+    public void setType(Type type) { this.type = type; }
+    public LinkedList<Word> words() { return words; }
+    public Paragraph.Type type() { return type; }
+    public int wordCount() { return words.size(); }
+    public boolean isBlank() { return words.isEmpty(); }
 
     public Paragraph appendValue(String string) { return append(string, Keyword.Type.VALUE); }
     public Paragraph appendKeyword(String string) { return append(string, Keyword.Type.KEYWORD); }
@@ -88,12 +91,49 @@ public class Paragraph implements Iterable<Word> {
         } return this;
     }
 
-    public void setType(Type type) { this.type = type; }
-    public LinkedList<Word> words() { return words; }
-    public Type type() { return type; }
-    public int wordCount() { return words.size(); }
-    public int length() { return calculateLength(); }
-    public boolean isBlank() { return words.isEmpty(); }
+    public float width() { // Unscaled width pixels. Bind font before call
+        if (!isBlank()) {
+            FontsGUI fonts = GUI.fonts;
+            float space = fonts.advance(' ');
+            float width = 0;
+            for (Word w : words) {
+                width += w.width();
+                width += space;
+            } width -= space;
+            return width;
+        } return 0;
+    }
+
+    public int length() {
+        if (isBlank()) return 0;
+        int length = 0;
+        for (Word word : words) {
+            length += (word.length() + 1);
+        } return length - 1;
+    }
+
+    public Paragraph copy() {
+        Paragraph copy = new Paragraph(type);
+        for (Word word : words) {
+            copy.words.addLast(word.copy());
+        } return copy;
+    }
+
+    public void toString(StringBuilder sb) {
+        if (!isBlank()) {
+            for (Word word : words) {
+                sb.append(word).append(' ');
+            } sb.deleteCharAt(sb.length() - 1);
+        }
+    }
+
+    public String toString() {
+        if (isBlank()) return "";
+        StringBuilder sb = new StringBuilder(length() + 1);
+        for (Word word : words) {
+            sb.append(word).append(' ');
+        } return sb.deleteCharAt(sb.length() - 1).toString();
+    }
 
     public byte charAt(int index) throws IndexOutOfBoundsException {
         int p = 0;
@@ -126,8 +166,12 @@ public class Paragraph implements Iterable<Word> {
                     } else {
                         int local = word.length() - p + index;
                         Word[] split_words = word.split(local);
-                        l1.addLast(split_words[0]);
-                        l2.addLast(split_words[1]);
+                        if (split_words.length == 1) {
+                            l2.addLast(split_words[0]);
+                        } else {
+                            l1.addLast(split_words[0]);
+                            l2.addLast(split_words[1]);
+                        }
                         split = true;
                     }
                 } else if (p == index) {
@@ -227,7 +271,7 @@ public class Paragraph implements Iterable<Word> {
                         } else this.words.remove(i);
                     }
                 } else word.remove(local);
-                 break;
+                break;
             } else if (p == index) {
                 word.append(words[i+1]);
                 this.words.remove(i+1);
@@ -262,138 +306,7 @@ public class Paragraph implements Iterable<Word> {
         return this;
     }
 
-    public void toString(StringBuilder sb) {
-        if (!isBlank()) {
-            for (Word word : words) {
-                sb.append(word).append(' ');
-            } sb.deleteCharAt(sb.length() - 1);
-        }
-    }
-
-    public String toString() {
-        if (isBlank()) return "";
-        StringBuilder sb = new StringBuilder(length() + 1);
-        for (Word word : words) {
-            sb.append(word).append(' ');
-        } return sb.deleteCharAt(sb.length() - 1).toString();
-    }
-
-    public float desiredWidth(FontsGUI fonts, float height) {
-        return widthPixels(fonts) * fonts.relativeScale(height);
-    }
-
-    public float widthPixels(FontsGUI fonts) {
-        if (!isBlank()) {
-            float space = fonts.advance(' ');
-            float width = 0;
-            for (Word w : words) {
-                width += w.widthPixels(fonts);
-                width += space;
-            } width -= space;
-            return width;
-        } return 0;
-    }
-
-    public Iterator<Word> iterator() { return words.iterator(); }
-
-
-    public void drawFixedSize(TextBatchGUI batch, float x, float y, float width, float size, float alpha) {
-        FontsGUI fonts = batch.fonts();
-        float scale = fonts.relativeScale(size);
-        float width_pixels = widthPixels(fonts);
-        float desired_width = width_pixels * scale;
-        float space = scale * fonts.advance(' ');
-        float bounds_x = x + width;
-
-        int info_bits = (fonts.currentFont() << 29);
-        info_bits |= (((round(size) - 1) & 0xFF) << 21);
-        if (this instanceof ColoredLine custom) {
-            float glow = clamp(custom.glow());
-            info_bits |= ((round(glow * 127.0f) & 0x7F) << 13);
-        }
-        Vector4f color_rgb = MathLib.vec4();
-        Vector4f prev_color = null;
-        y -= fonts.ascent() * scale;
-        float color_floatBits = 0;
-        for (Word word : words) {
-            Vector4f word_color = colorOf(word);
-            if (word_color != prev_color) {
-                color_rgb.set(word_color);
-                color_rgb.w *= alpha;
-                prev_color = word_color;
-                color_floatBits = Color.rgb_to_floatBits(color_rgb);
-            } byte[] bytes = word.get();
-            for (byte b : bytes) {
-                char character = (char) (b & 0xFF);
-                float x2 = x + fonts.advance(character) * scale;
-                if (x2 <= bounds_x) batch.pushVertex(x, y, color_floatBits,info_bits | character);
-                else return;
-                x = x2;
-            } x += space;
-        }
-    }
-
-    public void drawDynamicSize(TextBatchGUI batch, float x, float y, float width, float size, boolean centered, float alpha) {
-        FontsGUI fonts = batch.fonts();
-        float scale = fonts.relativeScale(size);
-        float width_pixels = widthPixels(fonts);
-        float desired_width = width_pixels * scale;
-        float ratio = width / desired_width;
-        y -= fonts.ascent() * scale;
-        if (ratio < 1) { size = size * ratio;
-            scale = fonts.relativeScale(size);
-            desired_width = width_pixels * scale;
-        } if (centered) x += TextUtils.center_offset_x(fonts,desired_width,width);
-        if (size >= 1f) { float space = scale * fonts.advance(' ');
-
-            int info_bits = (fonts.currentFont() << 29);
-            info_bits |= (((round(size) - 1) & 0xFF) << 21);
-            if (this instanceof ColoredLine custom) {
-                float glow = clamp(custom.glow());
-                info_bits |= ((round(glow * 127.0f) & 0x7F) << 13);
-            }
-            Vector4f color_rgb = MathLib.vec4();
-            Vector4f prev_color = null;
-            float color_floatBits = 0;
-            for (Word word : words) {
-                Vector4f word_color = colorOf(word);
-                if (word_color != prev_color) {
-                    color_rgb.set(word_color);
-                    color_rgb.w *= alpha;
-                    prev_color = word_color;
-                    color_floatBits = Color.rgb_to_floatBits(color_rgb);
-                } byte[] bytes = word.get();
-                for (byte b : bytes) {
-                    char character = (char) (b & 0xFF);
-                    batch.pushVertex(x, y, color_floatBits,info_bits | character);
-                    x += fonts.advance(character) * scale;
-                } x += space;
-            }
-        }
-
-    }
-
-    public float calculateHeight(FontsGUI fonts, int size, float width, boolean wrap) {
-        if (!isBlank()) {
-            float scale = fonts.relativeScale(size);
-            float ascent = fonts.ascent() * scale;
-            float descent = fonts.descent() * scale;
-            if (wrap) {
-                float gap = fonts.lineGap() * scale;
-                float space = fonts.advance(' ') * scale;
-                float line_height = ascent + descent;
-                float x = 0, y = line_height;
-                for (Word word : words) {
-                    float word_width = word.length() * scale;
-                    x += word_width;
-                    if (x > width) {
-                        y += (gap + line_height);
-                        x = 0;
-                    } x += space;
-                }
-            } else return (ascent + descent);
-        } return 0;
-    }
+    protected boolean inRange(byte c) { return (c >= 32 && c < 127); }
 
     protected LinkedList<Word> stringToWords(String line, Type type) {
         LinkedList<Word> list = new LinkedList<>();
@@ -410,7 +323,7 @@ public class Paragraph implements Iterable<Word> {
                             if (word.charAt(0) == '0' && word.length() > 3) {
                                 if (word.charAt(1) == 'x') {
                                     String hex = word.substring(2,word.length()-1);
-                                    if (TextUtils.is_hexadecimal(hex)) {
+                                    if (is_hexadecimal(hex)) {
                                         hex = "0x"+hex.toUpperCase();
                                         list.add(new Keyword(hex, Keyword.Type.VALUE));
                                         continue;
@@ -425,7 +338,7 @@ public class Paragraph implements Iterable<Word> {
                                     number = number.substring(0,number.length() - 1);
                                 }
                             }
-                            if (TextUtils.is_numeric(number)) {
+                            if (is_numeric(number)) {
                                 list.add(new Keyword(word, Keyword.Type.VALUE));
                                 continue;
                             }
@@ -437,26 +350,20 @@ public class Paragraph implements Iterable<Word> {
         } return list;
     }
 
-    protected boolean inRange(byte c) { return (c >= 32 && c < 127); }
-
-
-    protected int calculateLength() {
-        if (isBlank()) return 0;
-        int length = 0;
-        for (Word word : words) {
-            length += (word.length() + 1);
-        } return length - 1;
+    private boolean is_hexadecimal(String s) {
+        if (s == null) return false;
+        try { int h = HexFormat.fromHexDigits(s);
+        } catch (IllegalArgumentException i) {
+            return false;
+        } return true;
     }
 
-
-    protected Vector4f colorOf(Word word) {
-        if (this instanceof ColoredLine custom)
-            return custom.color();
-        Word.Type wordType = word.type();
-        if (wordType == Word.Type.REGULAR) {
-            return type.color;
-        } else return wordType.color;
+    private boolean is_numeric(String s) {
+        if (s == null) return false;
+        try { double d = Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            return false;
+        } return true;
     }
-
 
 }

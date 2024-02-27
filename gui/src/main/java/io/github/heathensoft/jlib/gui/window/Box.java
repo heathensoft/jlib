@@ -39,6 +39,10 @@ public abstract class Box implements Interactable, Disposable {
 
     protected Size currentSize() { return currentSize; }
 
+    protected void setRestingSize(float w, float h) {
+        this.restingSize.set(w, h);
+    }
+
     protected Rectanglef bounds(Rectanglef dst, float x, float y) {
         dst.minX = x;
         dst.minY = y - currentSize.height();

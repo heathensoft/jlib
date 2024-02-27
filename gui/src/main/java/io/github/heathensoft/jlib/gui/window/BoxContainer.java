@@ -96,7 +96,7 @@ public abstract class BoxContainer extends Box {
             box.onWindowOpen(context);
     }
 
-    protected void restore() {
+    protected void restore() { // todo: not finished
         for (Box box : contents)
             box.restore();
         super.restore();

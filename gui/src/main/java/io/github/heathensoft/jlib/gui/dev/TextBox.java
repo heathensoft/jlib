@@ -28,7 +28,7 @@ public class TextBox extends Box {
         this.restingSize.set(width,height);
         this.currentSize.set(restingSize());
         this.padding = Math.max(0, padding);
-        this.use_parent_id = false;
+        this.use_parent_id = true;
     }
 
     public void render(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {

@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.gui.state;
+package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.utils.IDPool;
 import io.github.heathensoft.jlib.lwjgl.window.CursorObjects;
@@ -16,8 +16,8 @@ public class State {
     private final int ELEMENT_NONE = 0;
     private float hovered_duration = 0;
     private float pressed_duration = 0;
-    private int desired_cursor_icon = 0;
-    private int current_cursor_icon = 0;
+    private int desired_cursor_icon = CursorObjects.CURSOR_DEFAULT;
+    private int current_cursor_icon = CursorObjects.CURSOR_DEFAULT;
     private int pressed_element = ELEMENT_NONE;
     private int hovered_element = ELEMENT_NONE;
     private int grabbed_element = ELEMENT_NONE;
@@ -38,7 +38,7 @@ public class State {
         if (pause_processing) pixelID = ELEMENT_NONE;
         if (current_cursor_icon != desired_cursor_icon) {
             current_cursor_icon = desired_cursor_icon;
-            Engine.get().window().cursorObjects().useStandard(current_cursor_icon);
+            Engine.get().window().cursorObjects().useCursor(current_cursor_icon);
         } Mouse mouse = Engine.get().input().mouse();
         last_hovered_element = hovered_element;
         last_pressed_element = pressed_element;
@@ -75,9 +75,9 @@ public class State {
         } else desired_cursor_icon = CursorObjects.CURSOR_ARROW;
     }
 
-    public void setCursorIcon(int index) {
-        if (index < 0 || index >= CursorObjects.STANDARD_CURSOR_COUNT) return;
-        desired_cursor_icon = index;
+    public void useCursorIcon(int slot) {
+        if (Engine.get().window().cursorObjects().validCursor(slot))
+            desired_cursor_icon = slot;
     }
 
     public float hoveredDuration() { return hovered_duration; }

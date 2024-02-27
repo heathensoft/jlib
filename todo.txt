@@ -3,3 +3,20 @@
 Need an opengl struct in engine with version, limitations, compatibility / core.
 Then query this when creating shaders and allocating buffers.
 i.e. cannon use (#define version 460 core) when gl version is 4.3 or running on mac-os etc.
+
+
+
+
+
+
+GUI:
+
+* When rendering GUI elements, invisible id should be true by default. Or should it????
+  We are rendering parent id's and transparent borders etc. might be fine to keep it false by default-
+
+
+
+
+
+
+

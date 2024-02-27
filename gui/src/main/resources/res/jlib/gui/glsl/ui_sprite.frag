@@ -20,7 +20,7 @@ in VS_OUT {
 
 uniform sampler2D[TEXTURE_SLOTS] u_diffuse_textures;
 uniform sampler2D[TEXTURE_SLOTS] u_normals_textures;
-const float ALPHA_THRESHOLD = 0.1f;
+const float ALPHA_THRESHOLD = 0.01f;
 const vec3 FLAT_NORMAL = vec3(0.5, 0.5, 1.0);
 
 /*
@@ -42,7 +42,10 @@ void main() {
         uint slot = fs_in.texture_slot_normals;
         normals = texture(u_normals_textures[slot],fs_in.uv).rgb;
     } if(diffuse.a < ALPHA_THRESHOLD) {
-        if(!fs_in.draw_alpha) id = uint(0);
+        if(!fs_in.draw_alpha) {
+            discard;
+            //id = uint(0);
+        } // discard
     } f_diffuse = diffuse;
     f_normals = vec4(normals,diffuse.a);
 

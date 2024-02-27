@@ -11,8 +11,6 @@ import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
-import static io.github.heathensoft.jlib.gui.GUI.Windows.gui_windows_is_focused;
-import static io.github.heathensoft.jlib.gui.GUI.Windows.gui_windows_focus;
 
 /**
  * @author Frederik Dahl
@@ -102,7 +100,7 @@ public class WindowGUI implements Disposable {
             transform_timer = 1.0f;
             restoringX = true;
             restoringY = true;
-            GUI.Windows.gui_windows_add_new_window(this);
+            GUI.windows.addNew(this);
             initialized = true;
         }
     }
@@ -336,7 +334,8 @@ public class WindowGUI implements Disposable {
                     transform_target.maxX = max_width;
                 }
             }
-        } else if (restoringX) {
+        }
+        else if (restoringX) {
             if (offScreen) {
                 switch (anchor) {
                     case NONE, TOP, BOTTOM -> {
@@ -351,7 +350,9 @@ public class WindowGUI implements Disposable {
                     }
                 }
             }
-        } else {
+        }
+
+        else {
             switch (anchor) {
                 case NONE, TOP, BOTTOM -> { }
                 case TOP_RIGHT, RIGHT, BOTTOM_RIGHT -> {
@@ -363,6 +364,8 @@ public class WindowGUI implements Disposable {
                 }
             }
         }
+
+
         if (maximizingY) {
             float max_height;
             if(content.isLockedVertical()) { max_height = content_height;
@@ -444,7 +447,8 @@ public class WindowGUI implements Disposable {
         content.render(this,renderer, (int)position.x, (int)position.y,dt,0);
         content.renderText(renderer, (int)position.x, (int)position.y);
 
-        if (!GUI.State.anyInteractablePressed()) { dragging = false; }
+
+        if (!GUI.state.anyInteractablePressed()) { dragging = false; }
 
     }
 
@@ -461,7 +465,7 @@ public class WindowGUI implements Disposable {
         }
     }
 
-    public void focus() { if (!hasFocus())  gui_windows_focus(this); }
+    public void focus() { if (!hasFocus())  GUI.windows.focusOn(this); }
 
     public void maximizeX() {
         if (!maximizingX) {
@@ -663,7 +667,7 @@ public class WindowGUI implements Disposable {
         } return max_height;
     }
 
-    public boolean hasFocus() { return gui_windows_is_focused(this); }
+    public boolean hasFocus() { return GUI.windows.isInFocus(this); }
 
     public boolean isInitialized() {
         return initialized;
@@ -671,7 +675,8 @@ public class WindowGUI implements Disposable {
 
     public boolean isMaximizedX() {
         if (maximizingX) return true;
-        else { int max_width = round(maxWidth());
+        else {
+            int max_width = round(maxWidth());
             int width = round(content.currentSize.width());
             return width >= max_width;
         }

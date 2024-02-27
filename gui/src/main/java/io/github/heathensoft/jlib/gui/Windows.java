@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.gui.state;
+package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
@@ -45,7 +45,8 @@ public class Windows implements Disposable {
         while (!new_windows.isEmpty()) {
             WindowGUI window = new_windows.removeLast();
             if (!active_windows.contains(window)) {
-                active_windows.addFirst(window);
+                active_windows.addFirst(window); // add last.
+                // focus
             }
         }
         while (!focus_queue.isEmpty()) {
@@ -112,7 +113,7 @@ public class Windows implements Disposable {
      * @param name window name
      * @return the window or empty optional
      */
-    public Optional<WindowGUI> windowGet(String name) {
+    public Optional<WindowGUI> get(String name) {
         for (WindowGUI window : active_windows) {
             if (name.equals(window.name())) return Optional.of(window);
         } for (WindowGUI window : new_windows) {
@@ -123,13 +124,13 @@ public class Windows implements Disposable {
         } return Optional.empty();
     }
 
-    public void windowAddNew(WindowGUI window) { if (!new_windows.contains(window)) new_windows.addFirst(window); }
+    public void addNew(WindowGUI window) { if (!new_windows.contains(window)) new_windows.addFirst(window); }
 
-    public void windowFocusOn(WindowGUI window) { if (!focus_queue.contains(window)) focus_queue.addFirst(window); }
+    public void focusOn(WindowGUI window) { if (!focus_queue.contains(window)) focus_queue.addFirst(window); }
 
-    public boolean windowIsFocused(WindowGUI window) { return !active_windows.isEmpty() && active_windows.getFirst() == window; }
+    public boolean isInFocus(WindowGUI window) { return !active_windows.isEmpty() && active_windows.getFirst() == window; }
 
-    public boolean windowsAreHidden() { return hide_all; }
+    public boolean areHidden() { return hide_all; }
 
     public void hideAll() { hide_all = true; }
 

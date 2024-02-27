@@ -17,8 +17,26 @@ import java.util.List;
 
 
 public abstract class Application {
+
+    public enum State {
+        UNINITIALIZED("Uninitialized"),
+        INITIALIZING("Initializing"),
+        WAITING_TO_START("Waiting To Start"),
+        STARTING_UP("Starting Up"),
+        MAIN_LOOP_WAITING("Main Loop Waiting"),
+        UPDATING("Updating"),
+        RENDERING("Rendering"),
+        UPDATING_RESOLUTION("Updating Resolution"),
+        WAITING_TO_EXIT("Waiting To Exit"),
+        EXITING("Exiting");
+        public final String description;
+        State(String description) {
+            this.description = description;
+        }
+    }
     
     protected Settings settings;
+    protected State state = State.UNINITIALIZED;
     
     protected abstract void engine_init(
             List<Resolution> supported,
@@ -28,7 +46,6 @@ public abstract class Application {
     protected abstract void on_start(Resolution resolution) throws Exception;
 
     /**
-     *
      * @param delta delta time in seconds
      */
     protected abstract void on_update(float delta);
@@ -38,7 +55,10 @@ public abstract class Application {
     protected abstract void on_exit();
     
     protected abstract void resolution_request(Resolution resolution) throws Exception;
-    
+
+    protected void set_state(State state) { this.state = state; }
+
+    public State state() { return state; }
     
     public String name() { return "App"; }
     

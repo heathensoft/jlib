@@ -57,7 +57,6 @@ public class ScreenQuad implements Disposable {
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
     }
 
-    @Override
     public void dispose() {
         Disposable.dispose(vao);
         Disposable.dispose(indexBuffer);

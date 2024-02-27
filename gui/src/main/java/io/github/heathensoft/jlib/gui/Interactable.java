@@ -1,7 +1,6 @@
 package io.github.heathensoft.jlib.gui;
 
-
-import static io.github.heathensoft.jlib.gui.GUI.State.*;
+import static io.github.heathensoft.jlib.gui.GUI.*;
 
 /**
  * @author Frederik Dahl
@@ -16,114 +15,115 @@ public interface Interactable {
     default void iReturnID() {
         if (interactableID() == 0)
             throw new IllegalStateException("no interactable id to return");
-        returnID(interactableID());
+        state.returnID(interactableID());
     }
 
     default int iObtainID() {
         if (interactableID() != 0)
             throw new IllegalStateException("interactable id already obtained");
-        return obtainID();
+        return state.obtainID();
     }
 
-    default void iSetCursorIcon(int index) { setCursorIcon(index); }
+    default void iSetCursorIcon(int index) { state.useCursorIcon(index); }
 
     default void iYieldFocus() {
-        yieldFocus(interactableID());
+        state.yieldFocus(interactableID());
     }
 
     default void iFocus() {
-        focus(interactableID());
+        state.focus(interactableID());
     }
 
     default float iHoveredDuration() {
-        return hoveredDuration();
+        return state.hoveredDuration();
     }
 
     default float iPressedDuration() {
-        return pressedDuration();
+        return state.pressedDuration();
     }
 
     default boolean iHasID() { return interactableID() != 0; }
 
     default boolean iHasFocus() {
         if (interactableID() == 0) return false;
-        return hasFocus(interactableID());
+        return state.hasFocus(interactableID());
     }
 
     default boolean iAnyInteractableFocused() {
-        return anyInteractableFocused();
+        return state.anyInteractableFocused();
     }
 
     default boolean iHovered() {
         if (interactableID() == 0) return false;
-        return isHovered(interactableID());
+        return state.isHovered(interactableID());
     }
 
     default boolean iAnyInteractableHovered() {
-        return anyInteractableHovered();
+        return state.anyInteractableHovered();
     }
 
     default boolean iPressed(int button) {
         if (interactableID() == 0) return false;
-        return isPressed(interactableID(),button);
+        return state.isPressed(interactableID(),button);
     }
 
     default boolean iPressed() {
         if (interactableID() == 0) return false;
-        return isPressed(interactableID());
+        return state.isPressed(interactableID());
     }
 
     default boolean iJustPressed(int button) {
         if (interactableID() == 0) return false;
-        return justPressed(interactableID(),button);
+        return state.justPressed(interactableID(),button);
     }
 
     default boolean iJustPressed() {
         if (interactableID() == 0) return false;
-        return justPressed(interactableID());
+        return state.justPressed(interactableID());
     }
 
     default boolean iJustReleased(int button) {
         if (interactableID() == 0) return false;
-        return justReleased(interactableID(),button);
+        return state.justReleased(interactableID(),button);
     }
 
     default boolean iJustReleased() {
         if (interactableID() == 0) return false;
-        return justReleased(interactableID());
+        return state.justReleased(interactableID());
     }
 
     default boolean iClicked(int button) {
         if (interactableID() == 0) return false;
-        return clicked(interactableID(),button);
+        return state.clicked(interactableID(),button);
     }
 
     default boolean iClickedNotGrabbed(int button) {
         if (interactableID() == 0) return false;
-        return clickedNotGrabbed(interactableID(),button);
+        return state.clickedNotGrabbed(interactableID(),button);
     }
 
-    default boolean iAnyInteractablePressed() { return anyInteractablePressed(); }
+    default boolean iAnyInteractablePressed() {
+        return state.anyInteractablePressed();
+    }
 
     default boolean iGrabbed() {
         if (interactableID() == 0) return false;
-        return isGrabbed(interactableID());
+        return state.isGrabbed(interactableID());
     }
 
     default boolean iGrabbed(int button) {
         if (interactableID() == 0) return false;
-        return isGrabbed(interactableID(),button);
+        return state.isGrabbed(interactableID(),button);
     }
 
     default boolean iJustGrabbed(int button) {
         if (interactableID() == 0) return false;
-        return justGrabbed(interactableID(),button);
+        return state.justGrabbed(interactableID(),button);
     }
 
     default boolean iJustGrabbed() {
         if (interactableID() == 0) return false;
-        return justGrabbed(interactableID());
+        return state.justGrabbed(interactableID());
     }
-
 
 }

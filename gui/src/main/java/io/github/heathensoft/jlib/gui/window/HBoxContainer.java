@@ -14,18 +14,23 @@ public class HBoxContainer extends BoxContainer {
 
     public HBoxContainer() { spacing = 0; }
 
-    public void addBox(Box box) {
+    public void addBox(Box box) { // not finished
         float this_resting_height = restingSize.height();
         float box_resting_height = box.restingSize.height();
         float max_resting_height = Math.max(this_resting_height,box_resting_height);
-        this_resting_height = max_resting_height;
-        box_resting_height = max_resting_height;
-        box.restingSize.setHeight(box_resting_height);
-        restingSize.setHeight(this_resting_height);
+        contents.add(box);
+        for (Box content : contents) {
+            float resting_height = content.restingSize.height();
+            if (resting_height < max_resting_height) {
+                content.restingSize.setHeight(max_resting_height);
+                content.currentSize.setHeight(max_resting_height);
+            }
+
+
+        } restingSize.setHeight(max_resting_height);
         restingSize.addWidth(box.restingSize.width());
         if (!isEmpty()) restingSize.addWidth(spacing);
         if (box.lockedVertical) lockedVertical = true;
-        contents.add(box);
         boolean lock = true;
         for (Box b : contents) {
             if (!b.lockedHorizontal) {
@@ -35,6 +40,8 @@ public class HBoxContainer extends BoxContainer {
         } lockedHorizontal = lock;
         restore();
     }
+
+
 
     public void resizeHorizontal(float dx) {
         if (dx < 0) {

@@ -1,14 +1,16 @@
-package io.github.heathensoft.jlib.gui.state;
+package io.github.heathensoft.jlib.gui.ny;
 
-import static io.github.heathensoft.jlib.gui.state.GUI.*;
+import io.github.heathensoft.jlib.common.Disposable;
+
+import static io.github.heathensoft.jlib.gui.ny.GUI.*;
 
 /**
  * @author Frederik Dahl
- * 23/10/2023
+ * 19/02/2024
  */
 
 
-public interface Interactable {
+public interface InteractableGUI extends Disposable {
 
     default int interactableID() { return 0; }
 
@@ -24,23 +26,15 @@ public interface Interactable {
         return state.obtainID();
     }
 
-    default void iSetCursorIcon(int index) { state.setCursorIcon(index); }
+    default void iSetCursorIcon(int slot) { state.useCursorIcon(slot); }
 
-    default void iYieldFocus() {
-        state.yieldFocus(interactableID());
-    }
+    default void iYieldFocus() { state.yieldFocus(interactableID()); }
 
-    default void iFocus() {
-        state.focus(interactableID());
-    }
+    default void iFocus() { state.focus(interactableID()); }
 
-    default float iHoveredDuration() {
-        return state.hoveredDuration();
-    }
+    default float iHoveredDuration() { return state.hoveredDuration(); }
 
-    default float iPressedDuration() {
-        return state.pressedDuration();
-    }
+    default float iPressedDuration() { return state.pressedDuration(); }
 
     default boolean iHasID() { return interactableID() != 0; }
 
@@ -102,7 +96,9 @@ public interface Interactable {
         return state.clickedNotGrabbed(interactableID(),button);
     }
 
-    default boolean iAnyInteractablePressed() { return state.anyInteractablePressed(); }
+    default boolean iAnyInteractablePressed() {
+        return state.anyInteractablePressed();
+    }
 
     default boolean iGrabbed() {
         if (interactableID() == 0) return false;
@@ -123,5 +119,7 @@ public interface Interactable {
         if (interactableID() == 0) return false;
         return state.justGrabbed(interactableID());
     }
+
+    default void dispose() { if (iHasID()) iReturnID(); }
 
 }

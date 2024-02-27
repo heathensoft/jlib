@@ -83,7 +83,7 @@ public class TextBatchGUI extends BatchGUI {
         float scale = fonts.relativeScale(size);
         float width_pixels = width_pixels(string,fonts);
         float desired_width = width_pixels * scale;
-        float bounds_x = x + width;
+        float bounds_x = (x + width) + 0.5f;
         int info_bits = (fonts.currentFont() << 29);
         info_bits |= (((round(size) - 1) & 0xFF) << 21);
         info_bits |= ((round(clamp(glow) * 127.0f) & 0x7F) << 13);
@@ -91,7 +91,7 @@ public class TextBatchGUI extends BatchGUI {
         for (int i = 0; i < string.length(); i++) {
             char c = (char)(string.charAt(i) & 0x7F);
             float next_x = x + fonts.advance(c) * scale;
-            if (next_x > bounds_x) return;
+            if (next_x > (bounds_x)) return;
             pushVertex(x,y,color,info_bits | c);
             x = next_x;
         }

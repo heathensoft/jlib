@@ -155,10 +155,10 @@ public class Text implements RenderableText, Iterable<Paragraph> {
                 float space = fonts.advance(' ') * scale;
                 for (Word word : line) {
                     float word_width = word.widthPixels(fonts) * scale;
-                    if ((x + word_width) > width && x > 0) { x = 0;
+                    if ((x + word_width) > width && x > 0) {x = 0;
                         height += line_height;
-                    } x += (word_width + space);
-                } height += line_height;
+                    }x += (word_width + space);
+                }height += line_height;
             }
         } else { for (Paragraph line : this)
             height += line_height;

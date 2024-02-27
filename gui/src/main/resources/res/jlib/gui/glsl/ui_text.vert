@@ -46,7 +46,7 @@ out VS_OUT {
 
 uniform vec2 u_resolution;
 
-float getCharGlow(uint glowBits) { return float(glowBits) / 127.0; }
+float getCharGlow(uint glowBits) { return float(glowBits) / 255.0; }
 
 vec4 invertColor(vec4 color) {
     float r = 1.0 - color.r;
@@ -61,6 +61,7 @@ vec4 getColor(vec4 aColor, bool inverted) {
     return inverted ? invertColor(color) : color;
 }
 
+/*
 CharInfo getInfoBits(vec4 vertex) {
     CharInfo charInfo;
     uint iZ = floatBitsToUint(vertex.z);
@@ -73,15 +74,29 @@ CharInfo getInfoBits(vec4 vertex) {
     // Position: Y       // 2 bit font  (4)   //
     //                   // ----------------- //
     // ***************** // MSB ************* //
-    charInfo.glyphBits = (iZ      ) & 0x7F; // 7 bit
-    // -----------------------------------  // 6 bit
-    charInfo.glowBits =  (iZ >> 13) & 0x7F; // 7 bit
+    charInfo.glyphBits = (iZ      ) & 0x7F;     // 7 bit
+    // -----------------------------------      // 6 bit
+    charInfo.glowBits =  (iZ >> 13) & 0x7F;     // 7 bit
     charInfo.inverted =  ((iZ >> 20) & 0x01) == 1; // 7 bit
-    charInfo.sizeBits =  (iZ >> 21) & 0xFF; // 8 bit
-    charInfo.fontBits =  (iZ >> 29) & 0x03; // 2 bit
-    // -----------------------------------  // 1 bit
+    charInfo.sizeBits =  (iZ >> 21) & 0xFF;     // 8 bit
+    charInfo.fontBits =  (iZ >> 29) & 0x03;     // 2 bit
+    // -----------------------------------      // 1 bit
+    return charInfo;
+} */
+
+CharInfo getInfoBits(vec4 vertex) {
+    CharInfo charInfo;
+    uint iZ = floatBitsToUint(vertex.z);
+    // -----------------------------------
+    charInfo.glyphBits = (iZ      ) & 0x7F;     // 7 bit
+    charInfo.inverted =  ((iZ >> 7) & 0x01) == 1; // 1 bit
+    charInfo.sizeBits =  (iZ >>  8) & 0xFF;     // 8 bit
+    charInfo.glowBits =  (iZ >> 16) & 0xFF;     // 7 bit
+    charInfo.fontBits =  (iZ >> 24) & 0x03;     // 2 bit
+    // -----------------------------------
     return charInfo;
 }
+
 
 Font getFont(uint fontBits) {
     return textBlock.fonts[fontBits%NUM_FONTS];
@@ -114,7 +129,7 @@ Char buildCharacter(vec4 v_char, vec4 v_color) {
     Font font = getFont(charInfo.fontBits);
     charStruct.glow = getCharGlow(charInfo.glowBits);
     charStruct.color = getColor(v_color,charInfo.inverted);
-     charStruct.texSlot = uint(font.texSlot);
+    charStruct.texSlot = uint(font.texSlot);
     float scale = float(charInfo.sizeBits + 1) / (font.size); // adjust back
     if(charInfo.glyphBits < 32 || charInfo.glyphBits > 126) {
         charStruct.cursor = true;

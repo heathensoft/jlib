@@ -4,6 +4,7 @@ import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.OS;
 import io.github.heathensoft.jlib.common.io.Settings;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
+import io.github.heathensoft.jlib.lwjgl.utils.ScreenQuad;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Callback;
@@ -780,10 +781,10 @@ public class Window extends AbstractWindow {
     private final GLFWCharCallback char_callback = new GLFWCharCallback() {
         @Override
         public void invoke(long window, int codepoint) {
-            if ((codepoint & 0x7F) == codepoint) {
-                current_processor.on_char_press(codepoint);
-            }
-
+            if ((codepoint & 0x7F) == codepoint) current_processor.on_char_press(codepoint);
+            else if (codepoint == 230) current_processor.on_char_press(101); // æ
+            else if (codepoint == 248) current_processor.on_char_press(111); // ø
+            else if (codepoint == 229) current_processor.on_char_press(97);  // å
         }
     };
     

@@ -18,5 +18,8 @@ public class IDPool {
         } else return ids.dequeue();
     } public void returnID(int id) {
         ids.enqueue(id);
+    } public void clear() {
+        ids.clear();
+        new_id = 0;
     }
 }
