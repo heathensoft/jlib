@@ -22,17 +22,22 @@ public interface TextProcessor {
     /**
      * @param character ascii  [00 - 127]
      */
-    void characterStream(byte character);
+    void charPress(byte character);
 
-    void onTextProcessorActivated();
+    default void onTextProcessorActivated() { }
 
-    void onTextProcessorDeactivated();
+    default void onTextProcessorDeactivated() { }
 
-    default void activateProcessor() {
+    default void activateTextProcessor() {
         Engine.get().input().keys().setTextProcessor(this);
     }
 
-    default void deactivateProcessor() {
-        Engine.get().input().keys().setTextProcessor(null);
+    /** Deactivates if this is the current TextProcessor */
+    default void deactivateTextProcessor() {
+        Engine.get().input().keys().deactivateTextProcessor(this);
+    }
+
+    default boolean isActiveTextProcessor() {
+        return Engine.get().input().keys().isActiveTextProcessor(this);
     }
 }

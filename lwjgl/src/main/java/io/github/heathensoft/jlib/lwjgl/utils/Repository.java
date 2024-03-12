@@ -26,7 +26,8 @@ import java.util.*;
 public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
 
     private final static int HEADER_SIZE = Integer.BYTES * 3;
-    private final static int CHECK = 0x33D2_F31B;
+    private final static int CHECK_BIG_ENDIAN = 0x33D2_F31B;
+    private final static int CHECK_LITTLE_ENDIAN = 0x1BF3_D233;
     private final Map<String, ByteBuffer> map;
     private ByteBuffer local;
     private int size;
@@ -190,7 +191,7 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
                 byteChannel.truncate(size);
                 byteChannel.position(0L);
                 local.clear();
-                local.putInt(CHECK).putInt(size).putInt(num_entries).flip();
+                local.putInt(CHECK_BIG_ENDIAN).putInt(size).putInt(num_entries).flip();
                 writeToChannel(local,byteChannel);
                 for (var entry : map.entrySet()) {
                     serializeEntry(entry,byteChannel);
@@ -256,8 +257,12 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
         try { IOException exception = new IOException("corrupted file");
             int file_size = file.remaining();
             if (file_size < 20) throw exception;
-            if (file.getInt() != CHECK) throw exception;
-            if (file.getInt() != file_size) throw exception;
+            int check = file.getInt();
+            if (check != CHECK_BIG_ENDIAN) {
+                if (check == CHECK_LITTLE_ENDIAN) {
+                    Logger.warn("buffer should be in big endian order, not little endian");
+                } throw exception;
+            } if (file.getInt() != file_size) throw exception;
             int num_entries = file.getInt();
             Repository repository = new Repository();
             for (int i = 0; i < num_entries; i++) {
@@ -295,7 +300,7 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
                 ByteBuffer header = ByteBuffer.allocate(HEADER_SIZE);
                 readFromChannel(header,byteChannel);
                 header.flip();
-                if (header.getInt() != CHECK) throw exception;
+                if (header.getInt() != CHECK_BIG_ENDIAN) throw exception;
                 if (header.getInt() != file_size) throw exception;
                 int num_entries = header.getInt();
                 repository = new Repository();

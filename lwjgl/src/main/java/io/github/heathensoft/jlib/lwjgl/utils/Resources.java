@@ -28,7 +28,7 @@ public class Resources {
 
     // For some reason, BufferUtils gives me little endian data stream. (Big endian is default for standard java)
     // I am converting it to big endian. And now it seems to work for deserializing repositories, and images.
-    // Leaving the comment here in case of issues.
+    // Leaving the comment here in case of issues. (Me at a later date: Good Work!)
     public static ByteBuffer toBuffer(String resource, int size) throws IOException {
         ByteBuffer result;
         try (InputStream is = resourceStream(resource)){
@@ -41,7 +41,7 @@ public class Resources {
                     if (result.remaining() == 0) {
                         size = result.capacity() * 2;
                         ByteBuffer b = BufferUtils.createByteBuffer(size);
-                        result.order(ByteOrder.BIG_ENDIAN);
+                        b.order(ByteOrder.BIG_ENDIAN);
                         result = b.put(result.flip());
                     }
                 }

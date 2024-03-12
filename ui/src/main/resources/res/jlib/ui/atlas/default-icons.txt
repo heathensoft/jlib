@@ -1,0 +1,121 @@
+# https://github.com/heathensoft
+
+# GL_NEAREST = 9728
+# GL_LINEAR  = 9729
+# GL_NEAREST_MIPMAP_NEAREST = 9984
+# GL_LINEAR_MIPMAP_NEAREST  = 9985
+# GL_NEAREST_MIPMAP_LINEAR  = 9986
+# GL_LINEAR_MIPMAP_LINEAR   = 9987
+
+# GL_REPEAT = 10497
+# GL_CLAMP_TO_EDGE = 33071
+# GL_CLAMP_TO_BORDER = 33069
+# GL_MIRRORED_REPEAT = 33648
+
+# Atlas: <name> <width> <height> <sprites>
+# Texture: <minFilter> <magFilter> <textureWrap> <mipMap> <srgb>
+# Region: <x> <y> <width> <height> <name>
+
+A: default-icons 1024 1024 100
+T: 9987 9729 33071 1 0
+
+R: 936 0 72 72 sharp_brush_white_36dp
+R: 864 0 72 72 sharp_arrow_upward_white_36dp
+R: 792 0 72 72 sharp_arrow_right_white_36dp
+R: 720 0 72 72 sharp_arrow_left_white_36dp
+R: 648 0 72 72 sharp_arrow_forward_white_36dp
+R: 576 0 72 72 sharp_arrow_forward_ios_white_36dp
+R: 504 0 72 72 sharp_arrow_drop_up_white_36dp
+R: 432 0 72 72 sharp_arrow_drop_down_white_36dp
+R: 360 0 72 72 sharp_arrow_downward_white_36dp
+R: 288 0 72 72 sharp_arrow_back_white_36dp
+R: 216 0 72 72 sharp_arrow_back_ios_white_36dp
+R: 144 0 72 72 sharp_arrow_back_ios_new_white_36dp
+R: 72 0 72 72 sharp_apps_white_36dp
+R: 0 0 72 72 sharp_add_circle_outline_white_36dp
+R: 936 72 72 72 sharp_download_white_36dp
+R: 864 72 72 72 sharp_delete_forever_white_36dp
+R: 792 72 72 72 sharp_crop_white_36dp
+R: 720 72 72 72 sharp_create_new_folder_white_36dp
+R: 648 72 72 72 sharp_construction_white_36dp
+R: 576 72 72 72 sharp_color_lens_white_36dp
+R: 504 72 72 72 sharp_colorize_white_36dp
+R: 432 72 72 72 sharp_close_white_36dp
+R: 360 72 72 72 sharp_chevron_right_white_36dp
+R: 288 72 72 72 sharp_chevron_left_white_36dp
+R: 216 72 72 72 sharp_check_white_36dp
+R: 144 72 72 72 sharp_check_circle_outline_white_36dp
+R: 72 72 72 72 sharp_cached_white_36dp
+R: 0 72 72 72 sharp_bug_report_white_36dp
+R: 936 144 72 72 sharp_fullscreen_exit_white_36dp
+R: 864 144 72 72 sharp_format_color_fill_white_36dp
+R: 792 144 72 72 sharp_folder_white_36dp
+R: 720 144 72 72 sharp_first_page_white_36dp
+R: 648 144 72 72 sharp_filter_white_36dp
+R: 576 144 72 72 sharp_favorite_white_36dp
+R: 504 144 72 72 sharp_fast_rewind_white_36dp
+R: 432 144 72 72 sharp_fast_forward_white_36dp
+R: 360 144 72 72 sharp_expand_more_white_36dp
+R: 288 144 72 72 sharp_expand_less_white_36dp
+R: 216 144 72 72 sharp_equalizer_white_36dp
+R: 144 144 72 72 sharp_edit_white_36dp
+R: 72 144 72 72 sharp_edit_note_white_36dp
+R: 0 144 72 72 sharp_east_white_36dp
+R: 936 216 72 72 sharp_menu_white_36dp
+R: 864 216 72 72 sharp_manage_accounts_white_36dp
+R: 792 216 72 72 sharp_login_white_36dp
+R: 720 216 72 72 sharp_library_add_white_36dp
+R: 648 216 72 72 sharp_last_page_white_36dp
+R: 576 216 72 72 sharp_info_white_36dp
+R: 504 216 72 72 sharp_image_white_36dp
+R: 432 216 72 72 sharp_home_white_36dp
+R: 360 216 72 72 sharp_history_white_36dp
+R: 288 216 72 72 sharp_highlight_off_white_36dp
+R: 216 216 72 72 sharp_help_outline_white_36dp
+R: 144 216 72 72 sharp_groups_white_36dp
+R: 72 216 72 72 sharp_grade_white_36dp
+R: 0 216 72 72 sharp_fullscreen_white_36dp
+R: 936 288 72 72 sharp_play_arrow_white_36dp
+R: 864 288 72 72 sharp_photo_camera_white_36dp
+R: 792 288 72 72 sharp_person_white_36dp
+R: 720 288 72 72 sharp_person_add_white_36dp
+R: 648 288 72 72 sharp_pause_white_36dp
+R: 576 288 72 72 sharp_not_interested_white_36dp
+R: 504 288 72 72 sharp_notifications_white_36dp
+R: 432 288 72 72 sharp_note_add_white_36dp
+R: 360 288 72 72 sharp_north_white_36dp
+R: 288 288 72 72 sharp_north_west_white_36dp
+R: 216 288 72 72 sharp_north_east_white_36dp
+R: 144 288 72 72 sharp_more_vert_white_36dp
+R: 72 288 72 72 sharp_more_horiz_white_36dp
+R: 0 288 72 72 sharp_minimize_white_36dp
+R: 936 360 72 72 sharp_south_west_white_36dp
+R: 864 360 72 72 sharp_south_east_white_36dp
+R: 792 360 72 72 sharp_skip_previous_white_36dp
+R: 720 360 72 72 sharp_skip_next_white_36dp
+R: 648 360 72 72 sharp_shuffle_white_36dp
+R: 576 360 72 72 sharp_settings_white_36dp
+R: 504 360 72 72 sharp_search_white_36dp
+R: 432 360 72 72 sharp_science_white_36dp
+R: 360 360 72 72 sharp_remove_circle_outline_white_36dp
+R: 288 360 72 72 sharp_refresh_white_36dp
+R: 216 360 72 72 sharp_question_answer_white_36dp
+R: 144 360 72 72 sharp_public_white_36dp
+R: 72 360 72 72 sharp_psychology_white_36dp
+R: 0 360 72 72 sharp_power_settings_new_white_36dp
+R: 936 432 72 72 sharp_zoom_in_white_36dp
+R: 864 432 72 72 sharp_wysiwyg_white_36dp
+R: 792 432 72 72 sharp_west_white_36dp
+R: 720 432 72 72 sharp_wb_sunny_white_36dp
+R: 648 432 72 72 sharp_volume_up_white_36dp
+R: 576 432 72 72 sharp_volume_off_white_36dp
+R: 504 432 72 72 sharp_volume_down_white_36dp
+R: 432 432 72 72 sharp_visibility_white_36dp
+R: 360 432 72 72 sharp_visibility_off_white_36dp
+R: 288 432 72 72 sharp_upload_white_36dp
+R: 216 432 72 72 sharp_text_snippet_white_36dp
+R: 144 432 72 72 sharp_subdirectory_arrow_left_white_36dp
+R: 72 432 72 72 sharp_stop_white_36dp
+R: 0 432 72 72 sharp_south_white_36dp
+R: 72 504 60 60 baseline_circle_white_36dp
+R: 0 504 72 72 sharp_zoom_out_white_36dp

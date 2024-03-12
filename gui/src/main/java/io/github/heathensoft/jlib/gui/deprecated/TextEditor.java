@@ -131,7 +131,7 @@ public abstract class TextEditor implements TextProcessor {
 
     public void keyRelease(int key, int mods) { }
 
-    public void characterStream(byte character) {
+    public void charPress(byte character) {
         if (character != 10) {
             PlainParagraph p = text.get(lineIndex);
             if (p.insert(character,charIndex)) {

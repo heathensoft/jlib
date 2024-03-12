@@ -38,8 +38,8 @@ public class TextureAtlas implements Disposable {
         } else if (atlasInfo == null || atlasInfo.isBlank()) {
             throw new Exception("Texture Atlas: Missing Atlas Info");
         }
-        int texture_entry_nin_filter = GL_LINEAR;
-        int texture_entry_nag_filter = GL_LINEAR;
+        int texture_entry_min_filter = GL_LINEAR;
+        int texture_entry_mag_filter = GL_LINEAR;
         int texture_entry_wrap = GL_CLAMP_TO_EDGE;
         boolean texture_entry_found = false;
         boolean texture_entry_allocate_mip_map = false;
@@ -93,11 +93,11 @@ public class TextureAtlas implements Disposable {
                  if (!Texture.glFilterEnumIsValid(nin_filter)) {
                      Logger.warn("Texture Atlas: invalid min filter enum at line: {}",line_index);
                      Logger.warn("Using GL_LINEAR");
-                 } else texture_entry_nin_filter = nin_filter;
+                 } else texture_entry_min_filter = nin_filter;
                  if (!Texture.glFilterEnumIsValid(nag_filter)) {
                      Logger.warn("Texture Atlas: invalid mag filter enum at line: {}",line_index);
                      Logger.warn("Using GL_LINEAR");
-                 } else texture_entry_nag_filter = nag_filter;
+                 } else texture_entry_mag_filter = nag_filter;
                  if (!Texture.glWrapEnumIsValid(texture_wrap)) {
                      Logger.warn("Texture Atlas: invalid wrap enum at line: {}",line_index);
                      Logger.warn("Using GL_CLAMP_TO_EDGE");
@@ -128,7 +128,7 @@ public class TextureAtlas implements Disposable {
 
         Logger.debug("Texture Atlas: \"{}\", Extracted {}/{} sprites, Width: {}, Height: {}",atlas_name,num_sprites_extracted,atlas_entry_sprites,atlas_width,atlas_height);
         Logger.debug("Texture Wrap: {}, Min Filter: {}, Mag Filter: {}, Srgb to linear: {}", Texture.glWrapEnumToString(texture_entry_wrap),
-                Texture.glFilterEnumIsValid(texture_entry_nin_filter),Texture.glFilterEnumToString(texture_entry_nag_filter),texture_entry_srgb_to_linear);
+                Texture.glFilterEnumToString(texture_entry_min_filter),Texture.glFilterEnumToString(texture_entry_mag_filter),texture_entry_srgb_to_linear);
 
         for (int i = 0; i < num_sprites_extracted; i++) {
             TextureRegion region = region_list.get(i);
@@ -147,6 +147,10 @@ public class TextureAtlas implements Disposable {
             Logger.debug("Allocating Texture[{}]: Width: {}, Height: {}, Channels: {}, SRGB Format: {}",
                     i,bitmap.width(),bitmap.height(),bitmap.channels(),srgb);
             textures[i] = bitmap.asTexture(texture_entry_allocate_mip_map,srgb);
+            if (texture_entry_allocate_mip_map) {
+                Logger.debug("Generating Mip Map");
+                textures[i].generateMipmap();
+            }
             GLContext.checkError();
         }
         Logger.info("Texture Atlas: \"{}\" Extraction Complete", atlas_name);

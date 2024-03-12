@@ -113,7 +113,7 @@ public class TextField extends PlainParagraph implements TextProcessor {
         }
     }
 
-    public void characterStream(byte character) {
+    public void charPress(byte character) {
         if (character != 10) {
             last_input_time = System.currentTimeMillis();
             if (cursor_character_index < character_capacity) {

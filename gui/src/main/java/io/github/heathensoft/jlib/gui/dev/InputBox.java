@@ -37,7 +37,7 @@ public class InputBox extends Box {
     }
 
     protected void onWindowClose(WindowGUI context) {
-        commandLine.deactivateProcessor();
+        commandLine.deactivateTextProcessor();
         iYieldFocus();
     }
 
@@ -47,13 +47,13 @@ public class InputBox extends Box {
         if (iHovered()) GUI.state.useCursorIcon(CursorObjects.CURSOR_TEXT_INPUT);
         if (iJustPressed(Mouse.LEFT)) {
             if (!commandLine.isActiveInputProcessor()) {
-                commandLine.activateProcessor();
+                commandLine.activateTextProcessor();
                 iFocus();
             }
         }
         if (!iHasFocus()) {
             if (commandLine.isActiveInputProcessor()) {
-                commandLine.deactivateProcessor();
+                commandLine.deactivateTextProcessor();
             }
         }
 

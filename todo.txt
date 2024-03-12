@@ -1,5 +1,7 @@
 
 
+ENGINE:
+
 Need an opengl struct in engine with version, limitations, compatibility / core.
 Then query this when creating shaders and allocating buffers.
 i.e. cannon use (#define version 460 core) when gl version is 4.3 or running on mac-os etc.
@@ -11,10 +13,28 @@ i.e. cannon use (#define version 460 core) when gl version is 4.3 or running on 
 
 GUI:
 
-* When rendering GUI elements, invisible id should be true by default. Or should it????
-  We are rendering parent id's and transparent borders etc. might be fine to keep it false by default-
+[COMPLETE]
+When rendering GUI elements, invisible id should be true by default. (COMPLETE)
 
+[LOW PRIORITY]
+When text wrapping is on, do not add a new line for a new paragraph. Treat the text
+as one single paragraph. But, if the paragraph is empty we jump a line.
+Reason: It looks better. Not sure after all.
 
+[COMPLETE]
+Drawing circles / ellipses in shader instead of using texture. (COMPLETE)
+
+[LOW PRIORITY]
+When control + up/down text field: add linked list to arraylist before searching?
+
+Icon Window. (Not box Window) Closes when you click it or anything else. Icons for things like:
+color pick, copy_paste etc.
+
+Hover/descriptor window - single paragraph only. Temporary only for hovered. (not really a window) and NO_ID.
+Singleton. Implement description interface? Maybe all interactables should. but can return null. Then no description-
+Last thing to be drawn.
+
+Text draw order
 
 
 

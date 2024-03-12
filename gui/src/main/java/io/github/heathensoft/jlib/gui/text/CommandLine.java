@@ -170,7 +170,7 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
         }
     }
 
-    public void characterStream(byte character) {
+    public void charPress(byte character) {
         if (character != 10) {
             last_input_time = System.currentTimeMillis();
             if (cursor_character_index < character_capacity) {
@@ -211,7 +211,7 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
 
     protected void onKeyEnter(String value, boolean isValid) { }
 
-    protected void onKeyEscape() { deactivateProcessor(); }
+    protected void onKeyEscape() { deactivateTextProcessor(); }
 
     protected void onKeyTab() { }
 

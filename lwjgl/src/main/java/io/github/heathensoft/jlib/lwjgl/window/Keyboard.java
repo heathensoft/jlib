@@ -27,7 +27,7 @@ public class Keyboard {
     public void process_input() {
         while (!queued_chars.isEmpty()) {
             int character = queued_chars.dequeue();
-            textProcessor.characterStream((byte) character);
+            textProcessor.charPress((byte) character);
         } if (update_required) {
             System.arraycopy(c_keys,0,
             p_keys,0, GLFW_KEY_LAST);
@@ -100,11 +100,30 @@ public class Keyboard {
             textProcessor.onTextProcessorActivated();
         }
     }
+
+    /** Deactivates if the processor is the current text processor*/
+    public void deactivateTextProcessor(TextProcessor processor) {
+        if (processor == textProcessor) setTextProcessor(null);
+    }
+
+    public void deactivateTextProcessor() {
+        if (textProcessor != null) {
+            queued_chars.clear();
+            queued_keys.clear();
+            textProcessor.onTextProcessorDeactivated();
+            textProcessor = tp_internal;
+            textProcessor.onTextProcessorActivated();
+        }
+    }
+
+    public boolean isActiveTextProcessor(TextProcessor processor) {
+        return processor == textProcessor;
+    }
     
     private static final TextProcessor tp_internal = new TextProcessor() {
         public void keyPress(int key, int mods) {}
         public void keyRelease(int key, int mods) {}
-        public void characterStream(byte character) {}
+        public void charPress(byte character) {}
         public void onTextProcessorActivated() {}
         public void onTextProcessorDeactivated() {}
     };

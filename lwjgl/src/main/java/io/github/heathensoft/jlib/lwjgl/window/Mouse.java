@@ -122,6 +122,8 @@ public class Mouse {
         return drag_vector[button];
     }
 
+    public Vector2f drag_origin(int button) { return drag_origin[button]; }
+
     public boolean scrolled() {
         return current_scroll != 0;
     }

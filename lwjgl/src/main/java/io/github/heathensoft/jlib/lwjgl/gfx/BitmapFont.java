@@ -1,11 +1,14 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.io.ExternalFile;
 import io.github.heathensoft.jlib.common.utils.RectPacker;
+import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import org.lwjgl.stb.STBTTFontinfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
@@ -38,6 +41,14 @@ public class BitmapFont {
     }
 
     public Bitmap toBitmap() throws Exception { return new Bitmap(png); }
+
+    public void saveAsRepo(String font_name, String folder_path) throws IOException {
+        Repository repository = new Repository();
+        repository.put(font_name,this);
+        ExternalFile folder = new ExternalFile(folder_path);
+        ExternalFile repo_file = folder.resolve(font_name + ".repo");
+        repository.save(repo_file.path());
+    }
 
     public static BitmapFont create(String name, ByteBuffer ttf, int size, int spacing, float protrusion) throws Exception {
         return create(name, ttf, size, spacing, protrusion, 0);
