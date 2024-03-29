@@ -1,11 +1,14 @@
-package io.github.heathensoft.jlib.lwjgl.utils;
+package io.github.heathensoft.jlib.gui;
 
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
-import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
+import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
+import org.lwjgl.system.MemoryStack;
+
+import java.nio.FloatBuffer;
 
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL20.glEnableVertexAttribArray;
@@ -22,19 +25,20 @@ public class ScreenQuad implements Disposable {
     private final Vao vao;
     private final BufferObject indexBuffer;
     private final BufferObject vertexBuffer;
-    private final ShaderProgram shaderProgram;
+    private final ShaderProgramOld shaderProgram;
     
     public ScreenQuad() throws Exception {
-        shaderProgram = new ShaderProgram(default_screen_vs_shader(),default_screen_fs_shader());
+        shaderProgram = new ShaderProgramOld(default_screen_vs_shader(),default_screen_fs_shader());
         shaderProgram.createUniform("u_sampler");
         indexBuffer = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
-        vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_STATIC_DRAW);
+        vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_STREAM_DRAW);
         float[] vertices = {
-                 1.0f,-1.0f,1.0f, 0.0f, // Bottom right 0
-                -1.0f, 1.0f,0.0f, 1.0f, // Top left     1
-                 1.0f, 1.0f,1.0f, 1.0f, // Top right    2
-                -1.0f,-1.0f,0.0f, 0.0f, // Bottom left  3
-        }; short[] indices = { 2, 1, 0, 0, 1, 3};
+                -1.0f,-1.0f, 0, 0, // Bottom Left  0
+                 1.0f,-1.0f, 1, 0, // Bottom Right 1
+                -1.0f, 1.0f, 0, 1, // Top Left    2
+                 1.0f, 1.0f, 1, 1, // Top Right  3
+        }; short[] indices = { 0,1,2,2,1,3};
+
         vao = new Vao().bind();
         indexBuffer.bind();
         indexBuffer.bufferData(indices);
@@ -47,6 +51,30 @@ public class ScreenQuad implements Disposable {
         glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, texPointer);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
+    }
+
+    public void setUVs(float u, float v, float u2, float v2) {
+        vertexBuffer.bind();
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(16);
+            buffer.put(-1).put(-1).put( u).put( v);
+            buffer.put( 1).put(-1).put(u2).put( v);
+            buffer.put(-1).put( 1).put( u).put(v2);
+            buffer.put( 1).put( 1).put(u2).put(v2);
+            vertexBuffer.bufferSubData(buffer.flip(),0);
+        }
+    }
+
+    public void resetUVs() {
+        vertexBuffer.bind();
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(16);
+            buffer.put(-1).put(-1).put(0).put(0);
+            buffer.put( 1).put(-1).put(1).put(0);
+            buffer.put(-1).put( 1).put(0).put(1);
+            buffer.put( 1).put( 1).put(1).put(1);
+            vertexBuffer.bufferSubData(buffer.flip(),0);
+        }
     }
     
     public void render(Texture texture) {

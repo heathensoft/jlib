@@ -3,7 +3,6 @@ package io.github.heathensoft.jlib.ui.gfx;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
-import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import io.github.heathensoft.jlib.ui.text.Text;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
 import org.joml.Vector2f;
@@ -40,8 +39,9 @@ import static org.lwjgl.opengl.GL40.glBlendEquationi;
 import static org.lwjgl.opengl.GL40.glBlendFunci;
 
 /**
- *
+ * Master Renderer for GUI. Batch draw for quads. begin -> draw gui -> end.
  * REMEMBER YOU CAN SKIP RENDER ELEMENT ID (by using SKIP_ID as id argument)
+ * Attempting to draw disposed textures will result in pink output colors (Color.ERROR_BITS)
  *
  * @author Frederik Dahl
  * 14/10/2023
@@ -51,8 +51,6 @@ import static org.lwjgl.opengl.GL40.glBlendFunci;
 public class RendererGUI implements Disposable {
 
     public static final int SKIP_ID = -1;
-    public static final String DEFAULT_FONT_NAME = "LiberationMono64";
-    public static final String DEFAULT_FONT_PATH = "res/jlib/lwjgl/font/";
     public static final int FONT_UNIFORM_BUFFER_BINDING_POINT = 0;
 
     protected static final int TEXT_BATCH_CAPACITY = 2048;
@@ -75,6 +73,7 @@ public class RendererGUI implements Disposable {
     protected int active_batch;
     protected int frame_count;
     protected boolean rendering;
+    protected boolean paused;
 
     // PIXEL UID BUFFER
     protected IntBuffer syncBuffer;
@@ -95,6 +94,35 @@ public class RendererGUI implements Disposable {
         initializePixelBuffer(width,height);
         initializeFontCollection();
         initializeRenderBatches(width,height);
+    }
+
+    public void pause() {
+        if (rendering) {
+            if (!paused) {
+                spriteBatch.flush();
+                textBatch.flush();
+                active_batch = NULL_BATCH;
+                paused = true;
+            }
+        }
+    }
+
+    public void resume() {
+        if (rendering) {
+            if (paused) {
+                Framebuffer.bind(framebuffer);
+                Framebuffer.viewport();
+                Framebuffer.drawBuffers(0,1,2,3);
+                // Blending diffuse and normals
+                glEnable(GL_BLEND);
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+                // Blending emissive
+                glBlendEquationi(2,GL_MAX);
+                glBlendFunci(2,GL_ONE,GL_ONE);
+                paused = false;
+            }
+        }
     }
 
     public void begin(Vector2f mouse) {
@@ -143,7 +171,7 @@ public class RendererGUI implements Disposable {
     public void drawText(Text text, Rectanglef bounds, int font, float padding, float size, boolean wrap, boolean show_cursor) { drawText(text,bounds,0,font,padding,size,wrap,show_cursor); }
     public void drawText(Text text, Rectanglef bounds, float y_offset, int font, float padding, float size, boolean wrap, boolean show_cursor) { drawText(text,bounds,y_offset,font,padding,size,0,wrap,show_cursor); }
     public void drawText(Text text, Rectanglef bounds, float y_offset, int font, float padding, float size, float glow, boolean wrap, boolean show_cursor) {
-        if (rendering && size > 1f && !text.isBlank()) {
+        if (rendering && !paused && size > 1f && !text.isBlank()) {
             Rectanglef r = MathLib.rectf(
                     bounds.minX + padding,
                     bounds.minY + padding,
@@ -170,7 +198,7 @@ public class RendererGUI implements Disposable {
     public void drawStringFixedSize(String string, int font, int abgr, float x, float y, float width, float size) { drawStringFixedSize(string,TextAlignment.LEFT,font,abgr,x,y,width,size); }
     public void drawStringFixedSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size) { drawStringFixedSize(string,alignment,font,abgr,x,y,width,size,0); }
     public void drawStringFixedSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size, float glow) {
-        if (rendering && size > 1f && width > 0 && string != null && !string.isBlank()) {
+        if (rendering && !paused && size > 1f && width > 0 && string != null && !string.isBlank()) {
             if (active_batch != TEXT_BATCH) {
                 if (active_batch == SPRITE_BATCH) {
                     spriteBatch.flush();
@@ -197,7 +225,7 @@ public class RendererGUI implements Disposable {
     public void drawStringDynamicSize(String string, int font, int abgr, float x, float y, float width, float size) { drawStringDynamicSize(string,TextAlignment.LEFT,font,abgr,x,y,width,size); }
     public void drawStringDynamicSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size) { drawStringDynamicSize(string,alignment,font,abgr,x,y,width,size,0); }
     public void drawStringDynamicSize(String string, TextAlignment alignment, int font, int abgr, float x, float y, float width, float size, float glow) {
-        if (rendering && size > 1f && width > 0 && string != null && !string.isBlank()) {
+        if (rendering && !paused && size > 1f && width > 0 && string != null && !string.isBlank()) {
             if (active_batch != TEXT_BATCH) {
                 if (active_batch == SPRITE_BATCH) {
                     spriteBatch.flush();
@@ -220,6 +248,30 @@ public class RendererGUI implements Disposable {
         if (x2 > x1 && y2 > y1) drawStringDynamicSize(string,alignment,font,abgr,x1,y2,x2 - x1,y2 - y1,glow);
     }
 
+    public void drawStringDynamicVerticalCentered(String string, Rectanglef bounds, int font, int abgr) { drawStringDynamicVerticalCentered(string,TextAlignment.LEFT,bounds,font,abgr); }
+    public void drawStringDynamicVerticalCentered(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr) { drawStringDynamicVerticalCentered(string,alignment,bounds,font,abgr,0); }
+    public void drawStringDynamicVerticalCentered(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr, int padding) { drawStringDynamicVerticalCentered(string,alignment,bounds,font,abgr,padding,0); }
+    public void drawStringDynamicVerticalCentered(String string, TextAlignment alignment, Rectanglef bounds, int font, int abgr, int padding, float glow) {
+        final float x1 = bounds.minX + padding;
+        final float y1 = bounds.minY + padding;
+        final float x2 = bounds.maxX - padding;
+        final float y2 = bounds.maxY - padding;
+        if (x2 > x1 && y2 > y1) {
+            final float width = x2 - x1;
+            final float height = y2 - y1;
+            if (rendering && !paused && height > 1f && width > 0 && string != null && !string.isBlank()) {
+                if (active_batch != TEXT_BATCH) {
+                    if (active_batch == SPRITE_BATCH) {
+                        spriteBatch.flush();
+                        shader_swaps++;
+                    } active_batch = TEXT_BATCH;
+                    Framebuffer.drawBuffers(0,1,2);
+                } fonts.bindFontMetrics(font);
+                textBatch.drawDynamicVerticalCentered(string,alignment,abgr,x1,y2,width,height,glow);
+            }
+        }
+    }
+
 
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -227,7 +279,7 @@ public class RendererGUI implements Disposable {
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawElement(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int abgr, int id, float glow) { drawElement(diffuse, region, quad, abgr, id, glow, true); }
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -237,12 +289,15 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,false);
+                spriteBatch.push(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,false);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, normals, region, quad, abgr, id, glow, invisible_id,false);
+            } else spriteBatch.push(diffuse, normals, region, quad, abgr, id, glow, invisible_id,false);
         }
     }
+
+
+
 
     public void drawElement(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -250,7 +305,7 @@ public class RendererGUI implements Disposable {
     public void drawElement(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawElement(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawElement(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, int abgr, int id, float glow) { drawElement(diffuse, region, quad, abgr, id, glow, true); }
     public void drawElement(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -260,12 +315,14 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,false);
+                spriteBatch.push(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,false);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, normals, region, quad, abgr, id, glow, invisible_id,false);
+            } else spriteBatch.push(diffuse, normals, region, quad, abgr, id, glow, invisible_id,false);
         }
     }
+
+
 
     public void drawElement(Texture diffuse, TextureRegion region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, TextureRegion region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -273,7 +330,7 @@ public class RendererGUI implements Disposable {
     public void drawElement(Texture diffuse, TextureRegion region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawElement(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawElement(Texture diffuse, TextureRegion region, Rectanglef quad, int abgr, int id, float glow) { drawElement(diffuse, region, quad, abgr, id, glow, true); }
     public void drawElement(Texture diffuse, TextureRegion region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -283,12 +340,14 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, null, region, quad, abgr, 0, glow, invisible_id,false);
+                spriteBatch.push(diffuse, null, region, quad, abgr, 0, glow, invisible_id,false);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, null, region, quad, abgr, id, glow, invisible_id,false);
+            } else spriteBatch.push(diffuse, null, region, quad, abgr, id, glow, invisible_id,false);
         }
     }
+
+
 
     public void drawElement(Texture diffuse, Vector4f region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, Vector4f region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -296,7 +355,7 @@ public class RendererGUI implements Disposable {
     public void drawElement(Texture diffuse, Vector4f region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawElement(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawElement(Texture diffuse, Vector4f region, Rectanglef quad, int abgr, int id, float glow) { drawElement(diffuse, region, quad, abgr, id, glow, true); }
     public void drawElement(Texture diffuse, Vector4f region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -306,10 +365,33 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, null, region, quad, abgr, 0, glow, invisible_id,false);
+                spriteBatch.push(diffuse, null, region, quad, abgr, 0, glow, invisible_id,false);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, null, region, quad, abgr, id, glow, invisible_id,false);
+            } else spriteBatch.push(diffuse, null, region, quad, abgr, id, glow, invisible_id,false);
+        }
+    }
+    public void drawElement(Texture diffuse, Rectanglef quad) { drawElement(diffuse, quad,0); }
+    public void drawElement(Texture diffuse, Rectanglef quad, int id) { drawElement(diffuse, quad, Color.WHITE_BITS, id); }
+    public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id) { drawElement(diffuse, quad, abgr, id, 0); }
+    public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawElement(diffuse, quad, abgr, id, 0, invisible_id); }
+    public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id, float glow) { drawElement(diffuse,  quad, abgr, id, glow, true); }
+    public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            Vector4f region = MathLib.vec4(0,0,1,1);
+            if (active_batch != SPRITE_BATCH) {
+                if (active_batch == TEXT_BATCH) {
+                    textBatch.flush();
+                    shader_swaps++;
+                } active_batch = SPRITE_BATCH;
+                Framebuffer.drawBuffers(0,1,2,3);
+            } if (id == SKIP_ID) {
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2);
+                spriteBatch.push(diffuse, null, region, quad, abgr, 0, glow, invisible_id,false);
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2,3);
+            } else spriteBatch.push(diffuse, null, region, quad, abgr, id, glow, invisible_id,false);
         }
     }
 
@@ -319,7 +401,7 @@ public class RendererGUI implements Disposable {
     public void drawElement(Rectanglef quad, int abgr, float glow) { drawElement(quad, abgr, 0, glow); }
     public void drawElement(Rectanglef quad, int abgr, int id, float glow) { drawElement(quad, abgr, id, glow,true); }
     public void drawElement(Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -329,30 +411,124 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(quad, abgr, 0, glow, invisible_id,false);
+                spriteBatch.push(quad, abgr, 0, glow, invisible_id,false);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(quad, abgr, id, glow, invisible_id,false);
+            } else spriteBatch.push(quad, abgr, id, glow, invisible_id,false);
         }
     }
 
 
+    public void drawRotated(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, float rotation) { drawRotated(diffuse, normals, region, quad, rotation, 0); }
+    public void drawRotated(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, float rotation, int id) { drawRotated(diffuse, normals, region, quad, rotation, 0xFFFFFFFF, id); }
+    public void drawRotated(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, float rotation, int abgr, int id) { drawRotated(diffuse, normals, region, quad, rotation, abgr, id, 0); }
+    public void drawRotated(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, float rotation, int abgr, int id, float glow) { drawRotated(diffuse, normals, region, quad, rotation, abgr, id, glow, true); }
+    public void drawRotated(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, float rotation, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            if (active_batch != SPRITE_BATCH) {
+                if (active_batch == TEXT_BATCH) {
+                    textBatch.flush();
+                    shader_swaps++;
+                } active_batch = SPRITE_BATCH;
+                Framebuffer.drawBuffers(0,1,2,3);
+            } if (id == SKIP_ID) {
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2);
+                spriteBatch.push(diffuse, normals, region, quad, rotation, abgr, 0, glow, invisible_id);
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2,3);
+            } else spriteBatch.push(diffuse, normals, region, quad, rotation, abgr, id, glow, invisible_id);
+        }
+    }
+
+    public void drawRotated(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, float rotation) { drawRotated(diffuse, normals, region, quad, rotation, 0); }
+    public void drawRotated(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, float rotation, int id) { drawRotated(diffuse, normals, region, quad, rotation, 0xFFFFFFFF, id); }
+    public void drawRotated(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, float rotation, int abgr, int id) { drawRotated(diffuse, normals, region, quad, rotation, abgr, id, 0); }
+    public void drawRotated(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, float rotation, int abgr, int id, float glow) { drawRotated(diffuse, normals, region, quad, rotation, abgr, id, glow, true); }
+    public void drawRotated(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, float rotation, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            if (active_batch != SPRITE_BATCH) {
+                if (active_batch == TEXT_BATCH) {
+                    textBatch.flush();
+                    shader_swaps++;
+                } active_batch = SPRITE_BATCH;
+                Framebuffer.drawBuffers(0,1,2,3);
+            } if (id == SKIP_ID) {
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2);
+                spriteBatch.push(diffuse, normals, region, quad, rotation, abgr, 0, glow, invisible_id);
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2,3);
+            } else spriteBatch.push(diffuse, normals, region, quad, rotation, abgr, id, glow, invisible_id);
+        }
+    }
+
+    public void drawRotated(Texture diffuse, TextureRegion region, Rectanglef quad, float rotation) { drawRotated(diffuse, region, quad, rotation, 0); }
+    public void drawRotated(Texture diffuse, TextureRegion region, Rectanglef quad, float rotation, int id) { drawRotated(diffuse, region, quad, rotation, 0xFFFFFFFF, id); }
+    public void drawRotated(Texture diffuse, TextureRegion region, Rectanglef quad, float rotation, int abgr, int id) { drawRotated(diffuse, region, quad, rotation, abgr, id, 0); }
+    public void drawRotated(Texture diffuse, TextureRegion region, Rectanglef quad, float rotation, int abgr, int id, float glow) { drawRotated(diffuse, region, quad, rotation, abgr, id, glow, true); }
+    public void drawRotated(Texture diffuse, TextureRegion region, Rectanglef quad, float rotation, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            if (active_batch != SPRITE_BATCH) {
+                if (active_batch == TEXT_BATCH) {
+                    textBatch.flush();
+                    shader_swaps++;
+                } active_batch = SPRITE_BATCH;
+                Framebuffer.drawBuffers(0,1,2,3);
+            } if (id == SKIP_ID) {
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2);
+                spriteBatch.push(diffuse, null, region, quad, rotation, abgr, 0, glow, invisible_id);
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2,3);
+            } else spriteBatch.push(diffuse, null, region, quad, rotation, abgr, id, glow, invisible_id);
+        }
+    }
+
+    public void drawRotated(Texture diffuse, Vector4f region, Rectanglef quad, float rotation) { drawRotated(diffuse, region, quad, rotation, 0); }
+    public void drawRotated(Texture diffuse, Vector4f region, Rectanglef quad, float rotation, int id) { drawRotated(diffuse, region, quad, rotation, 0xFFFFFFFF, id); }
+    public void drawRotated(Texture diffuse, Vector4f region, Rectanglef quad, float rotation, int abgr, int id) { drawRotated(diffuse, region, quad, rotation, abgr, id, 0); }
+    public void drawRotated(Texture diffuse, Vector4f region, Rectanglef quad, float rotation, int abgr, int id, float glow) { drawRotated(diffuse, region, quad, rotation, abgr, id, glow, true); }
+    public void drawRotated(Texture diffuse, Vector4f region, Rectanglef quad, float rotation, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            if (active_batch != SPRITE_BATCH) {
+                if (active_batch == TEXT_BATCH) {
+                    textBatch.flush();
+                    shader_swaps++;
+                } active_batch = SPRITE_BATCH;
+                Framebuffer.drawBuffers(0,1,2,3);
+            } if (id == SKIP_ID) {
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2);
+                spriteBatch.push(diffuse, null, region, quad, rotation, abgr, 0, glow, invisible_id);
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2,3);
+            } else spriteBatch.push(diffuse, null, region, quad, rotation, abgr, id, glow, invisible_id);
+        }
+    }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    public void drawRotated(Rectanglef quad, float rotation, int abgr) { drawRotated(quad, rotation,abgr, 0); }
+    public void drawRotated(Rectanglef quad, float rotation, int abgr, int id) { drawRotated(quad, rotation,abgr, id,0f); }
+    public void drawRotated(Rectanglef quad, float rotation, int abgr, float glow) { drawRotated(quad, rotation,abgr, 0, glow); }
+    public void drawRotated(Rectanglef quad, float rotation, int abgr, int id, float glow) { drawRotated(quad, rotation, abgr, id, glow,true); }
+    public void drawRotated(Rectanglef quad, float rotation, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            if (active_batch != SPRITE_BATCH) {
+                if (active_batch == TEXT_BATCH) {
+                    textBatch.flush();
+                    shader_swaps++;
+                } active_batch = SPRITE_BATCH;
+                Framebuffer.drawBuffers(0,1,2,3);
+            } if (id == SKIP_ID) {
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2);
+                spriteBatch.push(quad, rotation, abgr, 0, glow, invisible_id);
+                spriteBatch.flush();
+                Framebuffer.drawBuffers(0,1,2,3);
+            } else spriteBatch.push(quad, rotation, abgr, id, glow, invisible_id);
+        }
+    }
 
 
 
@@ -367,7 +543,7 @@ public class RendererGUI implements Disposable {
     public void drawRound(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawRound(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawRound(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int abgr, int id, float glow) { drawRound(diffuse, region, quad, abgr, id, glow, true); }
     public void drawRound(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -377,10 +553,10 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,true);
+                spriteBatch.push(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,true);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, normals, region, quad, abgr, id, glow, invisible_id,true);
+            } else spriteBatch.push(diffuse, normals, region, quad, abgr, id, glow, invisible_id,true);
         }
     }
 
@@ -390,7 +566,7 @@ public class RendererGUI implements Disposable {
     public void drawRound(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawRound(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawRound(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, int abgr, int id, float glow) { drawRound(diffuse, region, quad, abgr, id, glow, true); }
     public void drawRound(Texture diffuse, Texture normals, Vector4f region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -400,10 +576,10 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,true);
+                spriteBatch.push(diffuse, normals, region, quad, abgr, 0, glow, invisible_id,true);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, normals, region, quad, abgr, id, glow, invisible_id,true);
+            } else spriteBatch.push(diffuse, normals, region, quad, abgr, id, glow, invisible_id,true);
         }
     }
 
@@ -413,7 +589,7 @@ public class RendererGUI implements Disposable {
     public void drawRound(Texture diffuse, TextureRegion region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawRound(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawRound(Texture diffuse, TextureRegion region, Rectanglef quad, int abgr, int id, float glow) { drawRound(diffuse, region, quad, abgr, id, glow, true); }
     public void drawRound(Texture diffuse, TextureRegion region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -423,10 +599,10 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, null, region, quad, abgr, 0, glow, invisible_id,true);
+                spriteBatch.push(diffuse, null, region, quad, abgr, 0, glow, invisible_id,true);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, null, region, quad, abgr, id, glow, invisible_id,true);
+            } else spriteBatch.push(diffuse, null, region, quad, abgr, id, glow, invisible_id,true);
         }
     }
 
@@ -436,7 +612,7 @@ public class RendererGUI implements Disposable {
     public void drawRound(Texture diffuse, Vector4f region, Rectanglef quad, int abgr, int id, boolean invisible_id) { drawRound(diffuse, region, quad, abgr, id, 0, invisible_id); }
     public void drawRound(Texture diffuse, Vector4f region, Rectanglef quad, int abgr, int id, float glow) { drawRound(diffuse, region, quad, abgr, id, glow, true); }
     public void drawRound(Texture diffuse, Vector4f region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -446,10 +622,10 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(diffuse, null, region, quad, abgr, 0, glow, invisible_id,true);
+                spriteBatch.push(diffuse, null, region, quad, abgr, 0, glow, invisible_id,true);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(diffuse, null, region, quad, abgr, id, glow, invisible_id,true);
+            } else spriteBatch.push(diffuse, null, region, quad, abgr, id, glow, invisible_id,true);
         }
     }
 
@@ -459,7 +635,7 @@ public class RendererGUI implements Disposable {
     public void drawRound(Rectanglef quad, int abgr, float glow) { drawRound(quad, abgr, 0, glow); }
     public void drawRound(Rectanglef quad, int abgr, int id, float glow) { drawRound(quad, abgr, id, glow,true); }
     public void drawRound(Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && quad.isValid()) {
+        if (rendering && !paused && quad.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -469,17 +645,17 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-                spriteBatch.draw(quad, abgr, 0, glow, invisible_id,true);
+                spriteBatch.push(quad, abgr, 0, glow, invisible_id,true);
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            } else spriteBatch.draw(quad, abgr, id, glow, invisible_id,true);
+            } else spriteBatch.push(quad, abgr, id, glow, invisible_id,true);
         }
     }
 
     public void drawScrollBar(Rectanglef scroll_bar, int abgr, int id) { drawScrollBar(scroll_bar, abgr, id,0.0f); }
     public void drawScrollBar(Rectanglef scroll_bar, int abgr, int id, float glow) { drawScrollBar(scroll_bar, abgr, id, glow, true); }
     public void drawScrollBar(Rectanglef scroll_bar, int abgr, int id, float glow, boolean invisible_id) {
-        if (rendering && scroll_bar.isValid()) {
+        if (rendering && !paused && scroll_bar.isValid()) {
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -543,15 +719,13 @@ public class RendererGUI implements Disposable {
 
     public void uploadFont(BitmapFont font, int slot) throws Exception { fonts.uploadFont(font,slot); }
 
-    public void uploadFont(ByteBuffer png, String metrics, int slot) throws Exception { fonts.uploadFont(png, metrics, slot); }
-
     public void updateResolution(int width, int height) throws Exception {
         if (rendering) throw new IllegalStateException("Illegal attempt to update resolution while rendering");
         if (framebuffer.width() != width || framebuffer.height() != height) {
             initializePixelBuffer(width, height);
             initializeFramebuffer(width, height);
-            textBatch.setResolutionUniform(width, height);
-            spriteBatch.setResolutionUniform(width, height);
+            textBatch.updateResolution(width, height);
+            spriteBatch.updateResolution(width, height);
         }
     }
 
@@ -575,10 +749,8 @@ public class RendererGUI implements Disposable {
 
     protected void initializeFontCollection() throws Exception {
         if (fonts == null) {
-            Repository font_repo = Repository.loadFromResources(DEFAULT_FONT_PATH + DEFAULT_FONT_NAME + ".repo");
-            BitmapFont font = font_repo.getFont(DEFAULT_FONT_NAME);
             fonts = new FontsGUI(FONT_UNIFORM_BUFFER_BINDING_POINT);
-            fonts.uploadFont(font,0);
+            fonts.uploadDefaultFonts();
         }
     }
 
@@ -683,8 +855,21 @@ public class RendererGUI implements Disposable {
         int y = floor(quad.minY);
         int w = ceil(quad.maxX) - x;
         int h = ceil(quad.maxY) - y;
-        glEnable(GL_SCISSOR_TEST);
-        glScissor(x,y,w,h);
+        if (w > 0 && h > 0) {
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(x,y,w,h);
+        }
+    }
+
+    public void enableScissor(float x1, float y1, float x2, float y2) {
+        int x = floor(x1);
+        int y = floor(y1);
+        int w = ceil(x2) - x;
+        int h = ceil(y2) - y;
+        if (w > 0 && h > 0) {
+            glEnable(GL_SCISSOR_TEST);
+            glScissor(x,y,w,h);
+        }
     }
 
 

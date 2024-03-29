@@ -1,4 +1,4 @@
-#version 440 core
+
 layout (location=0) out vec4 f_color;
 in vec2 pos;
 

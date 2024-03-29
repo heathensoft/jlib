@@ -1,408 +1,676 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.IDPool;
+import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.lwjgl.utils.Resources;
+import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.*;
 import org.lwjgl.system.MemoryStack;
 import org.tinylog.Logger;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-import static org.lwjgl.opengl.GL11.GL_FALSE;
-import static org.lwjgl.opengl.GL11.GL_NONE;
-import static org.lwjgl.opengl.GL11.GL_TRUE;
+import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30C.glUniform1uiv;
-import static org.lwjgl.opengl.GL31.*;
 import static org.lwjgl.opengl.GL32.GL_GEOMETRY_SHADER;
+import static org.lwjgl.opengl.GL43.*;
 
 /**
+ *
+ * Shaders must have unique names
+ *
  * @author Frederik Dahl
- * 29/10/2022
+ * 26/03/2024
  */
 
 
-public class ShaderProgram implements Disposable {
-    
-    private static int currentID = GL_NONE;
-    
-    private final int name;
+public class ShaderProgram {
+
+    public static final String path_vert_texture_pass = "res/jlib/lwjgl/glsl/gfx_texture_pass.vert";
+    public static final String path_frag_texture_pass = "res/jlib/lwjgl/glsl/gfx_texture_pass.frag";
+    public static final String path_vert_bubble_demo = "res/jlib/lwjgl/glsl/gfx_bubble_demo.vert";
+    public static final String path_frag_bubble_demo = "res/jlib/lwjgl/glsl/gfx_bubble_demo.frag";
+    public static final String UNIFORM_SAMPLER_2D = "u_sampler2D";
+    public static final String UNIFORM_RESOLUTION = "u_resolution";
+    public static final String UNIFORM_TIME = "u_time";
+
+    public static final class JLIBShaders {
+        public final int texture_pass_program;
+        public final int bubble_demo_program;
+        private JLIBShaders() {
+            int texture_pass_handle = -1;
+            int bubble_demo_handle = -1;
+            try { ShaderProgram program;
+                String v_source, g_source, f_source;
+                v_source = Resources.asString(path_vert_texture_pass);
+                f_source = Resources.asString(path_frag_texture_pass);
+                program = new ShaderProgram("gfx_texture_pass_program",v_source,f_source);
+                texture_pass_handle = program.glHandle();
+                v_source = Resources.asString(path_vert_bubble_demo);
+                f_source = Resources.asString(path_frag_bubble_demo);
+                program = new ShaderProgram("gfx_bubble_demo_program",v_source,f_source);
+                bubble_demo_handle = program.glHandle();
+            } catch (Exception e) {
+                Logger.error(e.getMessage());
+                Logger.error("Error While Compiling JLIB Shaders");
+                Engine.get().exit();
+            } finally {
+                texture_pass_program = texture_pass_handle;
+                bubble_demo_program = bubble_demo_handle;
+            }
+        }
+    }
+
+    public static class ShaderPass implements Disposable {
+        private final Vao vertexAttributes;
+        private final BufferObject indices, vertices;
+        private ShaderPass() {
+            this.indices = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
+            this.vertices = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
+            this.vertexAttributes = new Vao().bind();
+            this.indices.bind().bufferData(new byte[] { 0,1,2,2,1,3});
+            this.vertices.bind().bufferData((long) 16 * Float.BYTES);
+            glVertexAttribPointer(0, 2, GL_FLOAT, false, 16, 0);
+            glVertexAttribPointer(1, 2, GL_FLOAT, false, 16, 8);
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+        } public void draw(Vector4f pos, Vector4f uv) { draw(pos.x,pos.y,pos.z,pos.w,uv.x,uv.y,uv.z,uv.w); }
+        public void draw() { draw(0,0,1,1); }
+        public void draw(float u1, float v1, float u2, float v2) { draw(0,0,1,1,u1,v1,u2,v2); }
+        public void draw(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2) {
+            try (MemoryStack stack = MemoryStack.stackPush()){
+                FloatBuffer buffer = stack.mallocFloat(16);
+                buffer.put(x1).put(y1).put(u1).put(v1);
+                buffer.put(x2).put(y1).put(u2).put(v1);
+                buffer.put(x1).put(y2).put(u1).put(v2);
+                buffer.put(x2).put(y2).put(u2).put(v2);
+                vertices.bind().bufferSubData(buffer.flip(),0);
+            } vertexAttributes.bind();
+            glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0);
+        } public void dispose() { Disposable.dispose(vertexAttributes,indices,vertices); }
+    }
+
+    private static JLIBShaders common_programs;
+    private static ShaderProgram current_program;
+    private static ShaderPass shader_pass;
+    private static final Map<Integer,ShaderProgram> programs_by_id = new HashMap<>();
+    private static final Map<String, ShaderProgram> programs_by_name = new HashMap<>();
+    private static final IDPool unnamed_suffix_pool = new IDPool();
+    private static final String ERROR_NAME_CLASH = "Shader program naming conflict: ";
+    private static final String ERROR_NOT_FOUND = "Shader program not found";
+    private static final String ERROR_NO_PROGRAM = "Shader program no program bound";
+    private static final String UNNAMED_PROGRAM = "unnamed_shader_program_";
+
     private final Map<String,Integer> uniforms;
-    private final Map<String,Integer> blockIndices;
-    
-    public ShaderProgram(String vSource, String fSource) throws Exception {
-        this();
-        attach(vSource,GL_VERTEX_SHADER);
-        attach(fSource,GL_FRAGMENT_SHADER);
-        compile();
-        link();
+    private final String name;
+    private final int handle;
+
+    public ShaderProgram(String vSource, String fSource) throws Exception { this(null,vSource,fSource); }
+    public ShaderProgram(String name, String vSource, String fSource) throws Exception { this(name,vSource,null,fSource); }
+    public ShaderProgram(String name, String vSource, String gSource, String fSource) throws Exception {
+        if (name == null || name.isBlank()) {
+            name = UNNAMED_PROGRAM + unnamed_suffix_pool.obtainID();
+        } if (programs_by_name.containsKey(name)) {
+            String error_message = ERROR_NAME_CLASH + name;
+            throw new Exception(error_message);
+        } handle = glCreateProgram();
+        if (gSource != null) attachShaderToProgram(gSource, handle, GL_GEOMETRY_SHADER);
+        if (vSource != null) attachShaderToProgram(vSource, handle, GL_VERTEX_SHADER);
+        if (fSource != null) attachShaderToProgram(fSource, handle, GL_FRAGMENT_SHADER);
+        Logger.debug("Compiling Shader Program: \"{}\"",name);
+        compileAndLinkShaders(handle);
+        this.uniforms = createUniformLocationMap(handle);
+        this.name = name;
+        registerShaderProgram(this);
     }
 
-    public ShaderProgram(String vSource, String gSource, String fSource) throws Exception {
-        this();
-        attach(vSource,GL_VERTEX_SHADER);
-        attach(gSource,GL_GEOMETRY_SHADER);
-        attach(fSource,GL_FRAGMENT_SHADER);
-        compile();
-        link();
-    }
-    
-    public ShaderProgram() throws Exception {
-        name = glCreateProgram();
-        if (name == GL_FALSE) {
-            throw new Exception(glGetProgramInfoLog(name));
-        } uniforms = new HashMap<>();
-        blockIndices = new HashMap<>();
-    }
-    
-    public void attach(String source, int type) throws Exception {
-        String prefix;
-        switch (type) {
-            case GL_VERTEX_SHADER -> prefix = "vertex";
-            case GL_FRAGMENT_SHADER -> prefix = "fragment";
-            case GL_GEOMETRY_SHADER -> prefix = "geometry";
-            default -> {
-                glDeleteProgram(name);
-                throw new Exception(
-                "unknown or unsupported shader type");
-            }
-        }
-        int handle = glCreateShader(type);
-        glShaderSource(handle,source);
-        glAttachShader(name,handle);
-    }
-    
-    public void compile() throws Exception {
-        final int[] count = {0};
-        final int[] shaders = new int[16];
-        glGetAttachedShaders(name,count,shaders);
-        for (int i = 0; i < count[0]; i++) {
-            final int shader = shaders[i];
-            glCompileShader(shader);
-            int status = glGetShaderi(shader, GL_COMPILE_STATUS);
-            if (status == GL_FALSE) {
-                String log = glGetShaderInfoLog(shader);
-                disposeShaders();
-                throw new Exception(log);
-            }
-        }
-    }
-    
-    public void link() throws Exception {
-        int status = glGetProgrami(name,GL_LINK_STATUS);
-        int attachedCount = glGetProgrami(name,GL_ATTACHED_SHADERS);
-        if (status != GL_TRUE && attachedCount >= 2) {
-            glLinkProgram(name);
-            status = glGetProgrami(name,GL_LINK_STATUS);
-            disposeShaders();
-            if (status == GL_FALSE) {
-                String info = glGetProgramInfoLog(name);
-                glDeleteProgram(name);
-                throw new Exception(info);
-            } glValidateProgram(name);
-            status = glGetProgrami(name, GL_VALIDATE_STATUS);
-            if (status == GL_FALSE) {
-                throw new Exception(glGetProgramInfoLog(name));
-            }
-        }
-    }
-    
-    private void disposeShaders() {
-        int[] count = {0};
-        int[] shaders = new int[16];
-        glGetAttachedShaders(name,count,shaders);
-        for (int i = 0; i < count[0]; i++) {
-            final int shader = shaders[i];
-            glDetachShader(name,shader);
-            glDeleteShader(shader);
-        }
-    }
-    
-    public int getUniform(String name) {
-        return uniforms.getOrDefault(name,-1);
-    }
-    
-    public void createUniformBlockIndex(String name) {
-        int index = glGetUniformBlockIndex(this.name,name);
-        if (index == GL_INVALID_INDEX) throw new RuntimeException("no such block: " + name);
-        blockIndices.put(name,index);
-        
-    }
-    
-    public void bindBlock(String name, int bindingPoint) {
-        Integer index = blockIndices.get(name);
-        if (index == null) throw new RuntimeException("no such block: " + name);
-        glUniformBlockBinding(this.name,index,bindingPoint);
+    public String name() { return name; }
+    public int glHandle() { return handle; }
+    public boolean isBound() { return this == current_program; }
+
+    public static int programCount() { return programs_by_id.size(); }
+    public static ShaderProgram currentProgram() { return current_program; }
+    public static Optional<ShaderProgram> currentProgramOptional() { return Optional.of(current_program); }
+    public static List<ShaderProgram> getAllPrograms() { return programs_by_id.values().stream().toList(); }
+    public static List<ShaderProgram> getAllPrograms(List<ShaderProgram> dst) {
+        for (var entry : programs_by_id.entrySet()) {
+            dst.add(entry.getValue());
+        } return dst;
     }
 
-    /** Do not have to use shader for this */
-    public void createUniform(String name) {
-        int uniformLocation = glGetUniformLocation(this.name, name);
-        if (uniformLocation == GL_INVALID_INDEX)
-            throw new RuntimeException("no such uniform: " + name);
-        uniforms.put(name, uniformLocation);
+    public static void texturePass(Texture texture) {
+        texturePass(texture, MathLib.vec4(0,0,1,1));
     }
 
-    /** Do not have to use shader for this */
-    public void createUniforms(String... names) {
-        for (String name : names) {
-            createUniform(name);
+    public static void texturePass(Texture texture, Vector4f uv) {
+        texturePass(texture, MathLib.vec2(1,1),MathLib.vec4(0,0,1,1),uv);
+    }
+
+    public static void texturePass(Texture texture, Vector2f resolution, Vector4f pos, Vector4f uv) {
+        bindProgram(commonPrograms().texture_pass_program);
+        setUniform(ShaderProgram.UNIFORM_RESOLUTION,resolution);
+        setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,0);
+        texture.bindToSlot(0);
+        ShaderProgram.shaderPass().draw();
+    }
+
+    public static JLIBShaders commonPrograms() {
+        if (common_programs == null) {
+            common_programs = new JLIBShaders();
+        } return common_programs;
+    }
+
+    public static ShaderPass shaderPass() {
+        if (shader_pass == null) {
+            shader_pass = new ShaderPass();
+        } return shader_pass;
+    }
+
+    public static void deleteAllProgramsAndResources() {
+        for (var entry : programs_by_id.entrySet()) {
+            ShaderProgram program = entry.getValue();
+            String name = program.name;
+            int program_handle = program.handle;
+            if (current_program == program) {
+                glUseProgram(GL_NONE);
+            } Logger.debug("Deleting Shader Program: \"{}\"",name);
+            deleteShadersOfProgram(program_handle);
+            glDeleteProgram(program_handle);
+        } Disposable.dispose(shader_pass);
+        current_program = null;
+        programs_by_id.clear();;
+        programs_by_name.clear();;
+        unnamed_suffix_pool.clear();
+        common_programs = null;
+        shader_pass = null;
+    }
+
+    public static void deleteCurrentProgram() {
+        ShaderProgram program = current_program;
+        if (program != null) {
+            current_program = null;
+            String name = program.name;
+            int program_handle = program.handle;
+            programs_by_name.remove(name,program);
+            programs_by_id.remove(program_handle,program);
+            glUseProgram(GL_NONE);
+            Logger.debug("Deleting Shader Program: \"{}\"",name);
+            deleteShadersOfProgram(program_handle);
+            glDeleteProgram(program_handle);
         }
     }
 
-    public void setUniform(String name, float x, float y) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(2);
-            buffer.put(x).put(y);
-            buffer.flip();
-            glUniform2fv(uniforms.get(name), buffer);
+    public static void bindProgram(ShaderProgram program) {
+        if (program == null) {
+            if (current_program != null) {
+                glUseProgram(GL_NONE); }
+        } else bindProgram(program.handle);
+    }
+
+    public static void bindProgram(String program_name) {
+        ShaderProgram program = programs_by_name.get(program_name);
+        if (program == null) throw new RuntimeException(ERROR_NOT_FOUND);
+        bindProgram(program.handle);
+    }
+
+    public static void bindProgram(int program_handle) {
+        if (program_handle == GL_NONE) {
+            if (current_program != null) {
+                glUseProgram(GL_NONE);
+                current_program = null; }
+        } else if (current_program == null) {
+            ShaderProgram program = programs_by_id.get(program_handle);
+            if (program == null) throw new RuntimeException(ERROR_NOT_FOUND);
+            glUseProgram(program.handle);
+            current_program = program;
+        } else if (current_program.handle != program_handle) {
+            ShaderProgram program = programs_by_id.get(program_handle);
+            if (program == null) throw new RuntimeException(ERROR_NOT_FOUND);
+            glUseProgram(program.handle);
+            current_program = program;
         }
     }
 
-    public void setUniform(String name, float x, float y, float z) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(3);
-            buffer.put(x).put(y).put(z);
-            buffer.flip();
-            glUniform3fv(uniforms.get(name), buffer);
-        }
+    public static void setUniform(String name, int i) {
+        int uniform_location = getUniformLocation(name);
+        glUniform1i(uniform_location,i);
     }
 
-    public void setUniform(String name, float x, float y, float z, float w) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(4);
-            buffer.put(x).put(y).put(z).put(w);
-            buffer.flip();
-            glUniform4fv(uniforms.get(name), buffer);
-        }
-    }
-    
-    public void setUniform(String name, Vector2f value) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(2);
-            buffer.put(value.x).put(value.y);
-            buffer.flip();
-            glUniform2fv(uniforms.get(name), buffer);
-        }
-    }
-    
-    public void setUniform(String name, Vector2f[] values) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(2 * values.length);
-            for (Vector2f value : values) {
-                buffer.put(value.x).put(value.y);
-            } buffer.flip();
-            glUniform2fv(uniforms.get(name), buffer);
-        }
-    }
-    
-    public void setUniform(String name, Vector3f value) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(3);
-            buffer.put(value.x).put(value.y).put(value.z);
-            buffer.flip();
-            glUniform3fv(uniforms.get(name), buffer);
-        }
-    }
-    
-    public void setUniform(String name, Vector3f[] values) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(3 * values.length);
-            for (Vector3f value : values) {
-                buffer.put(value.x).put(value.y).put(value.z);
-            } buffer.flip();
-            glUniform3fv(uniforms.get(name), buffer);
-        }
-    }
-    
-    public void setUniform(String name, Vector4f value) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(4);
-            buffer.put(value.x).put(value.y).put(value.z).put(value.w);
-            buffer.flip();
-            glUniform4fv(uniforms.get(name), buffer);
-        }
-    }
-    
-    public void setUniform(String name, Vector4f[] values) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(4 * values.length);
-            for (Vector4f value : values) {
-                buffer.put(value.x).put(value.y).put(value.z).put(value.w);
-            } buffer.flip();
-            glUniform4fv(uniforms.get(name), buffer);
-        }
-    }
-    
-    public void setUniform(String name, Matrix3f value) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(9);
-            value.get(buffer);
-            glUniformMatrix3fv(uniforms.get(name), false, buffer);
-        }
-    }
-    
-    public void setUniform(String name, Matrix4f value) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer buffer = stack.mallocFloat(16);
-            value.get(buffer);
-            glUniformMatrix4fv(uniforms.get(name), false, buffer);
-        }
-    }
-    
-    public void setUniform1i(String name, int value) {
-        glUniform1i(uniforms.get(name), value);
-    }
-    
-    public void setUniform1iv(String name, int[] array) {
-        glUniform1iv(uniforms.get(name),array);
-    }
-    
-    public void setUniform2iv(String name, int[] array) {
-        glUniform2iv(uniforms.get(name),array);
-    }
-    
-    public void setUniform3iv(String name, int[] array) {
-        glUniform3iv(uniforms.get(name),array);
-    }
-    
-    public void setUniform4iv(String name, int[] array) {
-        glUniform4iv(uniforms.get(name),array);
-    }
-
-    public void setUniform1iv(String name, IntBuffer buffer) {
-        glUniform1iv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform2iv(String name, IntBuffer buffer) {
-        glUniform2iv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform3iv(String name, IntBuffer buffer) {
-        glUniform3iv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform4iv(String name, IntBuffer buffer) {
-        glUniform4iv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform1ui(String name, int value) {
-        glUniform1ui(uniforms.get(name), value);
-    }
-    
-    public void setUniform1uiv(String name, int[] array) {
-        glUniform1uiv(uniforms.get(name),array);
-    }
-    
-    public void setUniform2uiv(String name, int[] array) {
-        glUniform2uiv(uniforms.get(name),array);
-    }
-    
-    public void setUniform3uiv(String name, int[] array) {
-        glUniform3uiv(uniforms.get(name),array);
-    }
-    
-    public void setUniform4uiv(String name, int[] array) {
-        glUniform4uiv(uniforms.get(name),array);
-    }
-    
-    public void setUniform1uiv(String name, IntBuffer buffer) {
-        glUniform1uiv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform2uiv(String name, IntBuffer buffer) {
-        glUniform2uiv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform3uiv(String name, IntBuffer buffer) {
-        glUniform3uiv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform4uiv(String name, IntBuffer buffer) {
-        glUniform4uiv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform1f(String name, float value) {
-        glUniform1f(uniforms.get(name), value);
-    }
-    
-    public void setUniform1fv(String name, float[] array) {
-        glUniform1fv(uniforms.get(name),array);
-    }
-    
-    public void setUniform2fv(String name, float[] array) {
-        glUniform2fv(uniforms.get(name),array);
-    }
-    
-    public void setUniform3fv(String name, float[] array) {
-        glUniform3fv(uniforms.get(name),array);
-    }
-    
-    public void setUniform4fv(String name, float[] array) {
-        glUniform4fv(uniforms.get(name),array);
-    }
-    
-    public void setUniform1fv(String name, FloatBuffer buffer) {
-        glUniform1fv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform2fv(String name, FloatBuffer buffer) {
-        glUniform2fv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform3fv(String name, FloatBuffer buffer) {
-        glUniform3fv(uniforms.get(name),buffer);
-    }
-    
-    public void setUniform4fv(String name, FloatBuffer buffer) {
-        glUniform1fv(uniforms.get(name),buffer);
-    }
-
-    public void setUniformSampler(String name, int slot) {
-        setUniform1i(name,slot);
-    }
-
-    public void setUniformSamplerArray(String name, int size) {
-        setUniformSamplerArray(name,size,0);
-    }
-
-    public void setUniformSamplerArray(String name, int size, int slotOffset) {
+    public static void setUniform(String name, int i0, int i1) {
+        int uniform_location = getUniformLocation(name);
         try (MemoryStack stack = MemoryStack.stackPush()){
-            IntBuffer buffer = stack.mallocInt(size);
-            for (int i = 0; i < size; i++) buffer.put(i+slotOffset);
-            setUniform1iv(name,buffer.flip());
+            IntBuffer buffer = stack.mallocInt(2);
+            buffer.put(i0).put(i1).flip();
+            glUniform2iv(uniform_location,buffer);
         }
     }
 
-    public ShaderProgram use() {
-        if (name != currentID) {
-            glUseProgram(name);
-            currentID = name;
-        } return this;
-    }
-    
-    public static void useZERO() {
-        glUseProgram(currentID = GL_NONE);
-    }
-    
-    public int id() {
-        return name;
-    }
-    
-    public void dispose() {
-        // If any method throws an exception, the shader program would already be
-        // disposed. That's why I check delete status and attachments here.
-        if (glGetProgrami(name,GL_ATTACHED_SHADERS) > 0)
-            disposeShaders();
-        if (glGetProgrami(name,GL_DELETE_STATUS) == GL_FALSE)
-            glDeleteProgram(name);
-        useZERO();
+    public static void setUniform(String name, int i0, int i1, int i2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(3);
+            buffer.put(i0).put(i1).put(i2).flip();
+            glUniform3iv(uniform_location,buffer);
+        }
     }
 
-    public static String insert(String insert, String replace, String source) {
+    public static void setUniform(String name, int i0, int i1, int i2, int i3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(4);
+            buffer.put(i0).put(i1).put(i2).put(i3).flip();
+            glUniform4iv(uniform_location,buffer);
+        }
+    }
+
+    public static void setUniform(String name, int[] array) {
+        setUniform(name,array,0,array.length);
+    }
+
+    public static void setUniform(String name, int[] array, int offset, int count) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(count);
+            for (int i = 0; i < count; i++) {
+                buffer.put(array[i + offset]);
+            } glUniform1iv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, IntBuffer buffer) {
+        int uniform_location = getUniformLocation(name);
+        glUniform1iv(uniform_location,buffer);
+    }
+
+
+    public static void setUniform(String name, float f) {
+        int uniform_location = getUniformLocation(name);
+        glUniform1f(uniform_location,f);
+    }
+
+    public static void setUniform(String name, float f0, float f1) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(2);
+            buffer.put(f0).put(f1).flip();
+            glUniform2fv(uniform_location,buffer);
+        }
+    }
+
+    public static void setUniform(String name, float f0, float f1, float f2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(3);
+            buffer.put(f0).put(f1).put(f2).flip();
+            glUniform3fv(uniform_location,buffer);
+        }
+    }
+
+    public static void setUniform(String name, float f0, float f1, float f2, float f3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(4);
+            buffer.put(f0).put(f1).put(f2).put(f3).flip();
+            glUniform4fv(uniform_location,buffer);
+        }
+    }
+
+    public static void setUniform(String name, float[] array) {
+        setUniform(name,array,0,array.length);
+    }
+
+    public static void setUniform(String name, float[] array, int offset, int count) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(count);
+            for (int i = 0; i < count; i++) {
+                buffer.put(array[i + offset]);
+            } glUniform1fv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, FloatBuffer buffer) {
+        int uniform_location = getUniformLocation(name);
+        glUniform1fv(uniform_location,buffer);
+    }
+
+    public static void setUniform(String name, Vector2f vec2) {
+        setUniform(name,vec2.x,vec2.y);
+    }
+
+    public static void setUniform(String name, Vector3f vec3) {
+        setUniform(name,vec3.x,vec3.y,vec3.z);
+    }
+
+    public static void setUniform(String name, Vector4f vec4) {
+        setUniform(name,vec4.x,vec4.y,vec4.z,vec4.w);
+    }
+
+    public static void setUniform(String name, Vector2i vec2) {
+        setUniform(name,vec2.x,vec2.y);
+    }
+
+    public static void setUniform(String name, Vector3i vec3) {
+        setUniform(name,vec3.x,vec3.y,vec3.z);
+    }
+
+    public static void setUniform(String name, Vector4i vec4) {
+        setUniform(name,vec4.x,vec4.y,vec4.z,vec4.w);
+    }
+
+    public static void setUniform(String name, Matrix2f mat2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(4);
+            glUniformMatrix2fv(uniform_location,false,mat2.get(buffer));
+        }
+    }
+
+    public static void setUniform(String name, Matrix3f mat3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(9);
+            glUniformMatrix3fv(uniform_location,false,mat3.get(buffer));
+        }
+    }
+
+    public static void setUniform(String name, Matrix4f mat4) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(16);
+            glUniformMatrix4fv(uniform_location,false,mat4.get(buffer));
+        }
+    }
+
+    public static void setUniform(String name, Vector2f[] vec2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.mallocFloat(2 * vec2.length);
+            for (Vector2f value : vec2) {
+                buffer.put(value.x).put(value.y);
+            } glUniform2fv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, Vector3f[] vec3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.mallocFloat(3 * vec3.length);
+            for (Vector3f v : vec3) {
+                buffer.put(v.x).put(v.y).put(v.z);
+            } glUniform3fv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, Vector4f[] vec4) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            FloatBuffer buffer = stack.mallocFloat(4 * vec4.length);
+            for (Vector4f v : vec4) {
+                buffer.put(v.x).put(v.y).put(v.z).put(v.w);
+            } glUniform4fv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, Vector2i[] vec2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer buffer = stack.mallocInt(2 * vec2.length);
+            for (Vector2i value : vec2) {
+                buffer.put(value.x).put(value.y);
+            } glUniform2iv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, Vector3i[] vec3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer buffer = stack.mallocInt(3 * vec3.length);
+            for (Vector3i v : vec3) {
+                buffer.put(v.x).put(v.y).put(v.z);
+            } glUniform3iv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, Vector4i[] vec4) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer buffer = stack.mallocInt(4 * vec4.length);
+            for (Vector4i v : vec4) {
+                buffer.put(v.x).put(v.y).put(v.z).put(v.w);
+            } glUniform4iv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniform(String name, Matrix2f[] mat2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(4 * mat2.length);
+            for (int i = 0; i < mat2.length; i++) {
+                mat2[i].get(4*i,buffer);
+            } glUniformMatrix2fv(uniform_location,false,buffer);
+        }
+    }
+
+    public static void setUniform(String name, Matrix3f[] mat3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(9 * mat3.length);
+            for (int i = 0; i < mat3.length; i++) {
+                mat3[i].get(9*i,buffer);
+            } glUniformMatrix3fv(uniform_location,false,buffer);
+        }
+    }
+
+    public static void setUniform(String name, Matrix4f[] mat4) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            FloatBuffer buffer = stack.mallocFloat(16 * mat4.length);
+            for (int i = 0; i < mat4.length; i++) {
+                mat4[i].get(16*i,buffer);
+            } glUniformMatrix4fv(uniform_location,false,buffer);
+        }
+    }
+
+    public static void setUniformU(String name, int u) {
+        int uniform_location = getUniformLocation(name);
+        glUniform1ui(uniform_location,u);
+    }
+
+    public static void setUniformU(String name, int u0, int u1) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(2);
+            buffer.put(u0).put(u1).flip();
+            glUniform2uiv(uniform_location,buffer);
+        }
+    }
+
+    public static void setUniformU(String name, int u0, int u1, int u2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(3);
+            buffer.put(u0).put(u1).put(u2).flip();
+            glUniform3uiv(uniform_location,buffer);
+        }
+    }
+
+    public static void setUniformU(String name, int u0, int u1, int u2, int u3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(4);
+            buffer.put(u0).put(u1).put(u2).put(u3).flip();
+            glUniform4uiv(uniform_location,buffer);
+        }
+    }
+
+    public static void setUniformU(String name, int[] array) {
+        setUniform(name,array,0,array.length);
+    }
+
+    public static void setUniformU(String name, int[] array, int offset, int count) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer buffer = stack.mallocInt(count);
+            for (int i = 0; i < count; i++) {
+                buffer.put(array[i + offset]);
+            } glUniform1uiv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniformU(String name, IntBuffer buffer) {
+        int uniform_location = getUniformLocation(name);
+        glUniform1uiv(uniform_location,buffer);
+    }
+
+    public static void setUniformU(String name, Vector2i vec2) {
+        setUniformU(name,vec2.x,vec2.y);
+    }
+
+    public static void setUniformU(String name, Vector3i vec3) {
+        setUniformU(name,vec3.x,vec3.y,vec3.z);
+    }
+
+    public static void setUniformU(String name, Vector4i vec4) {
+        setUniformU(name,vec4.x,vec4.y,vec4.z,vec4.w);
+    }
+
+    public static void setUniformU(String name, Vector2i[] vec2) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer buffer = stack.mallocInt(2 * vec2.length);
+            for (Vector2i value : vec2) {
+                buffer.put(value.x).put(value.y);
+            } glUniform2uiv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniformU(String name, Vector3i[] vec3) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer buffer = stack.mallocInt(3 * vec3.length);
+            for (Vector3i v : vec3) {
+                buffer.put(v.x).put(v.y).put(v.z);
+            } glUniform3uiv(uniform_location,buffer.flip());
+        }
+    }
+
+    public static void setUniformU(String name, Vector4i[] vec4) {
+        int uniform_location = getUniformLocation(name);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer buffer = stack.mallocInt(4 * vec4.length);
+            for (Vector4i v : vec4) {
+                buffer.put(v.x).put(v.y).put(v.z).put(v.w);
+            } glUniform4uiv(uniform_location,buffer.flip());
+        }
+    }
+
+
+    public static String replaceSource(String insert, String replace, String source) {
         return source.replace(replace,insert);
     }
-    
+
+    private static void attachShaderToProgram(String source, int program_handle, int shader_type) {
+        source = Engine.get().glContext().shaderVersionString() + source;
+        int shader_handle = glCreateShader(shader_type);
+        glShaderSource(shader_handle,source);
+        glAttachShader(program_handle,shader_handle);
+    }
+
+    private static void compileAndLinkShaders(int program_handle) throws Exception {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer shader_count_buffer = stack.mallocInt(1);
+            IntBuffer shader_handle_buffer = stack.mallocInt(16);
+            glGetAttachedShaders(program_handle,shader_count_buffer,shader_handle_buffer);
+            int shader_count = shader_count_buffer.get(0);
+            for (int idx = 0; idx < shader_count; idx++) {
+                int shader_handle = shader_handle_buffer.get(idx);
+                glCompileShader(shader_handle);
+                int compile_status = glGetShaderi(shader_handle,GL_COMPILE_STATUS);
+                if (compile_status == GL_FALSE) {
+                    String error_message = glGetShaderInfoLog(shader_handle);
+                    for (int i = 0; i < shader_count; i++) {
+                        shader_handle = shader_handle_buffer.get(i);
+                        glDetachShader(program_handle,shader_handle);
+                        glDeleteShader(shader_handle);
+                    } glDeleteProgram(program_handle);
+                    throw new Exception(error_message);
+                }
+            }
+            glLinkProgram(program_handle);
+            int link_status = glGetProgrami(program_handle,GL_LINK_STATUS);
+            for (int idx = 0; idx < shader_count; idx++) {
+                int shader_handle = shader_handle_buffer.get(idx);
+                glDetachShader(program_handle,shader_handle);
+                glDeleteShader(shader_handle);
+            } if (link_status == GL_FALSE) {
+                String error_message = glGetProgramInfoLog(program_handle);
+                glDeleteProgram(program_handle);
+                throw new Exception(error_message);
+            } glValidateProgram(program_handle);
+            int validate_status = glGetProgrami(program_handle,GL_VALIDATE_STATUS);
+            if (validate_status == GL_FALSE) {
+                String error_message = glGetProgramInfoLog(program_handle);
+                glDeleteProgram(program_handle);
+                throw new Exception(error_message);
+            }
+        }
+    }
+
+    private static Map<String,Integer> createUniformLocationMap(int program_handle) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer num_uniform_buffer = stack.mallocInt(1);
+            glGetProgramInterfaceiv(program_handle,GL_UNIFORM, GL_ACTIVE_RESOURCES, num_uniform_buffer);
+            int num_uniforms = num_uniform_buffer.get(0);
+            Map<String,Integer> uniform_location_map = new HashMap<>();
+            for (int uniform = 0; uniform < num_uniforms; uniform++) {
+                String name = glGetProgramResourceName(program_handle,GL_UNIFORM,uniform);
+                int uniform_location = glGetUniformLocation(program_handle,name);
+                if (uniform_location >= 0) {
+                    String[] split = name.split("\\[[\\d]+?\\]");
+                    if (split.length > 0) {
+                        String uniform_name = split[0];
+                        uniform_location_map.putIfAbsent(uniform_name,uniform_location);
+                    }
+                }
+            } return uniform_location_map;
+        }
+    }
+
+    private static void registerShaderProgram(ShaderProgram program) {
+        programs_by_id.putIfAbsent(program.handle,program);
+        programs_by_name.putIfAbsent(program.name,program);
+    }
+
+    private static void deleteShadersOfProgram(int program_handle) {
+        try (MemoryStack stack = MemoryStack.stackPush()){
+            IntBuffer shader_count_buffer = stack.mallocInt(1);
+            IntBuffer shader_handle_buffer = stack.mallocInt(16);
+            glGetAttachedShaders(program_handle,shader_count_buffer,shader_handle_buffer);
+            int shader_count = shader_count_buffer.get(0);
+            for (int i = 0; i < shader_count; i++) {
+                int shader_handle = shader_handle_buffer.get(i);
+                glDetachShader(program_handle,shader_handle);
+                glDeleteShader(shader_handle);
+            }
+        }
+    }
+
+    private static int getUniformLocation(String name) {
+        if (current_program == null) throw new RuntimeException(ERROR_NO_PROGRAM);
+        Integer uniform_location = current_program.uniforms.get(name);
+        if (uniform_location == null) throwRTEInvalidUniformName(current_program,name);
+        return uniform_location;
+    }
+
+    private static void throwRTEInvalidUniformName(ShaderProgram program, String uniform_name) {
+        String message = "Shader Program [" + program.name +"] could not find uniform: \"" + uniform_name + "\"";
+        throw new RuntimeException(message);
+    }
+
+
+
 }

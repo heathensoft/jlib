@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.gui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.gui.text.Paragraph;
-import io.github.heathensoft.jlib.gui.text.Text;
+import io.github.heathensoft.jlib.gui.text.TextOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
@@ -135,7 +135,7 @@ public class RendererGUI implements Disposable {
         }
     }
 
-    public void drawText(Text text, Rectanglef quad) {
+    public void drawText(TextOld text, Rectanglef quad) {
         if (rendering && !text.isBlank() && quad.isValid()) {
             if (active_batch != TEXT_BATCH) {
                 if (active_batch == SPRITE_BATCH) {
@@ -386,7 +386,6 @@ public class RendererGUI implements Disposable {
 
     public void uploadFont(BitmapFont font, int slot) throws Exception { fonts.uploadFont(font,slot); }
 
-    public void uploadFont(ByteBuffer png, String metrics, int slot) throws Exception { fonts.uploadFont(png, metrics, slot); }
 
     public void updateResolution(int width, int height) throws Exception {
         if (rendering) throw new IllegalStateException("Illegal attempt to update resolution while rendering");

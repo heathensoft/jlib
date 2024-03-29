@@ -1,18 +1,22 @@
 package io.github.heathensoft.jlib.test.guinew.tt;
 
+import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.*;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.Interactable;
 import io.github.heathensoft.jlib.ui.box.Box;
+import io.github.heathensoft.jlib.ui.box.BoxContainer;
 import io.github.heathensoft.jlib.ui.box.BoxWindow;
+import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
+import io.github.heathensoft.jlib.ui.gfx.ImageDisplay;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.ui.text.Paragraph;
 import io.github.heathensoft.jlib.ui.text.Text;
 import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
-import static io.github.heathensoft.jlib.common.utils.U.clamp;
+import static io.github.heathensoft.jlib.common.utils.U.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
@@ -21,13 +25,14 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 
 
-public class TextField extends Box implements TextProcessor {
+public class TextFieldOld extends Box implements TextProcessor {
 
     private Text text;
     private int text_font;
     private float text_size;
     private boolean text_wrap;
     private boolean editing_enabled;
+    private boolean sb_lock;
     private float sb_grab_y;
     private final float sb_width;
     private final float tf_padding;
@@ -35,8 +40,14 @@ public class TextField extends Box implements TextProcessor {
     private float tf_text_height;
     private final Vector2f text_cursor_position;
     private final Interactable.Instance scroll_bar;
+    private ImageDisplay boxBackground;
+    private BoxWindow parent_window;
 
-    public TextField(float tf_width, float tf_height, float tf_padding, float sb_width, float text_size) {
+    public void setBoxBackground(ImageDisplay boxBackground) {
+        this.boxBackground = boxBackground;
+    }
+
+    public TextFieldOld(float tf_width, float tf_height, float tf_padding, float sb_width, float text_size) {
         tf_width = Math.max(16,tf_width);
         tf_height = Math.max(16,tf_height);
         this.sb_width = Math.max(4,sb_width);
@@ -44,7 +55,7 @@ public class TextField extends Box implements TextProcessor {
         this.desired_width = tf_width + this.sb_width;
         this.desired_height = tf_height;
         this.text_cursor_position = new Vector2f();
-        this.interactable_id = iObtainID();
+        this.iID = iObtainID();
         this.scroll_bar = new Interactable.Instance();
         this.text = new Text();
         this.editing_enabled = false;
@@ -53,6 +64,10 @@ public class TextField extends Box implements TextProcessor {
         this.text_font = 0;
     }
 
+
+    protected void onWindowInit(BoxWindow window, BoxContainer parent) {
+        this.parent_window = window;
+    }
 
     protected void onWindowClose(BoxWindow window) {
         if (isActiveTextProcessor()) deactivateTextProcessor();
@@ -142,10 +157,22 @@ public class TextField extends Box implements TextProcessor {
             else if(cursor_y1 > window_y1) scrollDown(cursor_y1 - window_y1);
         }
         Rectanglef bounds = bounds(MathLib.rectf(),x,y);
-        renderer.drawElement(bounds,0xFF212121,interactable_id);
+        if (boxBackground == null) renderer.drawElement(bounds,0xFF212121, iID);
+        else boxBackground.render(window,renderer,bounds,0,0,dt);
         bounds.minX = bounds.maxX - sb_width;
         renderScrollBar(renderer,bounds);
+
     }
+
+    protected void displayFadingFontSize() {
+        Rectanglef bounds = MathLib.rectf();
+        if (parent_window.getBoundsOf(this,bounds)) {
+            bounds.maxX -= sb_width;
+            parent_window.displayFading(null,null,round(text_size),null,bounds);
+        }
+    }
+
+
 
 
 
@@ -156,6 +183,7 @@ public class TextField extends Box implements TextProcessor {
             bounds.maxX -= sb_width;
             renderer.drawText(text,bounds,tf_text_offset,text_font,tf_padding,text_size,text_wrap,show_cursor);
         }
+
     }
 
 
@@ -172,11 +200,10 @@ public class TextField extends Box implements TextProcessor {
             bounds = MathLib.rectf().set(bounds);
             bounds.maxY -= sb_position;
             bounds.minY = bounds.maxY - (sb_height + sb_width);
-            color = 0xFF0000FF;
+            color = 0xdd0000FF;
             id = scroll_bar.interactableID();
-        } else {
-            id = interactable_id;
-            color = 0xFF666666;
+        } else { id = iID;
+            color = 0x66666666;
         } renderer.drawElement(bounds,color,id,0.0f);
     }
 
@@ -185,8 +212,10 @@ public class TextField extends Box implements TextProcessor {
             if ((mods & GLFW_MOD_CONTROL) > 0) {
                 if (key == GLFW_KEY_KP_ADD) {
                     if (text_size < 256) text_size++;
+                    displayFadingFontSize();
                 } else if (key == GLFW_KEY_KP_SUBTRACT) {
                     if (text_size > 8) text_size--;
+                    displayFadingFontSize();
                 } else if (key == GLFW_KEY_C) {
                     String string = text.toString();
                     Window window = Engine.get().window();
@@ -200,19 +229,27 @@ public class TextField extends Box implements TextProcessor {
                     Window window = Engine.get().window();
                     window.setClipboard(string);
                     text.clear();
-                } else text.keyPress(key, mods);
+                } else if (key == GLFW_KEY_F) {
+                    text_font = (text_font + 1) % FontsGUI.FONT_SLOTS;
+                    displayFadingFont();
+                }else text.keyPress(key, mods);
             } else text.keyPress(key, mods);
         } else { // editing disabled
             if ((mods & GLFW_MOD_CONTROL) > 0) {
                 if (key == GLFW_KEY_KP_ADD) {
                     if (text_size < 256) text_size++;
+                    displayFadingFontSize();
                 } else if (key == GLFW_KEY_KP_SUBTRACT) {
                     if (text_size > 8) text_size--;
+                    displayFadingFontSize();
                 } else if (key == GLFW_KEY_C) {
                     String string = text.toString();
                     Window window = Engine.get().window();
                     window.setClipboard(string);
-                } // No key-mods
+                } else if (key == GLFW_KEY_F) {
+                    text_font = (text_font + 1) % FontsGUI.FONT_SLOTS;
+                    displayFadingFont();
+                }// No key-mods
             } else if (key == GLFW_KEY_UP) {
                 scrollUp(text_size);
             } else if (key == GLFW_KEY_DOWN) {
@@ -221,9 +258,21 @@ public class TextField extends Box implements TextProcessor {
         }
     }
 
-    public void keyRelease(int key, int mods) { text.keyRelease(key, mods); }
+    private void displayFadingFont() {
+        Rectanglef bounds = MathLib.rectf();
+        if (parent_window.getBoundsOf(this,bounds)) {
+            bounds.maxX -= sb_width;
+            GUI.fonts.bindFontMetrics(text_font);
+            String font_name = GUI.fonts.name();
+            parent_window.displayFading(font_name,null,text_font,null,bounds);
+        }
+    }
+
+    public void keyRelease(int key, int mods) {  }
 
     public void charPress(byte character) { text.charPress(character); }
+
+    public void lockScrollBar(boolean lock) { sb_lock = lock; }
 
     public boolean isWrappingEnabled() { return text_wrap; }
 
@@ -259,6 +308,7 @@ public class TextField extends Box implements TextProcessor {
         bounds.minY += tf_padding;
         bounds.maxY -= tf_padding;
         float tf_window_height = bounds.lengthY();
+
         if (text.isBlank()) {
             tf_text_height = tf_window_height;
             text_cursor_position.zero();
@@ -267,12 +317,23 @@ public class TextField extends Box implements TextProcessor {
             bounds.minX += tf_padding;
             bounds.maxX -= (tf_padding + sb_width);
             float tf_window_width = bounds.lengthX();
+            GUI.fonts.bindFontMetrics(text_font);
             tf_text_height = text.height(tf_window_width,text_size,text_wrap);
             tf_text_height = Math.max(tf_window_height,tf_text_height);
-            if (editing_enabled) text.cursorPosition(text_cursor_position,tf_window_width,text_size,text_wrap);
+            if (editing_enabled && iHasFocus()) text.cursorPosition(text_cursor_position,tf_window_width,text_size,text_wrap);
             else text_cursor_position.zero();
             float tf_wiggle_room = tf_text_height - tf_window_height;
             tf_text_offset = clamp(tf_text_offset,0,tf_wiggle_room);
+            boolean focus = iHasFocus() || scroll_bar.iHasFocus();
+            if (sb_lock &! focus) {
+                if (text.isOrderedDefault()) {
+                    tf_text_offset = tf_wiggle_room;
+                } else {
+                    tf_text_offset = 0;
+                }
+            }
+
+
         }
     }
 
@@ -313,7 +374,9 @@ public class TextField extends Box implements TextProcessor {
     public void dispose() {
         super.dispose();
         scroll_bar.dispose();
+        Disposable.dispose(boxBackground);
     }
+
 
     private void renderCursorDebug(RendererGUI renderer, float x, float y) {
         x += tf_padding;
@@ -342,6 +405,8 @@ public class TextField extends Box implements TextProcessor {
         bounds.maxY -= tf_padding;
         bounds.maxY += tf_text_offset;
         bounds.minY = bounds.maxY - tf_text_height;
-        renderer.drawElement(bounds,0x77000000,interactable_id);
+        renderer.drawElement(bounds,0x77000000, iID);
     }
+
+
 }

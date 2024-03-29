@@ -463,6 +463,8 @@ public class Texture implements Disposable {
         filter(GL_NEAREST,GL_NEAREST);
     }
 
+    public void linear() { filter(GL_LINEAR,GL_LINEAR); }
+
     public void filter(int min, int mag) {
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min);
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag);
@@ -672,7 +674,7 @@ public class Texture implements Disposable {
                 "}";
 
 
-        ShaderProgram shader = new ShaderProgram(VERTEX_SHADER,FRAGMENT_SHADER);
+        ShaderProgramOld shader = new ShaderProgramOld(VERTEX_SHADER,FRAGMENT_SHADER);
 
         Vao vao = new Vao().bind();
         BufferObject vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_STATIC_DRAW);

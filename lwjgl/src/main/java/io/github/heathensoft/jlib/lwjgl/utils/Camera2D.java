@@ -11,7 +11,7 @@ import org.joml.primitives.Rectanglef;
  */
 
 
-public class OrthographicCamera {
+public class Camera2D {
     
     private static final Vector3f UP = new Vector3f(0,1,0);
     

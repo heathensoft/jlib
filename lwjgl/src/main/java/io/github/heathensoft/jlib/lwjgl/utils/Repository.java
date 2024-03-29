@@ -1,7 +1,9 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
+import io.github.heathensoft.jlib.lwjgl.gfx.AtlasData;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import io.github.heathensoft.jlib.lwjgl.gfx.BitmapFont;
+import io.github.heathensoft.jlib.lwjgl.gfx.TextureAtlas;
 import org.tinylog.Logger;
 
 import java.io.IOException;
@@ -51,13 +53,13 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
         put(key, bitmap.compress(), replace);
     }
 
-    public void put(String key, BitmapFont font) {
-        put(key, font, true);
+    public void put(String key, AtlasData atlas) {
+        put(key, atlas, true);
     }
 
-    public void put(String key, BitmapFont font, boolean replace) {
-        put(key + ".png",font.png,replace);
-        put(key + ".txt",font.metrics,replace);
+    public void put(String key, AtlasData atlas, boolean replace) {
+        put(key + ".png",atlas.bitmap().compress(),replace);
+        put(key + ".txt",atlas.info(),replace);
     }
 
     public void put(String key, String data) {
@@ -90,6 +92,7 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
         if (data.hasRemaining()) {
             if (map.containsKey(key)) {
                 if (replace) {
+                    Logger.debug("Repository: Content replaced: {}",key);
                     ByteBuffer existing = map.remove(key);
                     size -= existing.remaining();
                     size += data.remaining();
@@ -136,12 +139,15 @@ public class Repository implements Iterable<Map.Entry<String,ByteBuffer>> {
         } return new Bitmap(png);
     }
 
+
+
     public BitmapFont getFont(String font) throws Exception {
         ByteBuffer png = map.get(font + ".png");
         ByteBuffer txt = map.get(font + ".txt");
         if (png == null || txt == null) {
             throw new Exception("font not in repository: " + font);
-        } return new BitmapFont(png,txt);
+        } String info = new String(txt.array());
+        return new BitmapFont(new Bitmap(png),info);
     }
 
     public String getString(String key) throws Exception {

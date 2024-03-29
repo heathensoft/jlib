@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
+ * Utility class to load assets from the "resources" folders
+ * For external files use: {@link io.github.heathensoft.jlib.common.io.ExternalFile}
  * @author Frederik Dahl
  * 16/10/2023
  */

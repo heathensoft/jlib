@@ -13,7 +13,6 @@ import org.joml.primitives.Rectanglef;
 
 public class Box implements Interactable {
 
-    protected int interactable_id;
     protected float current_width;
     protected float current_height;
     protected float desired_width;
@@ -21,6 +20,7 @@ public class Box implements Interactable {
     protected boolean locked_horizontal;
     protected boolean locked_vertical;
     protected boolean built;
+    protected int iID;
 
     public Box() { }
 
@@ -39,7 +39,7 @@ public class Box implements Interactable {
 
     protected void renderText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) { }
 
-    public int interactableID() { return interactable_id; }
+    public int interactableID() { return iID; }
 
     public void lockHorizontal() {
         if (built) throw new IllegalStateException("Box: cannot lock built box");
@@ -110,7 +110,14 @@ public class Box implements Interactable {
     protected float unlockedDesiredWidth() { return locked_horizontal ? 0 : desired_width; }
     
     protected float unlockedDesiredHeight() { return locked_vertical ? 0 : desired_height; }
-    
+
+    protected boolean getBoundsOf(Box target, Rectanglef dst, float x, float y) {
+        if (this == target) {
+            bounds(dst,x,y);
+            return true;
+        } return false;
+    }
+
     protected void build() {
         if (built) throw new IllegalStateException("Box already built");
         if (desired_width <= 0) throw new IllegalStateException("Box: cannot build, desired width <= 0");
@@ -147,6 +154,6 @@ public class Box implements Interactable {
 
     public void dispose() {
         Interactable.super.dispose();
-        interactable_id = 0;
+        iID = 0;
     }
 }

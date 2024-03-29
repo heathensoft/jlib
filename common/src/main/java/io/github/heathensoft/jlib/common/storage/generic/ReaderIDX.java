@@ -6,6 +6,7 @@ package io.github.heathensoft.jlib.common.storage.generic;
  */
 
 
+@FunctionalInterface
 public interface ReaderIDX<E> {
     
     /**

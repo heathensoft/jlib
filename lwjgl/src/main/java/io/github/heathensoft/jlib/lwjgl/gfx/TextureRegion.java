@@ -1,10 +1,13 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
+import org.joml.Vector4f;
+
 import java.nio.FloatBuffer;
 
 /**
  *
- * The UV-coordinates of a texture-region are always pixel-centered
+ * Texels have x,y = 0,0 in the top-left corner of the Texture
+ * Width and Height is never < 1. (Clamped to 1) One pixel
  *
  * @author Frederik Dahl
  * 21/03/2023
@@ -17,6 +20,7 @@ public class TextureRegion {
     protected final int texture_height;
     protected int x, y, width, height;
     protected float u, v, u2, v2;
+    protected boolean pixel_centered;
     
     public TextureRegion(int texture_size) {
         this(texture_size,texture_size);
@@ -30,22 +34,29 @@ public class TextureRegion {
         this(x,y,width,height,texture_width,texture_height,false);
     }
 
-    public TextureRegion(int x, int y, int width, int height, int texture_width, int texture_height, boolean pixel_centered_uvs) {
-        this.width = width; this.texture_width = texture_width; this.x = x % texture_width;
-        this.height = height; this.texture_height = texture_height; this.y = y % texture_height;
-        if (pixel_centered_uvs) {
+    public TextureRegion(int x, int y, int width, int height, int texture_width, int texture_height, boolean pixel_centered) {
+        if (texture_width <= 0 || texture_height <= 0) throw new RuntimeException("Invalid TextureRegion Size");
+        this.texture_height = texture_height;
+        this.texture_width = texture_width;
+        this.height = Math.max(1,height);
+        this.width = Math.max(1,width);
+        this.y = y % texture_height;
+        this.x = x % texture_width;
+        if (pixel_centered) {
             this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
             this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
             this.u2 = (float) ((this.x + width - 0.5d) / (double) this.texture_width);
             this.v2 = (float) ((this.y + height - 0.5d) / (double) this.texture_height);
-        } else { this.u = (float) ((this.x) / (double) this.texture_width);
+        } else {
+            this.u = (float) ((this.x) / (double) this.texture_width);
             this.v = (float) ((this.y) / (double) this.texture_height);
             this.u2 = (float) ((this.x + width) / (double) this.texture_width);
             this.v2 = (float) ((this.y + height) / (double) this.texture_height);
-        }
+        } this.pixel_centered = pixel_centered;
     }
 
     public TextureRegion(TextureRegion region) {
+        this.pixel_centered = region.pixel_centered;
         this.texture_height = region.texture_height;
         this.texture_width = region.texture_width;
         this.height = region.height;
@@ -58,149 +69,115 @@ public class TextureRegion {
         this.v2 = region.v2;
     }
 
-    public void pixelCenterUVs() {
-        this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
-        this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
-        this.u2 = (float) ((this.x + width - 0.5d) / (double) this.texture_width);
-        this.v2 = (float) ((this.y + height - 0.5d) / (double) this.texture_height);
-    }
+    public float u() { return u; }
+    public float v() { return v; }
+    public float u2() { return u2; }
+    public float v2() { return v2; }
+    public int x() { return x; }
+    public int y() { return y; }
+    public int w() { return width; }
+    public int h() { return height; }
+    public int textureWidth() { return texture_width; }
+    public int textureHeight() { return texture_height; }
+    public boolean isPixelCentered() { return pixel_centered; }
+    public boolean isFlippedHorizontally() { return u > u2; }
+    public boolean isFlippedVertically() { return v > v2; }
+    public TextureRegion copy() { return new TextureRegion(this); }
+    public FloatBuffer getUVs(FloatBuffer dst) { return dst.put(u).put(v).put(u2).put(v2); }
+    public Vector4f getUVs(Vector4f dst) { return dst.set(u,v,u2,v2); }
 
-    public TextureRegion[] subDivide(int rows, int cols, int element_width, int element_height, boolean pixel_centered_uvs) {
+
+    public TextureRegion[] subDivide(int rows, int cols, int reg_width, int reg_height, boolean pixel_centered) {
         TextureRegion[] array = new TextureRegion[rows * cols];
         for (int row = 0; row < rows; row++) {
-            int local_y = row * element_height;
+            int local_y = row * reg_height;
             for (int col = 0; col < cols; col++) {
-                int local_x = col * element_width;
+                int local_x = col * reg_width;
                 array[row * cols + col] = subRegion(
-                        local_x,local_y,element_width,element_height,pixel_centered_uvs);
+                        local_x,local_y,reg_width,reg_height,pixel_centered);
             }
         } return array;
     }
-    
-    public TextureRegion[] subDivide(int rows, int cols, int element_width, int element_height) {
-        return subDivide(rows,cols,element_width,element_height,false);
-    }
-    
-    public TextureRegion[] subDivide(int rows, int cols, int element_size) {
-        return subDivide(rows,cols,element_size,element_size);
+
+    public TextureRegion[] subDivide(int rows, int cols, int reg_width, int reg_height) {
+        return subDivide(rows,cols,reg_width,reg_height,false);
     }
 
-    public TextureRegion subRegion(int local_x, int local_y, int w, int h, boolean pixel_centered_uvs) {
-        return new TextureRegion(x+local_x,y+local_y,w,h, texture_width, texture_height, pixel_centered_uvs);
+    public TextureRegion[] subDivide(int rows, int cols, int reg_size) {
+        return subDivide(rows,cols,reg_size,reg_size);
     }
-    
+
+    public TextureRegion subRegion(int local_x, int local_y, int w, int h, boolean pixel_centered) {
+        return new TextureRegion(x+local_x,y+local_y,w,h, texture_width, texture_height, pixel_centered);
+    }
+
     public TextureRegion subRegion(int local_x, int local_y, int w, int h) {
         return new TextureRegion(x+local_x,y+local_y,w,h, texture_width, texture_height);
     }
-    
-    public void scroll(int amount_x, int amount_y) {
-        setPosition(this.x + amount_x, this.y + amount_y);
+
+    public void scroll(int dx, int dy) { setPosition(this.x + dx, this.y + dy); }
+
+    public void set(int x, int y, int w, int h) {
+        this.y = y % texture_height;
+        this.x = x % texture_width;
+        this.height = Math.max(1,h);
+        this.width = Math.max(1,w);
+        recalculateUV();
     }
-    
+
     public void setPosition(int x, int y) {
-        boolean pixel_centered = isPixelCentered();
         this.x = x % texture_width;
         this.y = y % texture_height;
-        recalculateUV(pixel_centered);
+        recalculateUV();
     }
-    
+
     public void setSize(int w, int h) {
-        boolean pixel_centered = isPixelCentered();
-        this.width = w;
-        this.height = h;
-        recalculateUV(pixel_centered);
+        this.height = Math.max(1,h);
+        this.width = Math.max(1,w);
+        recalculateUV();
     }
-    
-    public void resize(int amount_x, int amount_y) {
-        setSize(this.width + amount_x, this.height + amount_y);
-    }
-    
-    public void flipX() {
+
+    public void flipHorizontally() {
         float f = u;
         u = u2;
         u2 = f;
     }
-    
-    public void flipY() {
+
+    public void flipVertically() {
         float f = v;
         v = v2;
         v2 = f;
     }
 
-    public float u() {
-        return u;
-    }
-    
-    public float u2() {
-        return u2;
-    }
-    
-    public float v() {
-        return v;
-    }
-    
-    public float v2() {
-        return v2;
-    }
-    
-    public int x() {
-        return x;
-    }
-    
-    public int y() {
-        return y;
-    }
-    
-    public int w() {
-        return width;
-    }
-    
-    public int h() {
-        return height;
-    }
-    
-    public int textureWidth() {
-        return texture_width;
-    }
-    
-    public int textureHeight() {
-        return texture_height;
-    }
-    
-    public void getUVs(FloatBuffer buffer) {
-        buffer.put(u).put(v).put(u2).put(v2);
+    public void togglePixelCentered(boolean on) {
+        if (on &! pixel_centered) {
+            this.u = (float) ((this.x + 0.5d) / (double) this.texture_width);
+            this.v = (float) ((this.y + 0.5d) / (double) this.texture_height);
+            this.u2 = (float) ((this.x + width - 0.5d) / (double) this.texture_width);
+            this.v2 = (float) ((this.y + height - 0.5d) / (double) this.texture_height);
+        } else if (pixel_centered &! on) {
+            this.u = (float) ((this.x) / (double) this.texture_width);
+            this.v = (float) ((this.y) / (double) this.texture_height);
+            this.u2 = (float) ((this.x + width) / (double) this.texture_width);
+            this.v2 = (float) ((this.y + height) / (double) this.texture_height);
+        }
     }
 
-    public boolean isPixelCentered() {
-        return !(u == (this.x / (double) texture_width));
-    }
-    
-    public boolean isFlippedX() {
-        return u > u2;
-    }
-    
-    public boolean isFlippedY() {
-        return v > v2;
-    }
-
-    public TextureRegion copy() {
-        return new TextureRegion(this);
-    }
-    
-    private void recalculateUV(boolean pixel_centered) {
-        boolean was_flipped_x = isFlippedX();
-        boolean was_flipped_y = isFlippedY();
+    private void recalculateUV() {
+        boolean was_flipped_x = isFlippedHorizontally();
+        boolean was_flipped_y = isFlippedVertically();
         if (pixel_centered) {
             u = (float) ((x + 0.5d) / (double) texture_width);
             v = (float) ((y + 0.5d) / (double) texture_height);
             u2 = (float) ((x + width - 0.5d) / (double) texture_width);
             v2 = (float) ((y + height - 0.5d) / (double) texture_height);
-        } else { u = (float) ((x) / (double) texture_width);
+        } else {
+            u = (float) ((x) / (double) texture_width);
             v = (float) ((y) / (double) texture_height);
             u2 = (float) ((x + width) / (double) texture_width);
             v2 = (float) ((y + height) / (double) texture_height);
-        } if (was_flipped_x) flipX();
-        if (was_flipped_y) flipY();
+        } if (was_flipped_x) flipHorizontally();
+        if (was_flipped_y) flipVertically();
     }
     
 }

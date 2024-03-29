@@ -2,12 +2,8 @@ package io.github.heathensoft.jlib.ui.text;
 
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import org.joml.Vector4f;
 
-import java.util.HexFormat;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -19,22 +15,16 @@ import java.util.regex.Pattern;
 public class Paragraph implements Iterable<Word> {
 
     public enum Type {
-        REGULAR(Color.hex_to_rgb("A9B7C6FF",new Vector4f()),"Regular"),
-        COMMENT(Color.hex_to_rgb("808080FF",new Vector4f()),"Comment"),
-        DEBUG  (Color.hex_to_rgb("6A8759FF",new Vector4f()),"Debug"),
-        WARNING(Color.hex_to_rgb("FF0000FF",new Vector4f()),"Warning");
-        public final Vector4f color;
+        DEFAULT(0,"Default"),
+        COMMENT(1,"Comment"),
+        DEBUG  (2,"Debug"),
+        WARNING(3,"Warning");
+        public final int id;
         public final String name;
-        Type(Vector4f color, String name) {
-            this.color = color;
+        Type(int id, String name) {
             this.name = name;
+            this.id = id;
         }
-    }
-
-    public static Vector4f color_of(Paragraph paragraph, Word word) {
-        if (word.type() == Word.Type.REGULAR) {
-            return paragraph.type.color;
-        } else return word.type().color;
     }
 
     protected Type type;
@@ -42,7 +32,7 @@ public class Paragraph implements Iterable<Word> {
 
     public Paragraph() { this((String) null); }
     public Paragraph(Type type) { this((String) null,type); }
-    public Paragraph(String text) { this(text, Type.REGULAR); }
+    public Paragraph(String text) { this(text, Type.DEFAULT); }
     public Paragraph(String text, Type type) {
         this.words = stringToWords(text,type);
         this.type = type;
@@ -60,19 +50,17 @@ public class Paragraph implements Iterable<Word> {
     public int wordCount() { return words.size(); }
     public boolean isBlank() { return words.isEmpty(); }
 
-    public Paragraph appendValue(String string) { return append(string, Keyword.Type.VALUE); }
-    public Paragraph appendKeyword(String string) { return append(string, Keyword.Type.KEYWORD); }
-    public Paragraph appendComment(String string) { return append(string, Keyword.Type.INLINE_COMMENT); }
-    public Paragraph appendEntityPlayer(String string) { return append(string, Keyword.Type.ENTITY_PLAYER); }
-    public Paragraph appendEntityOther(String string) { return append(string, Keyword.Type.ENTITY_OTHER); }
-    public Paragraph appendLocation(String string) { return append(string, Keyword.Type.LOCATION); }
-    public Paragraph appendObject(String string) { return append(string, Keyword.Type.OBJECT); }
-    public Paragraph appendItem(String string) { return append(string, Keyword.Type.ITEM); }
-    public Paragraph appendAction(String string) { return append(string, Keyword.Type.ACTION); }
-    public Paragraph appendSuccess(String string) { return append(string, Keyword.Type.SUCCESS); }
-    public Paragraph appendFailure(String string) { return append(string, Keyword.Type.FAILURE); }
+    public Paragraph appendValue(String string) { return append(string, Word.Type.VALUE); }
+    public Paragraph appendEntityPlayer(String string) { return append(string, Word.Type.ENTITY_FRIENDLY); }
+    public Paragraph appendEntityOther(String string) { return append(string, Word.Type.ENTITY_HOSTILE); }
+    public Paragraph appendLocation(String string) { return append(string, Word.Type.LOCATION); }
+    public Paragraph appendObject(String string) { return append(string, Word.Type.OBJECT); }
+    public Paragraph appendItem(String string) { return append(string, Word.Type.ITEM); }
+    public Paragraph appendAction(String string) { return append(string, Word.Type.ACTION); }
+    public Paragraph appendSuccess(String string) { return append(string, Word.Type.ACTION_SUCCESS); }
+    public Paragraph appendFailure(String string) { return append(string, Word.Type.ACTION_FAILURE); }
 
-    public Paragraph append(String string, Keyword.Type type) {
+    public Paragraph append(String string, Word.Type type) {
         if (string != null && !string.isBlank()) {
             String[] split = string.trim().split("\\s+");
             for (String s : split) words.addLast(new Keyword(s,type));
@@ -90,6 +78,47 @@ public class Paragraph implements Iterable<Word> {
         for (Word word : paragraph) {
             words.addLast(word);
         } return this;
+    }
+
+    public void findKeywords(Set<String> dst, Word.Type type) {
+        if (!isBlank()) {
+            int word_count = words.size();
+            StringBuilder sb = new StringBuilder(length());
+            int index_outer = 0;
+            for (Word word_outer : words) {
+                if (word_outer.type() == type) {
+                    sb.delete(0,Math.max(0,sb.length()-1));
+                    sb.append(word_outer.toString().trim());
+                    dst.add(sb.toString());
+                    int index_inner = 0;
+                    for (Word word_inner : words) {
+                        if (index_inner > index_outer) {
+                            if (word_inner.type() == type) {
+                                sb.append(' ').append(word_inner.toString().trim());
+                                dst.add(sb.toString());
+                            } else break;;
+                        } index_inner++;
+                    }
+                } index_outer++;
+            }
+        }
+    }
+
+    /**
+     * Will return true if string is blank
+     * @param string string to search for
+     * @param case_sensitive case-sensitive
+     * @return if a match was found
+     */
+    public boolean matching(String string, boolean case_sensitive) {
+        if (string == null || string.isBlank()) return true;
+        if (!isBlank()) {
+            String paragraph = toString();
+            if (!case_sensitive) {
+                string = string.toUpperCase();
+                paragraph = paragraph.toUpperCase();
+            } return paragraph.contains(string);
+        } return false;
     }
 
     public float width() { // Unscaled width pixels. Bind font before call
@@ -314,7 +343,7 @@ public class Paragraph implements Iterable<Word> {
         if (line != null && !line.isBlank()) {
             String[] split_paragraph = line.trim().split("\\s+");
             switch (type) {
-                case REGULAR, COMMENT -> {
+                case DEFAULT, COMMENT -> {
                     for (String word : split_paragraph)
                         list.add(new Word(word));
                 } case DEBUG, WARNING -> {

@@ -1,6 +1,9 @@
 package io.github.heathensoft.jlib.common;
 
 /**
+ * Disposable is meant for resources allocated outside the Java heap.
+ * Native memory or GPU storage.
+ *
  * @author Frederik Dahl
  * 07/01/2022
  */

@@ -1,14 +1,8 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 
-import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
-import io.github.heathensoft.jlib.lwjgl.utils.ScreenQuad;
-import org.joml.Vector4f;
-
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 import static org.lwjgl.glfw.GLFW.GLFW_DONT_CARE;
 

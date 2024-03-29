@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.gui.dev;
 
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
-import io.github.heathensoft.jlib.gui.text.Text;
+import io.github.heathensoft.jlib.gui.text.TextOld;
 import io.github.heathensoft.jlib.gui.window.Box;
 import io.github.heathensoft.jlib.gui.window.WindowGUI;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
@@ -18,7 +18,7 @@ import org.joml.primitives.Rectanglef;
 
 public class TextBox extends Box {
 
-    private Text text;
+    private TextOld text;
     private final Vector4f background_color;
     private float padding;
     private boolean use_parent_id;
@@ -49,9 +49,9 @@ public class TextBox extends Box {
         }
     }
 
-    public void setText(Text text) { this.text = text; }
+    public void setText(TextOld text) { this.text = text; }
 
-    public Text text() { return text; }
+    public TextOld text() { return text; }
 
     public Vector4f backgroundColor() {
         return background_color;

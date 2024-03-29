@@ -114,9 +114,9 @@ public class Color {
         }
     }
 
-    public static Vector4f hex_to_rgb(String hex, Vector4f dst) {
-        return intBits_to_rgb(hex_to_intBits(hex),dst);
-    }
+    public static Vector4f hex_to_rgb(String hex) { return hex_to_rgb(hex,new Vector4f()); }
+
+    public static Vector4f hex_to_rgb(String hex, Vector4f dst) { return intBits_to_rgb(hex_to_intBits(hex),dst); }
 
     public static Vector4f hex_to_hsv(String hex, Vector4f dst) {
         return intBits_to_hsv(hex_to_intBits(hex),dst);

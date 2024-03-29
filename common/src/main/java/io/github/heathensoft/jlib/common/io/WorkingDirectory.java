@@ -1,5 +1,7 @@
 package io.github.heathensoft.jlib.common.io;
 
+import org.tinylog.Logger;
+
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
@@ -76,7 +78,7 @@ public class WorkingDirectory {
         } else throw new Exception("Missing working directory");
     }
 
-    public void moveUp() throws Exception {
+    public void navigateUp() throws Exception {
         if (hasParent()) {
             Path prevPath = Path.of(path.toString());
             Path prevParent = parent == null ? null : Path.of(parent.toString());
@@ -108,7 +110,7 @@ public class WorkingDirectory {
         }
     }
 
-    public void moveDown(String folder) throws Exception {
+    public void navigateDown(String folder) throws Exception {
         if (folders.contains(folder)) {
             Path prevPath = Path.of(path.toString());
             Path prevParent = parent == null ? null : Path.of(parent.toString());
@@ -184,6 +186,35 @@ public class WorkingDirectory {
     public boolean delete(String name) throws Exception {
         if (deleteFile(name)) return true;
         else return deleteFolder(name);
+    }
+
+    public List<String> getFilePaths(List<String> dst, String ... fileExtensions) {
+        if (!files.isEmpty() && fileExtensions != null && fileExtensions.length > 0) {
+            List<String> extensions = new LinkedList<>();
+            for (String string : fileExtensions) {
+                if (!string.isBlank()) {
+                    if (!string.startsWith(".")) {
+                        string = "." + string;
+                    } if (!extensions.contains(string)) {
+                        extensions.add(string);
+                    }
+                }
+            } if (!extensions.isEmpty()) {
+                ExternalFile folder = new ExternalFile(path);
+                for (String file_name : files) {
+                    for (String extension : extensions) {
+                        if (file_name.endsWith(extension)) {
+                            try { ExternalFile file = folder.resolve(file_name);
+                                dst.add(file.toString());
+                            } catch (InvalidPathException e) {
+                                Logger.warn(e); // Should not occur
+                            } break;
+                        }
+                    }
+                }
+            }
+
+        } return dst;
     }
 
     public List<String> getFileNames(List<String> dst, String ... fileExtensions) {

@@ -1,6 +1,6 @@
 package io.github.heathensoft.jlib.tiles.graphics;
 
-import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
+import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.tiles.physics.Light2D;
 
 /**
@@ -9,14 +9,12 @@ import io.github.heathensoft.jlib.tiles.physics.Light2D;
  */
 
 
-public class LightingProgram extends ShaderProgram {
+public class LightingProgram extends ShaderProgramOld {
     
     
     public LightingProgram(String vsSource, String fsSource) throws Exception {
         super(vsSource, fsSource);
     }
-    
-    public LightingProgram() throws Exception { }
     
     
     public void createUniformLight2D(String name) {

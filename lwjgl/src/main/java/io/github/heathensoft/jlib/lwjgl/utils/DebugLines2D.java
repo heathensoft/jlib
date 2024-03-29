@@ -31,7 +31,7 @@ public class DebugLines2D {
     private static int draw_calls = 0;
     private static boolean rendering;
     private static boolean initialized;
-    private static ShaderProgram shaderProgram;
+    private static ShaderProgramOld shaderProgram;
     private static FloatBuffer vertices;
     private static BufferObject vbo;
     private static Vao vao;
@@ -47,7 +47,7 @@ public class DebugLines2D {
                 glEnableVertexAttribArray(0);
                 glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true, VERTEX_SIZE * Float.BYTES, 2 * Float.BYTES);
                 glEnableVertexAttribArray(1);
-                shaderProgram = new ShaderProgram(vertex_shader(),fragment_shader());
+                shaderProgram = new ShaderProgramOld(vertex_shader(),fragment_shader());
                 shaderProgram.createUniform("u_combined");
                 initialized = true;
             } catch (Exception e) {
@@ -94,7 +94,7 @@ public class DebugLines2D {
         for (int r = y0; r <= y1; r += grid_size) DebugLines2D.drawHorizontal(x0,x1,r);
     }
 
-    public static void drawGrid(OrthographicCamera camera, int grid_size, boolean begin, boolean end) {
+    public static void drawGrid(Camera2D camera, int grid_size, boolean begin, boolean end) {
         if (begin) begin(camera.combined());
         float vp_x_half = camera.viewport.x / 2f * camera.zoom;
         float vp_y_half = camera.viewport.y / 2f * camera.zoom;
@@ -107,7 +107,7 @@ public class DebugLines2D {
         if (end) end();
     }
     
-    public static void drawGrid(OrthographicCamera camera, boolean begin, boolean end) {
+    public static void drawGrid(Camera2D camera, boolean begin, boolean end) {
         if (begin) begin(camera.combined());
         float vx = camera.viewport.x;
         float vy = camera.viewport.y;

@@ -56,57 +56,61 @@ public class WindowManager implements Disposable {
         assert_not_updating_internals();
         assert_not_rendering_windows();
         assert_not_preparing_windows();
-        updating_internals = true;
-        while (!windows_to_open.isEmpty()) {
-            Window window = windows_to_open.removeLast();
-            windows_opened.addFirst(window);
-            window.setStateOpen();
-            window.onOpen();
-        } if (!windows_to_close.isEmpty()) {
-            windows_recently_closed.clear();
-            while (!windows_to_close.isEmpty()) {
-                Window window = windows_to_close.removeLast();
-                if (window.isInFocus()) {
-                    window.clearStateInFocus();
-                    window.onFocusLoss();
-                } window.clearStateOpen();
-                window.clearAutoFocus();
-                window.onClose();
-                windows_closed.addFirst(window);
-                windows_recently_closed.addFirst(window);
-            }
-        } while (!windows_to_terminate.isEmpty()) {
-            Window window = windows_to_terminate.getLast();
-            String key = window.name();
-            windows_recently_closed.remove(window);
-            if (window.isOpen()) windows_opened.remove(window);
-            else windows_closed.remove(window);
-            if (!windows_by_name.remove(key,window))
-                throw new IllegalStateException("GUI: Window was registered but not in map of names");
-            List<Window> group = windows_by_group.get(window.windowGroup());
-            group.remove(window);
-            window.clearWindowState();
-            window.clearAutoFocus();
-            window.onTermination();
-        } tmp_list.clear();
-        boolean front_window = true;
-        for (Window window : windows_opened) {
-            if (front_window) {
-                if (!window.isInFocus()) {
-                    window.setStateInFocus();
-                    window.onFocusGain();
-                } front_window = false;
-            } else {
-                if (window.isInFocus()) {
-                    window.clearStateInFocus();
-                    window.onFocusLoss();
+        try {
+            updating_internals = true;
+            while (!windows_to_open.isEmpty()) {
+                Window window = windows_to_open.removeLast();
+                windows_opened.addFirst(window);
+                window.setStateOpen();
+                window.onOpen();
+            } if (!windows_to_close.isEmpty()) {
+                windows_recently_closed.clear();
+                while (!windows_to_close.isEmpty()) {
+                    Window window = windows_to_close.removeLast();
+                    if (window.isInFocus()) {
+                        window.clearStateInFocus();
+                        window.onFocusLoss();
+                    } window.clearStateOpen();
+                    window.clearAutoFocus();
+                    window.onClose();
+                    windows_closed.addFirst(window);
+                    windows_recently_closed.addFirst(window);
                 }
-            } tmp_list.addFirst(window);
-        } updating_internals = false;
-        preparing_windows = true;
-        for (Window window : tmp_list) {
-            window.prepare(dt);
-        } preparing_windows = false;
+            } while (!windows_to_terminate.isEmpty()) {
+                Window window = windows_to_terminate.getLast();
+                String key = window.name();
+                windows_recently_closed.remove(window);
+                if (window.isOpen()) windows_opened.remove(window);
+                else windows_closed.remove(window);
+                if (!windows_by_name.remove(key,window))
+                    throw new IllegalStateException("GUI: Window was registered but not in map of names");
+                List<Window> group = windows_by_group.get(window.windowGroup());
+                group.remove(window);
+                window.clearWindowState();
+                window.clearAutoFocus();
+                window.onTermination();
+            } tmp_list.clear();
+            boolean front_window = true;
+            for (Window window : windows_opened) {
+                if (front_window) {
+                    if (!window.isInFocus()) {
+                        window.setStateInFocus();
+                        window.onFocusGain();
+                    } front_window = false;
+                } else {
+                    if (window.isInFocus()) {
+                        window.clearStateInFocus();
+                        window.onFocusLoss();
+                    }
+                } tmp_list.addFirst(window);
+            } updating_internals = false;
+            preparing_windows = true;
+            for (Window window : tmp_list) {
+                window.prepare(dt);
+            } preparing_windows = false;
+        } finally { updating_internals = false;
+            preparing_windows = false;
+        }
     }
 
     /**
@@ -122,12 +126,18 @@ public class WindowManager implements Disposable {
         assert_not_rendering_windows();
         assert_not_preparing_windows();
         assert_not_updating_internals();
-        rendering_windows = true;
-        Resolution resolution = Engine.get().window().appResolution();
-        while (!tmp_list.isEmpty()) {
-            Window window = tmp_list.removeFirst();
-            window.render(renderer,dt);
-        } rendering_windows = false;
+
+        try {
+            rendering_windows = true;
+            Resolution resolution = Engine.get().window().appResolution();
+            while (!tmp_list.isEmpty()) {
+                Window window = tmp_list.removeFirst();
+                window.render(renderer,dt);
+            }
+        } finally {
+            rendering_windows = false;
+        }
+
     }
 
     public <T extends Window> Optional<T> getByName(String key, Class<T> clazz) {

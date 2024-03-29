@@ -60,12 +60,26 @@ public class SamplerArray {
      * @param shader used shader
      * @param uniform uniform name
      */
-    public void uploadUniform(ShaderProgram shader, String uniform) {
+    public void uploadUniform(ShaderProgramOld shader, String uniform) {
         if (next_slot > 0) {
             try (MemoryStack stack = MemoryStack.stackPush()){
                 IntBuffer buffer = stack.mallocInt(next_slot);
                 for (int slot = 0; slot < next_slot; slot++) { buffer.put(slot);
                 } shader.use().setUniform1iv(uniform,buffer.flip());
+                for (int slot = 0; slot < next_slot; slot++) {
+                    slots[slot].bindToSlot(slot + glActiveSlotOffset);
+                    slots[slot] = null;
+                } next_slot = prev_slot = 0;
+            }
+        }
+    }
+
+    public void uploadUniform(String uniform) {
+        if (next_slot > 0) {
+            try (MemoryStack stack = MemoryStack.stackPush()){
+                IntBuffer buffer = stack.mallocInt(next_slot);
+                for (int slot = 0; slot < next_slot; slot++) { buffer.put(slot);
+                } ShaderProgram.setUniform(uniform,buffer.flip());
                 for (int slot = 0; slot < next_slot; slot++) {
                     slots[slot].bindToSlot(slot + glActiveSlotOffset);
                     slots[slot] = null;

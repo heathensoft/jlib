@@ -4,7 +4,7 @@ import io.github.heathensoft.jlib.gui.dev.ColorPickerWindow;
 import io.github.heathensoft.jlib.gui.dev.Slider;
 import io.github.heathensoft.jlib.gui.dev.TextBox;
 import io.github.heathensoft.jlib.gui.GUI;
-import io.github.heathensoft.jlib.gui.text.Text;
+import io.github.heathensoft.jlib.gui.text.TextOld;
 import io.github.heathensoft.jlib.gui.window.*;
 import io.github.heathensoft.jlib.lwjgl.window.Application;
 import io.github.heathensoft.jlib.lwjgl.window.BootConfiguration;
@@ -46,7 +46,7 @@ public class App extends Application  {
         GUI.gui_initialize(resolution);
         new ColorPickerWindow().open();
         if (true == true) {
-            Text text = new Text(20);
+            TextOld text = new TextOld(20);
             text.useWordWrap(true);
             text.set("Text messaging, or texting, is the act of composing and sending electronic messages, " +
                     "typically consisting of alphabetic and numeric characters, " +

@@ -59,8 +59,14 @@ public class GLContext {
         Logger.info("opengl max uniform buffer bindings: {}", max_uniform_buffer_bindings);
         Logger.info("opengl max uniform buffer block size: {} Bytes", max_uniform_block_size);
         Logger.info("opengl max vertex attributes: {}", max_vertex_attributes);
+
     }
 
+    public String shaderVersionString() {
+        String string = "#version " + version_major + version_minor + 0;
+        if (core_profile) string += " core\n";
+        return string;
+    }
 
     public static void checkError(String bookmark) {
         Logger.debug("checking glError, {}",bookmark);
@@ -69,7 +75,7 @@ public class GLContext {
 
     public static void checkError() {
         int code;
-        while ((code = glGetError()) != GL_NO_ERROR) {
+        while ((code = glGetError()) != GL_NO_ERROR) { // redundant I think
             String error = switch (code) {
                 case GL_INVALID_ENUM                    -> "INVALID_ENUM";
                 case GL_INVALID_VALUE                   -> "INVALID_VALUE";

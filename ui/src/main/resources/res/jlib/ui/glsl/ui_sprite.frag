@@ -1,4 +1,3 @@
-#version 440 core
 
 #define NO_TEXTUE 15
 #define TEXTURE_SLOTS 15
@@ -69,6 +68,7 @@ void main() {
             discard;
         }
     }
+
     f_diffuse = diffuse;
     f_normals = vec4(normals,diffuse.a);
     f_emissive = glow * diffuse.a;

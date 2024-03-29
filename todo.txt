@@ -7,11 +7,25 @@ Then query this when creating shaders and allocating buffers.
 i.e. cannon use (#define version 460 core) when gl version is 4.3 or running on mac-os etc.
 
 
-
+Gotu, liberationMono, Play
 
 
 
 GUI:
+
+A gui class that stores textures generically generated. Like background from sprite etc. Loaded Textures too?.
+
+box that can switch between content. only one is shown at a time. desired size is max of all
+
+
+When querying color of words. Have a static variable of previous word,paragraph,font color???
+
+FileCache.
+
+[COMPLETE]
+Named window boxes. Stored in window, accessed by key
+
+Split Box Containers
 
 [COMPLETE]
 When rendering GUI elements, invisible id should be true by default. (COMPLETE)

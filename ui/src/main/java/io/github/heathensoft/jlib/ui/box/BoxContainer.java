@@ -3,6 +3,8 @@ package io.github.heathensoft.jlib.ui.box;
 
 
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
+import org.joml.Vector2f;
+import org.joml.primitives.Rectanglef;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -29,6 +31,23 @@ public abstract class BoxContainer extends Box {
 
     /** Called just before calling close on the contents */
     protected void onWindowCloseContainer(BoxWindow boxWindow) { }
+
+    protected boolean getBoundsOf(Box target, Rectanglef dst, float x, float y) {
+        if (super.getBoundsOf(target,dst,x,y)) { return true;
+        } else { if (this instanceof HBoxContainer container) {for (Box box : contents) {
+                if (box.getBoundsOf(target,dst,x,y)) return true;
+                x += (box.current_width + inner_spacing);
+            } } else if (this instanceof VBoxContainer container) {for (Box box : contents) {
+                if (box.getBoundsOf(target,dst,x,y)) return true;
+                y -= (box.current_height + inner_spacing);
+            } } else if (this instanceof RootContainer container) {
+                x += container.border_padding;
+                y -= container.border_padding;
+                Box box = container.contents.get(0);
+                return box.getBoundsOf(target, dst, x, y);
+            }
+        } return false;
+    }
 
     protected final void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
         renderContainer(window, renderer, x, y, dt, parent_id);

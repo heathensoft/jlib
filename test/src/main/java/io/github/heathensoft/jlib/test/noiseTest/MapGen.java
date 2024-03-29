@@ -167,7 +167,7 @@ public class MapGen implements Disposable {
         }
 
         public int movementPenalty(int x, int y) {
-            float h = U.unlerp(0.5f,1.0f,noise[y][x]); // no movement penalty below .5
+            float h = U.unLerp(0.5f,1.0f,noise[y][x]); // no movement penalty below .5
             return U.round(h * movement_penalty_factor);
         }
 

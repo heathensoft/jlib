@@ -1,11 +1,8 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 
-import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
-import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
-import io.github.heathensoft.jlib.lwjgl.utils.Resources;
+import io.github.heathensoft.jlib.lwjgl.gfx.*;
+import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
 import org.lwjgl.system.MemoryUtil;
 
@@ -25,10 +22,6 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 public class TextBatchGUI extends BatchGUI {
 
-    public static final String SHADER_VERT = "res/jlib/ui/glsl/ui_text.vert";
-    public static final String SHADER_GEOM = "res/jlib/ui/glsl/ui_text.geom";
-    public static final String SHADER_FRAG = "res/jlib/ui/glsl/ui_text.frag";
-
     private final FontsGUI fonts;
 
     TextBatchGUI(FontsGUI fonts, int capacity, int width, int height) throws Exception {
@@ -44,17 +37,71 @@ public class TextBatchGUI extends BatchGUI {
         glVertexAttribPointer(1,4,GL_UNSIGNED_BYTE,true,vertex_size_bytes,3 * Float.BYTES);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
-        String vShader = Resources.asString(SHADER_VERT);
-        String gShader = Resources.asString(SHADER_GEOM);
-        String fShader = Resources.asString(SHADER_FRAG);
-        shaderProgram = new ShaderProgram(vShader,gShader,fShader);
-        shaderProgram.createUniform("u_resolution");
-        shaderProgram.createUniform("u_font_textures");
-        setResolutionUniform(width, height);
+        updateResolution(width, height);
     }
 
     public FontsGUI fonts() {
         return fonts;
+    }
+
+    public void drawDynamicVerticalCentered(String string, TextAlignment alignment, int abgr, float x, float y, float width, float size, float glow) {
+        int num_characters = string.length();
+        if (num_characters > 0 && size >= 1f) {
+            float color = Color.intBits_to_floatBits(abgr);
+            float scale = fonts.relativeScale(size);
+            float width_unscaled = fonts.advanceSum(string);
+            float desired_width = width_unscaled * scale;
+            y -= (size / 2f);
+            if (desired_width >= width) { // Alignment does not matter here.
+                if (desired_width > width) { // Adjusting scale to fit
+                    float ratio = width / desired_width;
+                    size = size * ratio;
+                    if (size < 1f) return;
+                    scale = fonts.relativeScale(size);
+                }
+                float ascent = scale * fonts.ascent();
+                float descent = scale * fonts.descent();
+                float letter_height = ascent + descent;
+                y = y - (letter_height / 2f) + descent;
+                int info_bits = bits_font(fonts.currentFont());
+                info_bits = bits_set_size(info_bits,size);
+                info_bits = bits_set_glow(info_bits,glow);
+                for (int i = 0; i < num_characters; i++) {
+                    char c = (char)(string.charAt(i) & 0x7F);
+                    pushVertex(x,y,color,info_bits | c);
+                    x += fonts.advance(c) * scale;
+                }
+            } else { // ATP The line fits inside the rect without scale adjustments.
+                float ascent = scale * fonts.ascent();
+                float descent = scale * fonts.descent();
+                float letter_height = ascent + descent;
+                y = y - (letter_height / 2f) + descent;
+                int info_bits = bits_font(fonts.currentFont());
+                info_bits = bits_set_size(info_bits,size);
+                info_bits = bits_set_glow(info_bits,glow);
+                switch (alignment) {
+                    case LEFT -> {
+                        for (int i = 0; i < num_characters; i++) {
+                            char c = (char)(string.charAt(i) & 0x7F);
+                            pushVertex(x,y,color,info_bits | c);
+                            x += fonts.advance(c) * scale;
+                        }
+                    } case RIGHT -> { x += width;
+                        for (int i = (num_characters - 1); i >= 0; i--) {
+                            char c = (char)(string.charAt(i) & 0x7F);
+                            x -= fonts.advance(c) * scale;
+                            pushVertex(x,y,color,info_bits | c);
+                        }
+                    } case CENTERED -> { x += center_offset_x(desired_width,width);
+                        for (int i = 0; i < num_characters; i++) {
+                            char c = (char)(string.charAt(i) & 0x7F);
+                            pushVertex(x,y,color,info_bits | c);
+                            x += fonts.advance(c) * scale;
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
@@ -83,6 +130,7 @@ public class TextBatchGUI extends BatchGUI {
                     x += fonts.advance(c) * scale;
                 }
             } else { // ATP The line fits inside the rect without scale adjustments.
+
                 int info_bits = bits_font(fonts.currentFont());
                 info_bits = bits_set_size(info_bits,size);
                 info_bits = bits_set_glow(info_bits,glow);
@@ -194,8 +242,8 @@ public class TextBatchGUI extends BatchGUI {
 
     void flush() {
         if (count > 0) {
-            shaderProgram.use();
-            fonts.bindUploadTextures(shaderProgram,"u_font_textures");
+            ShaderProgram.bindProgram(GUI.shaders.text_program);
+            fonts.bindUploadTextures("u_font_textures");
             vertices.flip();
             vertexAttribArray.bind();
             vertexBuffer.bind();
@@ -205,6 +253,11 @@ public class TextBatchGUI extends BatchGUI {
             draw_calls++;
             count = 0;
         }
+    }
+
+    void updateResolution(int width, int height) {
+        ShaderProgram.bindProgram(GUI.shaders.text_program);
+        ShaderProgram.setUniform("u_resolution",(float) width,(float) height);
     }
 
     private float center_offset_x(float desired_width, float bounds_width) {

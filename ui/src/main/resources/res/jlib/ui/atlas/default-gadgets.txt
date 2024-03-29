@@ -1,0 +1,23 @@
+# https://github.com/heathensoft
+
+# GL_NEAREST = 9728
+# GL_LINEAR  = 9729
+# GL_NEAREST_MIPMAP_NEAREST = 9984
+# GL_LINEAR_MIPMAP_NEAREST  = 9985
+# GL_NEAREST_MIPMAP_LINEAR  = 9986
+# GL_LINEAR_MIPMAP_LINEAR   = 9987
+
+# GL_REPEAT = 10497
+# GL_CLAMP_TO_EDGE = 33071
+# GL_CLAMP_TO_BORDER = 33069
+# GL_MIRRORED_REPEAT = 33648
+
+# Atlas: <name> <width> <height> <sprites>
+# Texture: <minFilter> <magFilter> <textureWrap> <mipMap> <srgb>
+# Region: <x> <y> <width> <height> <name>
+
+A: pixel-icons 32 16 2
+T: 9728 9728 33071 0 0
+
+R: 12 0 10 10 box_window_border_edge_top_10px
+R: 0 0 10 10 box_window_border_corner_top_left_10px

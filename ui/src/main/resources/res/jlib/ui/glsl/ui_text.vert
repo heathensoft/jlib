@@ -1,4 +1,4 @@
-#version 440 core
+
 #define TEXT_BINDING_POINT 0 // <------
 #define NUM_CHARACTERS 95
 #define NUM_FONTS 4

@@ -7,7 +7,6 @@ import io.github.heathensoft.jlib.gui.text.TextUtils;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
-import io.github.heathensoft.jlib.lwjgl.utils.ScreenQuad;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Keyboard;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;

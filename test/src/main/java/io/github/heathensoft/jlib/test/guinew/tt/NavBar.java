@@ -1,5 +1,6 @@
 package io.github.heathensoft.jlib.test.guinew.tt;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
@@ -9,8 +10,6 @@ import io.github.heathensoft.jlib.ui.box.Box;
 import io.github.heathensoft.jlib.ui.box.BoxWindow;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import org.joml.primitives.Rectanglef;
-
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_O;
 
 /**
  * @author Frederik Dahl
@@ -31,10 +30,12 @@ public class NavBar extends Box {
         this.desired_width = CLOSE_BTN_SIZE;
         this.desired_height = Math.max(height,CLOSE_BTN_SIZE);
         this.locked_vertical = true;
-        this.interactable_id = iObtainID();
+        this.iID = iObtainID();
     }
 
     protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+
+
         Rectanglef quad = bounds(MathLib.rectf(),x,y);
         renderer.drawElement(quad,color,parent_id);
         TextureRegion region = GUI.default_icons.getRegion(CLOSE_BTN);
@@ -50,8 +51,7 @@ public class NavBar extends Box {
 
             GUI.windows.closeWindow(window);
         }
-
-        renderer.drawElement(texture,region,quad,close_btn_color,interactable_id,true);
+        renderer.drawElement(texture,region,quad,close_btn_color, iID,true);
     }
 
 

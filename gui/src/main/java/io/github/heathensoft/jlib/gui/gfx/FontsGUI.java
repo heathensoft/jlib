@@ -5,7 +5,6 @@ import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import org.lwjgl.system.MemoryStack;
 import org.tinylog.Logger;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.List;
@@ -63,17 +62,17 @@ public class FontsGUI implements Disposable {
     }
 
     public void uploadFont(BitmapFont font, int slot) throws Exception {
-        uploadFont(font.png,font.metricsString(),slot);
+        uploadFont(font.bitmap(),font.info(),slot);
     }
 
-    public void uploadFont(ByteBuffer png, String metrics, int slot) throws Exception {
+    public void uploadFont(Bitmap font_bitmap, String metrics, int slot) throws Exception {
         if (slot < 0 || slot >= FONT_SLOTS)
             throw new Exception("Invalid slot for fonts: " + slot + ". valid: [0-3]");
         FontMetrics fontMetrics = extractFontMetrics(metrics);
         boolean font_loaded = this.font_loaded[slot];
         Texture texture;
         {   // bake normalmap, create texture
-            Bitmap font_alpha = new Bitmap(png);
+            Bitmap font_alpha = font_bitmap;
             if (font_alpha.channels() > 1) {
                 Bitmap grey = font_alpha.greyScale();
                 font_alpha.dispose();
@@ -205,7 +204,7 @@ public class FontsGUI implements Disposable {
         } else Logger.warn("Font slot: " + font + "not loaded");
     }
 
-    public void bindUploadTextures(ShaderProgram shader, String uniform) {
+    public void bindUploadTextures(ShaderProgramOld shader, String uniform) {
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(numFontsLoaded);
             for (int i = 0; i < numFontsLoaded; i++) {

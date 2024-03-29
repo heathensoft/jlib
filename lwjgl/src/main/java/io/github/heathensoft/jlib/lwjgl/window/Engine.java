@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.lwjgl.window;
 
 
 import io.github.heathensoft.jlib.common.thread.ThreadService;
+import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
 import org.lwjgl.Version;
 import org.tinylog.Logger;
 
@@ -127,6 +128,8 @@ public final class Engine {
                 Logger.info("exiting application");
                 app.set_state(Application.State.EXITING);
                 app.on_exit();
+                Logger.info("deleting shaders");
+                ShaderProgram.deleteAllProgramsAndResources();
                 Logger.info("terminating window");
                 window.terminate();
                 if (threadPool != null) {

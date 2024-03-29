@@ -2,11 +2,12 @@ package io.github.heathensoft.jlib.ui.text;
 
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import org.joml.Vector4f;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+
+import static io.github.heathensoft.jlib.lwjgl.gfx.Color.hex_to_rgb;
 
 /**
  * @author Frederik Dahl
@@ -17,23 +18,27 @@ import java.util.Arrays;
 public class Word {
 
     public enum Type {
-        REGULAR(        Color.hex_to_rgb("A9B7C6FF",new Vector4f()),"Regular"),
-        VALUE(          Color.hex_to_rgb("0000BBFF",new Vector4f()),"Value"),
-        KEYWORD(        Color.hex_to_rgb("CC7832FF",new Vector4f()),"Keyword"),
-        INLINE_COMMENT( Color.hex_to_rgb("808080FF",new Vector4f()),"Inline Comment"),
-        ENTITY_PLAYER(  Color.hex_to_rgb("9876AAFF",new Vector4f()),"Player Entity"),
-        ENTITY_OTHER(   Color.hex_to_rgb("9876AAFF",new Vector4f()),"Other Entity"),
-        LOCATION(       Color.hex_to_rgb("9876AAFF",new Vector4f()),"Location"),
-        OBJECT(         Color.hex_to_rgb("9876AAFF",new Vector4f()),"Object"),
-        ITEM(           Color.hex_to_rgb("9876AAFF",new Vector4f()),"Item"),
-        ACTION(         Color.hex_to_rgb("FFC66DFF",new Vector4f()),"Action"),
-        SUCCESS(        Color.hex_to_rgb("77B767FF",new Vector4f()),"Success"),
-        FAILURE(        Color.hex_to_rgb("FF0000FF",new Vector4f()),"Failure");
+        REGULAR(        0,"Regular"),
+        VALUE(          1,"Value"),
+        VALUE_HIGH(     2,"Value High"),
+        VALUE_LOW(      3,"Value Low"),
+        ENTITY(         4,"Entity Neutral"),
+        ENTITY_FRIENDLY(5,"Entity Friendly"),
+        ENTITY_HOSTILE( 6,"Entity Hostile"),
+        ITEM(           7,"Item Common"),
+        ITEM_RARE(      8,"Item Rare"),
+        ITEM_UNIQUE(    9,"Item Unique"),
+        ACTION(         10,"Action Neutral"),
+        ACTION_SUCCESS( 11,"Action Success"),
+        ACTION_FAILURE( 12,"Action Failure"),
+        LOCATION(       13,"Location"),
+        OBJECT(         14,"Object"),
+        RESOURCE(       15,"Resource");
         public final String name;
-        public final Vector4f color;
-        Type(Vector4f color, String name) {
-            this.color = color;
+        public final int id;
+        Type(int id, String name) {
             this.name = name;
+            this.id = id;
         }
     }
 
@@ -56,9 +61,11 @@ public class Word {
 
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Word word = (Word) o;
-        return Arrays.equals(value, word.value);
+        if (o == null) return false;
+        if (o instanceof Word word) {
+            if (word.type() == type())
+                return Arrays.equals(value, word.value);
+        } return false;
     }
 
     public int hashCode() { return Arrays.hashCode(value); }

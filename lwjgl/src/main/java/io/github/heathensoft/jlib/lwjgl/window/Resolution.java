@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 
+import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFWVidMode;
 
 import java.util.Comparator;
@@ -45,6 +46,8 @@ public record Resolution(int width, int height) implements Comparable<Resolution
     public float aspect_ratio() {
         return (float) width / height;
     }
+
+    public Vector2f vec2(Vector2f dst) { return dst.set(width,height); }
 
     public Resolution cpy() {
         return new Resolution(width,height);

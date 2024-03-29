@@ -1,16 +1,10 @@
 package io.github.heathensoft.jlib.gui.dev;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
-import io.github.heathensoft.jlib.gui.window.*;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
-import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
-import org.joml.primitives.Rectanglef;
 
 import static io.github.heathensoft.jlib.common.utils.U.clamp;
 import static org.lwjgl.opengl.GL11.*;
@@ -37,7 +31,7 @@ public class ColorPicker implements Disposable {
     private static final String U_DRAW_SLIDER = "u_draw_slider";
     private static final String U_HUE = "u_hue";
 
-    private final ShaderProgram shader;
+    private final ShaderProgramOld shader;
     private final Framebuffer hsv_window_buffer;
     private final Framebuffer hue_slider_buffer;
     private final BufferObject vertexBuffer;
@@ -156,10 +150,10 @@ public class ColorPicker implements Disposable {
         glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
     }
 
-    private ShaderProgram create_shader_program() throws Exception {
+    private ShaderProgramOld create_shader_program() throws Exception {
         String vert_shader = Resources.asString(SHADER_VERT_PATH);
         String frag_shader = Resources.asString(SHADER_FRAG_PATH);
-        ShaderProgram shader = new ShaderProgram(vert_shader,frag_shader);
+        ShaderProgramOld shader = new ShaderProgramOld(vert_shader,frag_shader);
         shader.createUniform(U_DRAW_SLIDER);
         shader.createUniform(U_HUE);
         return shader;

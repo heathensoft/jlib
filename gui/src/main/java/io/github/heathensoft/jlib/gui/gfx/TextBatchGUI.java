@@ -3,7 +3,7 @@ package io.github.heathensoft.jlib.gui.gfx;
 import io.github.heathensoft.jlib.gui.text.TextUtils;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
+import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.lwjgl.system.MemoryUtil;
@@ -46,7 +46,7 @@ public class TextBatchGUI extends BatchGUI {
         String vShader = Resources.asString(SHADER_VERT);
         String gShader = Resources.asString(SHADER_GEOM);
         String fShader = Resources.asString(SHADER_FRAG);
-        shaderProgram = new ShaderProgram(vShader,gShader,fShader);
+        shaderProgram = new ShaderProgramOld(vShader,gShader,fShader);
         shaderProgram.createUniform("u_resolution");
         shaderProgram.createUniform("u_font_textures");
         setResolutionUniform(width, height);

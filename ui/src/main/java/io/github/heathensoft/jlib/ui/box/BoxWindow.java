@@ -2,14 +2,23 @@ package io.github.heathensoft.jlib.ui.box;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
+import io.github.heathensoft.jlib.lwjgl.gfx.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import io.github.heathensoft.jlib.ui.GUI;
+import io.github.heathensoft.jlib.ui.GlobalVariables;
 import io.github.heathensoft.jlib.ui.Window;
 import io.github.heathensoft.jlib.ui.WindowAnchor;
+import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
+import io.github.heathensoft.jlib.ui.text.TextAlignment;
 import org.joml.Vector2f;
+import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
+import org.tinylog.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
 import static io.github.heathensoft.jlib.common.utils.U.floor;
@@ -33,6 +42,8 @@ public final class BoxWindow extends Window {
 
     private final WindowAnchor anchor;
     private final RootContainer content;
+    private final FadingDisplay fading_display;
+    private final Map<String,Box> named_content;
     private final Rectanglef transform_initial = new Rectanglef();
     private final Rectanglef transform_target = new Rectanglef();
     private final Vector2f position = new Vector2f();
@@ -53,6 +64,8 @@ public final class BoxWindow extends Window {
     public BoxWindow(RootContainer content, WindowAnchor anchor, String name) {
         if (content == null) throw new RuntimeException("GUI: Null BoxWindow content");
         this.anchor = anchor == null ? WindowAnchor.NONE : anchor;
+        this.fading_display = new FadingDisplay();
+        this.named_content = new HashMap<>();
         this.content = content;
         this.name = name;
     }
@@ -211,6 +224,7 @@ public final class BoxWindow extends Window {
 
         content.render(this,renderer,(int)position.x,(int)position.y,dt,0);
         content.renderText(this,renderer,(int)position.x,(int)position.y,dt);
+        fading_display.draw(renderer,dt);
         if (!GUI.state.anyInteractablePressed()) { clearStateCurrentlyDragging(); }
     }
 
@@ -227,7 +241,10 @@ public final class BoxWindow extends Window {
         } content.onWindowClose(this);
     }
 
-    protected void onTermination() { Disposable.dispose(content); }
+    protected void onTermination() {
+        Disposable.dispose(content);
+        named_content.clear();
+    }
 
     public void restoreX() {
         if (!isCurrentlyRestoringX()) {
@@ -565,6 +582,36 @@ public final class BoxWindow extends Window {
 
     public boolean isTransforming() { return transform_timer < 1.0f; }
 
+    public void addNameContent(String key, Box box) {
+        Box existing = named_content.put(key,box);
+        if (existing != null) {
+            Logger.debug("GUI: Window: \"{}\" , named content replaced");
+        }
+    }
+
+    public void displayFading(String descriptor, String prefix, Number value, String suffix, Rectanglef box_bounds) {
+        fading_display.display(descriptor, prefix, value, suffix, box_bounds);
+    }
+
+    public void displayFading(String descriptor, Number value, Rectanglef box_bounds) {
+        fading_display.display(descriptor, null, value, null, box_bounds);
+    }
+
+    public void displayFading(String prefix, Number value, String suffix, Rectanglef box_bounds) {
+        fading_display.display(null, prefix, value, suffix, box_bounds);
+    }
+
+    public void displayFading(String string, Rectanglef box_bounds) {
+        fading_display.display(string, null, null, null, box_bounds);
+    }
+
+
+    public boolean getBoundsOf(Box target, Rectanglef dst) {
+        return content.getBoundsOf(target,dst,(int)position.x,(int)position.y);
+    }
+
+    public Box namedContent(String key) { return named_content.get(key); }
+
     public RootContainer content() { return content; }
 
     public WindowAnchor anchor() { return anchor; }
@@ -745,6 +792,175 @@ public final class BoxWindow extends Window {
         float wh = (a.lengthX() + (b.lengthX() - a.lengthX()) * t) / 2f;
         float hh = (a.lengthY() + (b.lengthY() - a.lengthY()) * t) / 2f;
         dst.minX = x - wh; dst.maxX = x + wh; dst.minY = y - hh; dst.maxY = y + hh;
+    }
+
+    private static final class FadingDisplay {
+
+        private float fadeOut_timer;
+        private String string;
+        private String value;
+        private final Rectanglef value_bounds;
+        private final Rectanglef string_bounds;
+
+        FadingDisplay() {
+            this.value_bounds = new Rectanglef();
+            this.string_bounds = new Rectanglef();
+            this.fadeOut_timer = 1f;
+        }
+
+        void display(String string, String value_prefix, Number value, String value_suffix, Rectanglef box_bounds) {
+            String value_string = value_string(value_prefix,value,value_suffix);
+            this.fadeOut_timer = 1.0f;
+            this.string = null;
+            this.value = null;
+            if (string == null) {
+                if (value_string != null)
+                    displayValue(value_string,box_bounds);
+            } else if (value_string == null) {
+                displayString(string,box_bounds);
+            } else { displayString(string,box_bounds);
+                displayValue(value_string,box_bounds);
+            }
+        }
+
+        void displayValue(String value, Rectanglef box_bounds) {
+            if (value != null && !value.isBlank() && box_bounds.isValid()) {
+                GlobalVariables global = GUI.variables;
+                float area_width;
+                float area_height = global.boxWindow_fadDisplay_desiredHeight;
+                float padding = global.boxWindow_fadDisplay_padding;
+                float bounds_w = box_bounds.lengthX();
+                float bounds_h = box_bounds.lengthY();
+                if (bounds_h < area_height) {
+                    area_height = bounds_h;
+                } float text_size = area_height - (2 * padding);
+                if (text_size > 1f) {
+                    FontsGUI fonts = GUI.fonts;
+                    fonts.bindFontMetrics(global.boxWindow_fadeDisplay_font);
+                    area_width = fonts.advanceSumSized(value,text_size);
+                    area_width += (global.boxWindow_fadDisplay_padding * 2);
+                    if (bounds_w < area_width) {
+                        area_height *= (bounds_w / area_width);
+                        area_width = bounds_w;
+                    } text_size = area_height - (2 * padding);
+                    if (text_size > 1f) {
+                        value_bounds.minX = box_bounds.maxX - area_width;
+                        value_bounds.minY = box_bounds.maxY - area_height;
+                        value_bounds.maxX = box_bounds.maxX;
+                        value_bounds.maxY = box_bounds.maxY;
+                        if (value_bounds.isValid()) {
+                            this.value = value;
+                            this.fadeOut_timer = 0f;
+                        }
+                    }
+                }
+            }
+        }
+
+        void displayString(String string, Rectanglef box_bounds) {
+            if (string != null && !string.isBlank() && box_bounds.isValid()) {
+                GlobalVariables global = GUI.variables;
+                float padding = global.boxWindow_fadDisplay_padding;
+                float area_width;
+                float area_height = global.boxWindow_fadDisplay_desiredHeight;
+                float bounds_w = box_bounds.lengthX();
+                float bounds_h = box_bounds.lengthY();
+                if (bounds_h < area_height) {
+                    area_height = bounds_h;
+                } float text_size = area_height - (2 * padding);
+                if (text_size > 1f) {
+                    FontsGUI fonts = GUI.fonts;
+                    fonts.bindFontMetrics(global.boxWindow_fadeDisplay_font);
+                    area_width = fonts.advanceSumSized(string,text_size);
+                    area_width += (padding * 2);
+                    if (bounds_w < area_width) {
+                        area_height *= (bounds_w / area_width);
+                        area_width = bounds_w;
+                    } text_size = area_height - (2 * padding);
+                    if (text_size > 1f) {
+                        string_bounds.minX = box_bounds.minX;
+                        string_bounds.maxY = box_bounds.maxY;
+                        string_bounds.maxX = box_bounds.minX + area_width;
+                        string_bounds.minY = box_bounds.maxY - area_height;
+                        if (string_bounds.isValid()) {
+                            this.string = string;
+                            this.fadeOut_timer = 0f;
+                        }
+                    }
+                }
+            }
+        }
+
+        void draw(RendererGUI renderer, float dt) {
+            if (fadeOut_timer < 1f) {
+                float alpha = 1 - U.smooth(clamp(fadeOut_timer));
+                GlobalVariables global = GUI.variables;
+                int padding = global.boxWindow_fadDisplay_padding;
+                int font = global.boxWindow_fadeDisplay_font;
+                Vector4f rgb = MathLib.vec4(0,0,0,alpha * 0.75f);
+                int bg_color = Color.rgb_to_intBits(rgb);
+                rgb.set(GUI.variables.boxWindow_fadeDisplay_textColor);
+                rgb.w *= alpha;
+                int text_color = Color.rgb_to_intBits(rgb);
+                if (string == null) {
+                    if (value != null) { // value only
+                        renderer.drawScrollBar(value_bounds,bg_color,0);
+                        TextAlignment alignment = TextAlignment.CENTERED;
+                        renderer.drawStringDynamicVerticalCentered(value,alignment, value_bounds,font,text_color,padding,0);
+                    }
+                } else {
+                    if (value == null) { // text only
+                        renderer.drawScrollBar(string_bounds,bg_color,0);
+                        TextAlignment alignment = TextAlignment.LEFT;
+                        renderer.drawStringDynamicVerticalCentered(string,alignment, string_bounds,font,text_color,padding,0);
+                    } else {
+                        if (string_bounds.intersectsRectangle(value_bounds)) { // Combine
+                            TextAlignment alignment = TextAlignment.CENTERED;
+                            String combined_string = string + " " +  value;
+                            Rectanglef combined_rect = MathLib.rectf();
+                            combined_rect.minX = string_bounds.minX;
+                            combined_rect.maxX = value_bounds.maxX;
+                            combined_rect.maxY = value_bounds.maxY;
+                            combined_rect.minY = Math.max(value_bounds.minY,string_bounds.minY);
+                            renderer.drawScrollBar(combined_rect,bg_color,0);
+                            renderer.drawStringDynamicVerticalCentered(combined_string,alignment,combined_rect,font,text_color,padding,0);
+                        } else { // both
+                            renderer.drawScrollBar(value_bounds,bg_color,0);
+                            TextAlignment alignment = TextAlignment.CENTERED;
+                            renderer.drawStringDynamicVerticalCentered(value,alignment, value_bounds,font,text_color,padding,0);
+                            renderer.drawScrollBar(string_bounds,bg_color,0);
+                            alignment = TextAlignment.LEFT;
+                            renderer.drawStringDynamicVerticalCentered(string,alignment, string_bounds,font,text_color,padding,0);
+                        }
+                    }
+                }
+                fadeOut_timer += dt;
+            }
+        }
+
+        private String value_string(String value_prefix, Number value, String value_suffix) {
+            if (value != null) {
+                String value_string;
+                if (value instanceof Float f) {
+                    value_string = "" + U.round(f,2);
+                } else if (value instanceof Double d) {
+                    value_string = "" + U.round(d,2);
+                } else if (value instanceof Integer i) {
+                    value_string = "" + i;
+                } else if (value instanceof Byte b) {
+                    value_string = Integer.toHexString(b);
+                    if (value_string.length() == 1) {
+                        value_string += "0";
+                    } value_string = value_string.toUpperCase();
+                    value_string = "0x" + value_string;
+                } else return null;
+                if (value_prefix != null) {
+                    value_string = value_prefix + value_string;
+                } if (value_suffix != null) {
+                    value_string = value_string + value_suffix;
+                } return value_string;
+            } return null;
+        }
     }
 
 }

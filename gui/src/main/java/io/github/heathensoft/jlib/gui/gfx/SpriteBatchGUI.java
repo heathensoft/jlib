@@ -53,7 +53,7 @@ public class SpriteBatchGUI extends BatchGUI {
         glEnableVertexAttribArray(3);
         String vShader = Resources.asString(SHADER_VERT);
         String fShader = Resources.asString(SHADER_FRAG);
-        shaderProgram = new ShaderProgram(vShader,fShader);
+        shaderProgram = new ShaderProgramOld(vShader,fShader);
         shaderProgram.createUniform("u_resolution");
         shaderProgram.createUniform("u_diffuse_textures");
         shaderProgram.createUniform("u_normals_textures");

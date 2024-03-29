@@ -13,6 +13,13 @@ import java.nio.*;
 
 public class U {
 
+
+    public static final float ROT_0 = 0f;
+    public static final float ROT_90 =  (float)(    (Math.PI / 2));
+    public static final float ROT_180 = (float)(2 * (Math.PI / 2));
+    public static final float ROT_270 = (float)(3 * (Math.PI / 2));
+    public static final float ROT_360 = (float)(4 * (Math.PI / 2));
+
     private static final int[] logTable;
 
     static {
@@ -24,30 +31,29 @@ public class U {
 
     public static int[][] adj_8 = new int[][] {{-1,0},{ 0,1},{ 1,0},{ 0,-1},{-1,1},{1,1},{-1,1},{-1,-1}};
 
-    public static boolean float_equals(double a, double b) {
-        return float_equals(a, b,(1e-9));
-    }
+    public static boolean float_equals(double a, double b) { return float_equals(a, b,(1e-9)); }
 
-    public static boolean float_equals(double a, double b, double epsilon) {
-        return Math.abs(a - b) < epsilon;
-    }
+    public static boolean float_equals(double a, double b, double epsilon) { return Math.abs(a - b) < epsilon; }
 
     public static float clamp(float v) {
         return v < 0 ? 0 : (v > 1 ? 1 : v);
     }
 
-
-    public static float remap(float v, float v_min, float v_max, float out_min, float out_max) {
-        return lerp(out_min,out_max,unlerp(v_min,v_max,v));
+    public static float clamp(float v, float min, float max) {
+        return Math.max(min,Math.min(v,max));
     }
 
-    public static float unlerp(float a, float b, float t) {
+    public static int clamp(int v, int min, int max) {
+        return Math.max(min,Math.min(v,max));
+    }
+
+    public static float remap(float v, float v_min, float v_max, float out_min, float out_max) { return lerp(out_min,out_max, unLerp(v_min,v_max,v)); }
+
+    public static float unLerp(float a, float b, float t) {
         return clamp((t - a) / (b - a));
     }
 
-    public static float smooth(float v) {
-        return v * v * (3.0f - 2.0f * v);
-    }
+    public static float smooth(float v) { return v * v * (3.0f - 2.0f * v); }
 
     public static float quadratic_erase_out(float v) {
         return 1.0f - (1.0f - v) * (1.0f - v);
@@ -69,22 +75,17 @@ public class U {
         return v * v;
     }
 
+    public static float abs(float f) {
+        return Math.abs(f);
+    }
+
     public static float sqrt(float v) {
         return (float) Math.sqrt(v);
-    }
-
-    public static float clamp(float v, float min, float max) {
-        return Math.max(min,Math.min(v,max));
-    }
-
-    public static int clamp(int v, int min, int max) {
-        return Math.max(min,Math.min(v,max));
     }
 
     public static float pow(float v, float e) {
         return (float)Math.pow(v,e);
     }
-
     /** Modulo for repeating patterns / maps etc. */
     public static int mod_repeat(int v, int range) {
         return v < 0 ? (range + (v % range)) % range : v % range;
@@ -95,15 +96,15 @@ public class U {
     }
 
     public static float lerp(float a, float b, float c, float t) {
-        if (t < 0.5f) return lerp(a,b, unlerp(0,0.5f,t));
-        if (t > 0.5f) return lerp(b,c, unlerp(0.5f,1.0f,t));
+        if (t < 0.5f) return lerp(a,b, unLerp(0,0.5f,t));
+        if (t > 0.5f) return lerp(b,c, unLerp(0.5f,1.0f,t));
         return b;
     }
 
     // lerp default value a between 0 - 1 , ((t = 0.5) == a)
     public static float lerp(float a, float t) {
-        if (t < 0.5f) return unlerp(0,0.5f,t) * a;
-        if (t > 0.5f) return unlerp(0.5f,1.0f,t) * (1 - a) + a;
+        if (t < 0.5f) return unLerp(0,0.5f,t) * a;
+        if (t > 0.5f) return unLerp(0.5f,1.0f,t) * (1 - a) + a;
         return a;
     }
 
@@ -133,10 +134,13 @@ public class U {
         return Math.round(f);
     }
 
-    public static float abs(float f) {
-        return Math.abs(f);
-    }
+    public static int round(double d) { return (int) Math.round(d); }
 
+    public static float round(double d, int digits) {
+        if (digits <= 0) return round(d);
+        double e = 10 * digits;
+        return (float) (Math.round(d * e) / e);
+    }
 
     public static int nextPowerOfTwo(int value) {
         if (value-- == 0) return 1;

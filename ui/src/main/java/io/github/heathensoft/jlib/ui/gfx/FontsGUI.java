@@ -1,12 +1,17 @@
 package io.github.heathensoft.jlib.ui.gfx;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Rand;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
+import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.lwjgl.utils.Repository;
+import io.github.heathensoft.jlib.ui.text.Paragraph;
+import io.github.heathensoft.jlib.ui.text.Word;
+import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.system.MemoryStack;
 import org.tinylog.Logger;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.List;
@@ -17,7 +22,12 @@ import static org.lwjgl.opengl.GL31.GL_UNIFORM_BUFFER;
 
 /**
  *
-
+ * Fonts are stored in the shader
+ * 4 fonts is max as I am using UBOs and not SSBOs
+ * Could decide to change this later
+ * You can upload fonts at runtime
+ *
+ *
  * @author Frederik Dahl
  * 09/10/2023
  */
@@ -28,7 +38,25 @@ public class FontsGUI implements Disposable {
     public static final int FONT_SLOTS = 4;
     public static final int FONTS_NUM_CHARACTERS = 95;
     public static final int FONT_STD140_SIZE = 3088;
-    public static final int FONTS_UNIFORM_BUFFER_SIZE = FONT_STD140_SIZE * FONT_SLOTS; //12352;
+    public static final int FONTS_UNIFORM_BUFFER_SIZE = FONT_STD140_SIZE * FONT_SLOTS; //12352 Bytes (16KB guaranteed available pr.ubo)
+
+    public static final int SLOT_REGULAR = 0;
+    public static final int SLOT_MONO = 1;
+    public static final int SLOT_LORE = 2;
+    public static final int SLOT_EDICT = 3;
+
+    private static final String[] DEFAULT_FONTS = new String[FONT_SLOTS];
+    private static final String DEFAULT_FONTS_PATH = "res/jlib/ui/fonts/";
+    static {
+        DEFAULT_FONTS[0] = "BaiJamjuree64";
+        DEFAULT_FONTS[1] = "LiberationMono64";
+        DEFAULT_FONTS[2] = "Gotu64";
+        //DEFAULT_FONTS[3] = "Bokor64";
+        //DEFAULT_FONTS[0] = "TradeWinds64";
+        //DEFAULT_FONTS[1] = "UncialAntiquas64";
+        //DEFAULT_FONTS[2] = "UnifrakturCook64";
+        DEFAULT_FONTS[3] = "Play64";
+    }
 
     private int currentFont;
     private int numFontsLoaded;
@@ -45,6 +73,14 @@ public class FontsGUI implements Disposable {
     private final float[] font_maxAdvance;
     private final float[] font_avgAdvance;
     private final float[] font_sizePixels;
+
+    private final Vector4f[][] font_colors;
+    private final Vector4f[] default_colors;
+    private Paragraph.Type last_pType = null;
+    private Word.Type last_wType = null;
+    private float last_alpha = 1.0f;
+    private float last_color_float_bits = 0.0f;
+
 
 
     public FontsGUI(int bindingPoint) {
@@ -63,20 +99,37 @@ public class FontsGUI implements Disposable {
         this.uniformBuffer = new BufferObject(GL_UNIFORM_BUFFER,GL_STATIC_DRAW).bind();
         this.uniformBuffer.bufferData(FONTS_UNIFORM_BUFFER_SIZE);
         this.uniformBuffer.bindBufferBase(uniformsBindingPoint);
+        this.default_colors = initialize_default_colors();
+        this.font_colors = initialize_font_colors(colorDefault());
+    }
+
+
+
+    public void uploadDefaultFonts() throws Exception {
+        for (int i = 0; i < FONT_SLOTS; i++) {
+            String font_name = DEFAULT_FONTS[i];
+            if (font_name != null) {
+                String path = DEFAULT_FONTS_PATH + font_name + ".repo";
+                Repository repo = Repository.loadFromResources(path,64 * 1024);
+                BitmapFont font = repo.getFont(font_name);
+                if (font != null) uploadFont(font,i);
+                Disposable.dispose(font);
+            }
+        }
     }
 
     public void uploadFont(BitmapFont font, int slot) throws Exception {
-        uploadFont(font.png,font.metricsString(),slot);
+        uploadFont(font.bitmap(),font.info(),slot);
     }
 
-    public void uploadFont(ByteBuffer png, String metrics, int slot) throws Exception {
+    public void uploadFont(Bitmap font_bitmap, String metrics, int slot) throws Exception {
         if (slot < 0 || slot >= FONT_SLOTS)
             throw new Exception("Invalid slot for fonts: " + slot + ". valid: [0-3]");
         FontMetrics fontMetrics = extractFontMetrics(metrics);
         boolean font_loaded = this.font_loaded[slot];
         Texture texture;
         {   // bake normalmap, create texture
-            Bitmap font_alpha = new Bitmap(png);
+            Bitmap font_alpha = font_bitmap;
             if (font_alpha.channels() > 1) {
                 Bitmap grey = font_alpha.greyScale();
                 font_alpha.dispose();
@@ -96,7 +149,6 @@ public class FontsGUI implements Disposable {
             } else font_normals = font_alpha.normalMap(fontMetrics.protrusion);
             Bitmap bitmap = Bitmap.combine(font_normals,font_alpha);
             font_normals.dispose();
-            font_alpha.dispose();
             texture = bitmap.asTexture(fontMetrics.mipMap,false);
             if (fontMetrics.mipMap) { texture.generateMipmap(); }
             texture.wrapST(fontMetrics.textureWrap); // invalid enum must be checked before this
@@ -205,20 +257,105 @@ public class FontsGUI implements Disposable {
 
     public void bindFontMetrics(int font) {
         if (font >= 0 && font < numFontsLoaded && font_loaded[font]) {
-            this.currentFont = font;
+            if (this.currentFont != font) {
+                this.currentFont = font;
+                this.last_pType = null;
+                this.last_wType = null;
+            }
         } else Logger.warn("Font slot: " + font + "not loaded");
     }
 
-    public void bindUploadTextures(ShaderProgram shader, String uniform) {
+    public void bindUploadTextures(String uniform) {
         try (MemoryStack stack = MemoryStack.stackPush()){
             IntBuffer buffer = stack.mallocInt(numFontsLoaded);
             for (int i = 0; i < numFontsLoaded; i++) {
                 if (font_loaded[i]) buffer.put(i);
-            } shader.setUniform1iv(uniform,buffer.flip());
+            } ShaderProgram.setUniform(uniform,buffer.flip());
             for (int i = 0; i < numFontsLoaded; i++) {
                 if (font_loaded[i]) font_texture[i].bindToSlot(i);
             }
         }
+    }
+
+    private Vector4f[] initialize_default_colors() {
+        Vector4f[] colors = new Vector4f[Paragraph.Type.values().length];
+        colors[Paragraph.Type.DEFAULT.id] = Color.hex_to_rgb("A9B7C6FF");
+        colors[Paragraph.Type.COMMENT.id] = Color.hex_to_rgb("808080FF");
+        colors[Paragraph.Type.DEBUG.id]   = Color.hex_to_rgb("6A8759FF");
+        colors[Paragraph.Type.WARNING.id] = Color.hex_to_rgb("FF0000FF");
+        return colors;
+    }
+
+    private Vector4f[][] initialize_font_colors(Vector4f color) {
+        Vector4f[][] colors = new Vector4f[FONT_SLOTS][Word.Type.values().length];
+        for (int font = 0; font < colors.length; font++) {
+            for (int type = 0; type < colors[font].length; type++)
+                colors[font][type] = new Vector4f(color);
+        } return colors;
+    }
+
+    public void setColor(Word.Type type,Vector4f color) {
+        font_colors[currentFont][type.id].set(color);
+        last_wType = null;
+    }
+
+    public void setDefaultColor(Paragraph.Type type, Vector4f color) {
+        default_colors[type.id].set(color);
+        last_pType = null;
+    }
+
+    public Vector4f colorDefault() {
+        return default_colors[Paragraph.Type.DEFAULT.id];
+    }
+
+    public Vector4f colorRegular() {
+        return font_colors[currentFont][Word.Type.REGULAR.id];
+    }
+
+    public Vector4f colorRGB(Paragraph paragraph, Word word) {
+        return colorRGB(paragraph.type(),word.type());
+    }
+
+    public Vector4f colorRGB(Paragraph.Type pType, Word.Type wType) {
+        if (pType == Paragraph.Type.DEFAULT) {
+            return font_colors[currentFont][wType.id];
+        } else if (wType == Word.Type.REGULAR) {
+            return default_colors[pType.id];
+        } else return font_colors[currentFont][wType.id];
+    }
+
+    public float colorRegularFloatBits() {
+        return Color.rgb_to_floatBits(colorRegular());
+    }
+
+    public float colorDefaultFloatBits() {
+        return Color.rgb_to_floatBits(colorDefault());
+    }
+
+    public float colorFloatBits(Paragraph paragraph, Word word) {
+        return colorFloatBits(paragraph.type(),word.type());
+    }
+
+    public float colorFloatBits(Paragraph paragraph, Word word, float alpha) {
+        return colorFloatBits(paragraph.type(),word.type(),alpha);
+    }
+
+    public float colorFloatBits(Paragraph.Type pType, Word.Type wType) {
+        return colorFloatBits(pType,wType,1.0f);
+    }
+
+    public float colorFloatBits(Paragraph.Type pType, Word.Type wType, float alpha) {
+        if (last_pType == pType && last_wType == wType && U.float_equals(last_alpha,alpha,1e-4)) {
+            return last_color_float_bits;
+        } last_pType = pType;
+        last_wType = wType;
+        last_alpha = alpha;
+        Vector4f rgb = colorRGB(pType,wType);
+        if (alpha < 1.0f) {
+            rgb = MathLib.vec4(rgb);
+            rgb.w *= alpha;
+        } last_color_float_bits = Color.rgb_to_floatBits(rgb);
+        return last_color_float_bits;
     }
 
     public Texture texture() {
@@ -381,9 +518,7 @@ public class FontsGUI implements Disposable {
         return bits | 0x80;
     }
 
-    public static int bits_set_size(int bits, float size) {
-        return bits | ((round(clamp(size,1,256)) - 1) & 0xFF) << 8;
-    }
+    public static int bits_set_size(int bits, float size) { return bits | ((round(clamp(size,1,256)) - 1) & 0xFF) << 8; }
 
     public static int bits_set_glow(int bits, float glow) {
         return bits | (round(clamp(glow) * 255.0f) & 0xFF) << 16;

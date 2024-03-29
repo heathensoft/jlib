@@ -1,4 +1,4 @@
-#version 440 core
+
 layout (location=0) in vec4 a_pos;
 out vec2 pos;
 void main() {

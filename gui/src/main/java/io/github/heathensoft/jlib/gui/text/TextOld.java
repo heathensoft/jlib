@@ -22,22 +22,22 @@ import static io.github.heathensoft.jlib.gui.text.TextUtils.string_to_paragraphs
  */
 
 
-public class Text implements RenderableText, Iterable<Paragraph> {
+public class TextOld implements RenderableText, Iterable<Paragraph> {
 
     protected int font;
     protected float font_size;
     protected boolean word_wrap;
     protected LinkedList<Paragraph> lines;
 
-    public Text(int font_size) {
+    public TextOld(int font_size) {
         this(font_size,false);
     }
 
-    public Text(int font_size, boolean word_wrap) {
+    public TextOld(int font_size, boolean word_wrap) {
         this(0,font_size,word_wrap);
     }
 
-    public Text(int font, int font_size, boolean word_wrap) {
+    public TextOld(int font, int font_size, boolean word_wrap) {
         this.font = clamp(font,0, FontsGUI.FONT_SLOTS - 1);
         this.lines = new LinkedList<>();
         this.word_wrap = word_wrap;
