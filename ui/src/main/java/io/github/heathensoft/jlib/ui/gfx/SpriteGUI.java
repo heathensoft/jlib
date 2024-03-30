@@ -137,7 +137,7 @@ public class SpriteGUI {
         Texture texture = Texture.generate2D(width,height);
         texture.bindToActiveSlot();
         texture.allocate(this.texture.format(),allocate_mipmaps);
-        texture.nearest(); texture.repeat();
+        texture.filterNearest(); texture.repeat();
         Framebuffer.attachColor(texture,0,false);
         Framebuffer.drawBuffer(0);
         Framebuffer.checkStatus();

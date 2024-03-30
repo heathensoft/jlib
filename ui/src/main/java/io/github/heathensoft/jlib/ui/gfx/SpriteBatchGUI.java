@@ -143,7 +143,7 @@ public class SpriteBatchGUI extends BatchGUI {
         int diffuse_slot, normals_slot;
         if (diffuse == null)
             diffuse_slot = 15;
-        else if (diffuse.isDisposed()) {
+        else if (diffuse.hasBeenDisposed()) {
             diffuse_slot = 15;
             abgr = Color.ERROR_BITS;
         }  else {
@@ -154,7 +154,7 @@ public class SpriteBatchGUI extends BatchGUI {
         }
         if (normals == null)
             normals_slot = 15;
-        else if (normals.isDisposed()) {
+        else if (normals.hasBeenDisposed()) {
             normals_slot = 15;
             abgr = Color.ERROR_BITS;
         }  else {
@@ -182,7 +182,7 @@ public class SpriteBatchGUI extends BatchGUI {
         int diffuse_slot, normals_slot;
         if (diffuse == null)
             diffuse_slot = 15;
-        else if (diffuse.isDisposed()) {
+        else if (diffuse.hasBeenDisposed()) {
             diffuse_slot = 15;
             abgr = Color.ERROR_BITS;
         }  else {
@@ -193,7 +193,7 @@ public class SpriteBatchGUI extends BatchGUI {
         }
         if (normals == null)
             normals_slot = 15;
-        else if (normals.isDisposed()) {
+        else if (normals.hasBeenDisposed()) {
             normals_slot = 15;
             abgr = Color.ERROR_BITS;
         }  else {
@@ -272,7 +272,7 @@ public class SpriteBatchGUI extends BatchGUI {
         int diffuse_slot, normals_slot;
         if (diffuse == null)
             diffuse_slot = 15;
-        else if (diffuse.isDisposed()) {
+        else if (diffuse.hasBeenDisposed()) {
             diffuse_slot = 15;
             abgr = Color.ERROR_BITS;
         } else {
@@ -283,7 +283,7 @@ public class SpriteBatchGUI extends BatchGUI {
         }
         if (normals == null)
             normals_slot = 15;
-        else if (normals.isDisposed()) {
+        else if (normals.hasBeenDisposed()) {
             normals_slot = 15;
             abgr = Color.ERROR_BITS;
         } else {
@@ -311,7 +311,7 @@ public class SpriteBatchGUI extends BatchGUI {
         int diffuse_slot, normals_slot;
         if (diffuse == null)
             diffuse_slot = 15;
-        else if (diffuse.isDisposed()) {
+        else if (diffuse.hasBeenDisposed()) {
             diffuse_slot = 15;
             abgr = Color.ERROR_BITS;
         } else { diffuse_slot = samplersDiffuse.assignSlot(diffuse);
@@ -320,7 +320,7 @@ public class SpriteBatchGUI extends BatchGUI {
             }
         } if (normals == null)
             normals_slot = 15;
-        else if (normals.isDisposed()) {
+        else if (normals.hasBeenDisposed()) {
             normals_slot = 15;
             abgr = Color.ERROR_BITS;
         } else { normals_slot = samplersNormals.assignSlot(normals);

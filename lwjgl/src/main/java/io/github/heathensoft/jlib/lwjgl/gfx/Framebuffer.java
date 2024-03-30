@@ -89,7 +89,7 @@ public class Framebuffer implements Disposable {
                     TextureFormat format = texture.format();
                     if (format.is_color_format) {
                         int slot = GL_COLOR_ATTACHMENT0 + attachment_slot;
-                        glFramebufferTexture(GL_FRAMEBUFFER,slot,texture.id(),0);
+                        glFramebufferTexture(GL_FRAMEBUFFER,slot,texture.glHandle(),0);
                         drawBuffer.colorAttachments[attachment_slot] =
                         new ColorAttachment(texture,dispose_with_fbo);
                         return;
@@ -106,7 +106,7 @@ public class Framebuffer implements Disposable {
                     TextureFormat format = texture.format();
                     if (!format.is_color_format) {
                         if (format.pixel_format == GL_DEPTH_COMPONENT) {
-                            glFramebufferTexture(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,texture.id(),0);
+                            glFramebufferTexture(GL_FRAMEBUFFER,GL_DEPTH_ATTACHMENT,texture.glHandle(),0);
                             drawBuffer.depthAttachment = new NonColorAttachment(texture,dispose_with_fbo);
                             return;
                         } throw new Exception("wrong format for depth attachment");
@@ -123,7 +123,7 @@ public class Framebuffer implements Disposable {
                     TextureFormat format = texture.format();
                     if (!format.is_color_format) {
                         if (format.pixel_format == GL_STENCIL_INDEX) {
-                            glFramebufferTexture(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,texture.id(),0);
+                            glFramebufferTexture(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,texture.glHandle(),0);
                             drawBuffer.stencilAttachment = new NonColorAttachment(texture,dispose_with_fbo);
                             return;
                         } throw new Exception("wrong format for stencil attachment");
@@ -141,7 +141,7 @@ public class Framebuffer implements Disposable {
                     TextureFormat format = texture.format();
                     if (!format.is_color_format) {
                         if (format.pixel_format == GL_DEPTH_STENCIL) {
-                            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,texture.id(),0);
+                            glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,texture.glHandle(),0);
                             drawBuffer.stencilAttachment = new NonColorAttachment(texture,dispose_with_fbo);
                             return;
                         } throw new Exception("wrong format for depth-stencil attachment");

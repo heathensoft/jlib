@@ -7,16 +7,15 @@ import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.joml.Math;
+import org.joml.Vector2i;
 import org.lwjgl.stb.STBIWriteCallback;
 import org.lwjgl.stb.STBImageWrite;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryUtil;
 import org.tinylog.Logger;
 
-import java.io.IOException;
 import java.nio.*;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_1D;
@@ -30,7 +29,25 @@ import static org.lwjgl.stb.STBImageWrite.stbi_flip_vertically_on_write;
 
 /**
  *
- * TEXTURE SLOTS = 0 --> 31
+ * @see <a href="https://www.khronos.org/opengl/wiki/Texture">Texture</a>
+ * @see <a href="https://www.khronos.org/opengl/wiki/Pixel_Transfer">Pixel Transfer Operations</a>
+ * @see <a href="https://stackoverflow.com/questions/8866904/differences-and-relationship-between-glactivetexture-and-glbindtexture">Bind/Actives</a>
+ *
+ * On Packing / unpacking:
+ * Pixel transfers can either go from user memory to OpenGL memory,
+ * or from OpenGL memory to user memory (the user memory can be client memory or buffer objects).
+ * Pixel data in user memory is said to be packed.
+ * Therefore, transfers to OpenGL memory are called unpack operations,
+ * and transfers from OpenGL memory are called pack operations.
+ *
+ * Valid targets:
+ *
+ *  0 - GL_TEXTURE_1D,
+ *  1 - GL_TEXTURE_2D,
+ *  2 - GL_TEXTURE_3D,
+ *  3 - GL_TEXTURE_1D_ARRAY
+ *  4 - GL_TEXTURE_2D_ARRAY
+ *  5 - GL_TEXTURE_CUBE_MAP
  *
  * @author Frederik Dahl
  * 12/01/2023
@@ -39,73 +56,55 @@ import static org.lwjgl.stb.STBImageWrite.stbi_flip_vertically_on_write;
 
 public class Texture implements Disposable {
 
+    private static final int NO_SLOT = -1;
+    private static final int NUM_SLOTS = 32;
+    private static final int UNIQUE_TARGETS = 6;
+    private static final int[][] SLOTS = new int[NUM_SLOTS][UNIQUE_TARGETS];
     private static int active_slot;
 
     private TextureFormat format;
-
-    private int id;
+    private int gl_texture;
+    private int mip_levels;
     private final int target;
     private final int width;
     private final int height;
     private final int depth;
-    private boolean mipmaps_allocated;
+    private boolean allocated;
 
     private Texture(int target, int width, int height, int depth) {
-        this.id = glGenTextures();
+        this.gl_texture = glGenTextures();
         this.target = target;
         this.width = width;
         this.height = height;
         this.depth = depth;
     }
 
-    public static Texture generate1D(int width) {
-        return new Texture(GL_TEXTURE_1D,width,1,1);
-    }
-
-    public static Texture generate1DArray(int width, int layers) {
-        return new Texture(GL_TEXTURE_1D_ARRAY,width,layers,1);
-    }
-
-    public static Texture generate2D(int width, int height) {
-        return new Texture(GL_TEXTURE_2D,width,height,1);
-    }
-
-    public static Texture generate2D(int size) {
-        return generate2D(size,size);
-    }
-
-    public static Texture generate2DArray(int width, int height, int layers) {
-        return new Texture(GL_TEXTURE_2D_ARRAY,width,height,layers);
-    }
-
-    public static Texture generate2DArray(int size, int layers) {
-        return generate2DArray(size,size,layers);
-    }
-
-    public static Texture generate3D(int width, int height, int depth) {
-        return new Texture(GL_TEXTURE_3D,width,height,depth);
-    }
+    public static Texture generate1D(int width) { return new Texture(GL_TEXTURE_1D,width,1,1); }
+    public static Texture generate1DArray(int width, int layers) { return new Texture(GL_TEXTURE_1D_ARRAY,width,layers,1); }
+    public static Texture generate2D(int width, int height) { return new Texture(GL_TEXTURE_2D,width,height,1); }
+    public static Texture generate2D(int size) { return generate2D(size,size); }
+    public static Texture generate2DArray(int width, int height, int layers) { return new Texture(GL_TEXTURE_2D_ARRAY,width,height,layers); }
+    public static Texture generate2DArray(int size, int layers) { return generate2DArray(size,size,layers); }
+    public static Texture generate3D(int width, int height, int depth) { return new Texture(GL_TEXTURE_3D,width,height,depth); }
 
     public void allocate(TextureFormat format) { allocate(format,false); }
-
     public void allocate(TextureFormat format, boolean mipmap) {
-        if (isDisposed()) throw new IllegalStateException("cannot allocate storage for disposed textures");
-        if (isAllocated()) throw new IllegalStateException("texture storage already allocated");
-        int levels = mipmap ? calculateMipmapLevels() : 1;
+        if (hasBeenDisposed()) throw new IllegalStateException("cannot allocate storage for disposed textures");
+        if (hasBeenAllocated()) throw new IllegalStateException("texture storage already allocated");
         int i_format = format.sized_format;
-        this.mipmaps_allocated = levels > 1;
+        this.mip_levels = mipmap ? calculateMipmapLevels() : 1;
         this.format = format;
+        this.allocated = true;
         switch (target) {
-            case GL_TEXTURE_1D -> glTexStorage1D(target,levels,i_format,width);
-            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> glTexStorage2D(target,levels,i_format,width,height);
-            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> glTexStorage3D(target,levels,i_format,width,height,depth);
+            case GL_TEXTURE_1D -> glTexStorage1D(target,mip_levels,i_format,width);
+            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> glTexStorage2D(target,mip_levels,i_format,width,height);
+            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> glTexStorage3D(target,mip_levels,i_format,width,height,depth);
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
     }
-
     public void uploadSubData(ByteBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
-        if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
+        if (hasBeenDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
+        if (!hasBeenAllocated()) throw new IllegalStateException("texture storage not allocated");
         glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
@@ -116,10 +115,9 @@ public class Texture implements Disposable {
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
     }
-
     public void uploadSubData(ShortBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
-        if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
+        if (hasBeenDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
+        if (!hasBeenAllocated()) throw new IllegalStateException("texture storage not allocated");
         glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
@@ -129,12 +127,10 @@ public class Texture implements Disposable {
             case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> glTexSubImage3D(target,level,x_off,y_off,z_off,width,height,depth,transfer_format,data_type,data);
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
-
     }
-
     public void uploadSubData(IntBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
-        if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
+        if (hasBeenDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
+        if (!hasBeenAllocated()) throw new IllegalStateException("texture storage not allocated");
         glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
@@ -144,12 +140,10 @@ public class Texture implements Disposable {
             case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> glTexSubImage3D(target,level,x_off,y_off,z_off,width,height,depth,transfer_format,data_type,data);
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
-
     }
-
     public void uploadSubData(FloatBuffer data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        if (isDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
-        if (!isAllocated()) throw new IllegalStateException("texture storage not allocated");
+        if (hasBeenDisposed()) throw new IllegalStateException("cannot transfer data to disposed textures");
+        if (!hasBeenAllocated()) throw new IllegalStateException("texture storage not allocated");
         glPixelStorei(GL_UNPACK_ALIGNMENT,format.pack_alignment);
         int transfer_format = format.pixel_format;
         int data_type = format.pixel_data_type;
@@ -159,161 +153,57 @@ public class Texture implements Disposable {
             case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> glTexSubImage3D(target,level,x_off,y_off,z_off,width,height,depth,transfer_format,data_type,data);
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
-
     }
+    public void uploadSubData(ByteBuffer data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off, y_off,0); }
+    public void uploadSubData(ShortBuffer data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off, y_off,0); }
+    public void uploadSubData(IntBuffer data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off, y_off,0); }
+    public void uploadSubData(FloatBuffer data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off, y_off,0); }
+    public void uploadSubData(ByteBuffer data, int level, int width, int x_off) { uploadSubData(data, level, width, height, x_off, 0); }
+    public void uploadSubData(ShortBuffer data, int level, int width, int x_off) { uploadSubData(data, level, width, height, x_off, 0); }
+    public void uploadSubData(IntBuffer data, int level, int width, int x_off) { uploadSubData(data, level, width, height, x_off, 0); }
+    public void uploadSubData(FloatBuffer data, int level, int width, int x_off) { uploadSubData(data, level, width, height, x_off, 0); }
+    public void uploadSubData(ByteBuffer data, int level) { uploadSubData(data, level, width, 0); }
+    public void uploadSubData(ShortBuffer data, int level) { uploadSubData(data, level, width, 0); }
+    public void uploadSubData(IntBuffer data, int level) { uploadSubData(data, level, width, 0); }
+    public void uploadSubData(FloatBuffer data, int level) { uploadSubData(data, level, width, 0); }
+    public void uploadData(ByteBuffer data, int level) { uploadSubData(data,level); }
+    public void uploadData(ShortBuffer data, int level) { uploadSubData(data,level); }
+    public void uploadData(IntBuffer data, int level) { uploadSubData(data,level); }
+    public void uploadData(FloatBuffer data, int level) { uploadSubData(data,level); }
+    public void uploadData(ByteBuffer data) { uploadSubData(data,0); }
+    public void uploadData(ShortBuffer data) { uploadSubData(data,0); }
+    public void uploadData(IntBuffer data) { uploadSubData(data,0); }
+    public void uploadData(FloatBuffer data) { uploadSubData(data,0); }
 
-    public void uploadSubData(ByteBuffer data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off, y_off,0);
-    }
-
-    public void uploadSubData(ShortBuffer data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off, y_off,0);
-    }
-
-    public void uploadSubData(IntBuffer data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off, y_off,0);
-    }
-
-    public void uploadSubData(FloatBuffer data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off, y_off,0);
-    }
-
-    public void uploadSubData(ByteBuffer data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height, x_off, 0);
-    }
-
-    public void uploadSubData(ShortBuffer data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height, x_off, 0);
-    }
-
-    public void uploadSubData(IntBuffer data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height, x_off, 0);
-    }
-
-    public void uploadSubData(FloatBuffer data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height, x_off, 0);
-    }
-
-    public void uploadSubData(ByteBuffer data, int level) {
-        uploadSubData(data, level, width, 0);
-    }
-
-    public void uploadSubData(ShortBuffer data, int level) {
-        uploadSubData(data, level, width, 0);
-    }
-
-    public void uploadSubData(IntBuffer data, int level) {
-        uploadSubData(data, level, width, 0);
-    }
-
-    public void uploadSubData(FloatBuffer data, int level) {
-        uploadSubData(data, level, width, 0);
-    }
-
-    public void uploadData(ByteBuffer data) {
-        uploadSubData(data,0);
-    }
-
-    public void uploadData(ShortBuffer data) {
-        uploadSubData(data,0);
-    }
-
-    public void uploadData(IntBuffer data) {
-        uploadSubData(data,0);
-    }
-
-    public void uploadData(FloatBuffer data) {
-        uploadSubData(data,0);
-    }
-
-
+    public void uploadData(byte[] data) { uploadSubData(data,0); }
+    public void uploadSubData(byte[] data, int level) { uploadSubData(data, level, width,0); }
+    public void uploadSubData(byte[] data, int level, int width, int x_off) { uploadSubData(data, level, width, height,x_off,0); }
+    public void uploadSubData(byte[] data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off,y_off,0); }
     public void uploadSubData(byte[] data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        ByteBuffer buffer = toByteBuffer(data);
-        uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off);
-        MemoryUtil.memFree(buffer);
+        ByteBuffer buffer = toByteBuffer(data); uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off); MemoryUtil.memFree(buffer);
     }
-
+    public void uploadData(short[] data) { uploadSubData(data,0); }
+    public void uploadSubData(short[] data, int level) { uploadSubData(data, level, width,0); }
+    public void uploadSubData(short[] data, int level, int width, int x_off) { uploadSubData(data, level, width, height,x_off,0); }
+    public void uploadSubData(short[] data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off,y_off,0); }
     public void uploadSubData(short[] data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        ShortBuffer buffer = toShortBuffer(data);
-        uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off);
-        MemoryUtil.memFree(buffer);
+        ShortBuffer buffer = toShortBuffer(data); uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off); MemoryUtil.memFree(buffer);
     }
-
+    public void uploadData(int[] data) { uploadSubData(data,0); }
+    public void uploadSubData(int[] data, int level) { uploadSubData(data, level, width,0); }
+    public void uploadSubData(int[] data, int level, int width, int x_off) { uploadSubData(data, level, width, height,x_off,0); }
+    public void uploadSubData(int[] data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off,y_off,0); }
     public void uploadSubData(int[] data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        IntBuffer buffer = toIntBuffer(data);
-        uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off);
-        MemoryUtil.memFree(buffer);
+        IntBuffer buffer = toIntBuffer(data); uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off); MemoryUtil.memFree(buffer);
     }
-
+    public void uploadData(float[] data) { uploadSubData(data,0); }
+    public void uploadSubData(float[] data, int level) { uploadSubData(data, level, width,0); }
+    public void uploadSubData(float[] data, int level, int width, int x_off) { uploadSubData(data, level, width, height,x_off,0); }
+    public void uploadSubData(float[] data, int level, int width, int height, int x_off, int y_off) { uploadSubData(data, level, width, height, depth, x_off,y_off,0); }
     public void uploadSubData(float[] data, int level, int width, int height, int depth, int x_off, int y_off, int z_off) {
-        FloatBuffer buffer = toFloatBuffer(data);
-        uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off);
-        MemoryUtil.memFree(buffer);
+        FloatBuffer buffer = toFloatBuffer(data); uploadSubData(buffer,level,width,height,depth,x_off,y_off,z_off); MemoryUtil.memFree(buffer);
     }
 
-    public void uploadSubData(byte[] data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off,y_off,0);
-    }
-
-    public void uploadSubData(short[] data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off,y_off,0);
-    }
-
-    public void uploadSubData(int[] data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off,y_off,0);
-    }
-
-    public void uploadSubData(float[] data, int level, int width, int height, int x_off, int y_off) {
-        uploadSubData(data, level, width, height, depth, x_off,y_off,0);
-    }
-
-    public void uploadSubData(byte[] data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height,x_off,0);
-    }
-
-    public void uploadSubData(short[] data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height,x_off,0);
-    }
-
-    public void uploadSubData(int[] data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height,x_off,0);
-    }
-
-    public void uploadSubData(float[] data, int level, int width, int x_off) {
-        uploadSubData(data, level, width, height,x_off,0);
-    }
-
-    public void uploadSubData(byte[] data, int level) {
-        uploadSubData(data, level, width,0);
-    }
-
-    public void uploadSubData(short[] data, int level) {
-        uploadSubData(data, level, width,0);
-    }
-
-    public void uploadSubData(int[] data, int level) {
-        uploadSubData(data, level, width,0);
-    }
-
-    public void uploadSubData(float[] data, int level) {
-        uploadSubData(data, level, width,0);
-    }
-
-    public void uploadData(byte[] data) {
-        uploadSubData(data,0);
-    }
-
-    public void uploadData(short[] data) {
-        uploadSubData(data,0);
-    }
-
-    public void uploadData(int[] data) {
-        uploadSubData(data,0);
-    }
-
-    public void uploadData(float[] data) {
-        uploadSubData(data,0);
-    }
 
     public Bitmap bitmap(int level) {
         int level_max = calculateMipmapLevels() - 1;
@@ -324,36 +214,22 @@ public class Texture implements Disposable {
         ByteBuffer pixels = MemoryUtil.memAlloc(w*h*c);
         get(pixels,l); return new Bitmap(pixels,w,h,c);
     }
-
     public void get(ByteBuffer pixels) { get(pixels,0); }
-
     public void get(ByteBuffer pixels, int level) {
         glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
         glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
     }
-
-    public void get(ShortBuffer pixels) {
-        get(pixels,0);
-    }
-
+    public void get(ShortBuffer pixels) { get(pixels,0); }
     public void get(ShortBuffer pixels, int level) {
         glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
         glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
     }
-
-    public void get(IntBuffer pixels) {
-        get(pixels,0);
-    }
-
+    public void get(IntBuffer pixels) { get(pixels,0); }
     public void get(IntBuffer pixels, int level) {
         glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
         glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
     }
-
-    public void get(FloatBuffer pixels) {
-        get(pixels,0);
-    }
-
+    public void get(FloatBuffer pixels) { get(pixels,0); }
     public void get(FloatBuffer pixels, int level) {
         glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
         glGetTexImage(target,level,format.pixel_format,format.pixel_data_type,pixels);
@@ -361,163 +237,166 @@ public class Texture implements Disposable {
 
 
     public void generateMipmap() {
-        if (mipmaps_allocated) glGenerateMipmap(target);
+        if (mip_levels > 1) glGenerateMipmap(target);
         else Logger.warn("attempted to generate mipmaps, but storage not allocated");
     }
-
-    public void bindToActiveSlot() {
-        glBindTexture(target, id);
+    public void bindToSlot(int slot) { bindToSlot(slot,target, gl_texture); }
+    public void bindToActiveSlot() { bindToActiveSlot(target, gl_texture); }
+    public int bindTooAnySlot() { return bindToAny(target, gl_texture); }
+    public TextureFormat format() { return format; }
+    public Vector2i mipmapSize(Vector2i dst, int level) {
+        int max = U.log2(Math.min(width,height));
+        level = U.clamp(level,0,max);
+        dst.x = width / (int) U.pow(2,level);
+        dst.y = height /(int) U.pow(2,level);
+        return dst;
     }
+    public boolean hasBeenAllocated() { return allocated; }
+    public boolean hasBeenDisposed() { return gl_texture == -1; }
+    public int width() { return width; }
+    public int height() { return height; }
+    public int depth() { return depth; }
+    public int glHandle() { return gl_texture; }
+    public int target() { return target; }
+    public int mipLevels() { return mip_levels; }
 
-    public void bindToSlot(int slot) {
-        if (slot != active_slot) {
-            // todo: if slot > client max slots -> log warn
-            glActiveTexture(slot + GL_TEXTURE0);
-            active_slot = slot;
-        } bindToActiveSlot();
-    }
-
-    public void dispose() {
-        if (!isDisposed()) {
-            glDeleteTextures(id);
-            format = null;
-            id = -1;
-        }
-    }
-
-    public TextureFormat format() {
-        return format;
-    }
-
-    public boolean isAllocated() {
-        return format != null;
-    }
-
-    public boolean usingMipmap() { return mipmaps_allocated; }
-
-    public boolean isDisposed() {
-        return id == -1;
-    }
-
-    public int width() {
-        return width;
-    }
-
-    public int height() {
-        return height;
-    }
-
-    public int depth() {
-        return depth;
-    }
-
-    public int id() {
-        return id;
-    }
-
-    public int target() {
-        return target;
-    }
-
-    public IntBuffer getTexParametersI(IntBuffer buffer) {
-
-        glGetTexParameterIiv(target,0,buffer);
-        return buffer;
-    }
-
-    public void wrapS(int wrapS) {
-        glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapS);
-    }
-
-    public void wrapT(int wrapT) {
-        glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapT);
-    }
-
-    public void wrapR(int wrapR) {
-        glTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR);
-    }
-
-    public void wrapST(int wrapS, int wrapT) {
+    public void textureWrapS(int wrapS) { glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapS); }
+    public void textureWrapT(int wrapT) { glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapT); }
+    public void textureWrapR(int wrapR) { glTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR); }
+    public void textureWrapST(int wrap) { textureWrapST(wrap,wrap); }
+    public void textureWrapST(int wrapS, int wrapT) {
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapS);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapT);
     }
-
-    public void wrapSTR(int wrapS, int wrapT, int wrapR) {
+    public void textureWrapSTR(int wrap) { textureWrapSTR(wrap,wrap,wrap); }
+    public void textureWrapSTR(int wrapS, int wrapT, int wrapR) {
         glTexParameteri(target, GL_TEXTURE_WRAP_S, wrapS);
         glTexParameteri(target, GL_TEXTURE_WRAP_T, wrapT);
         glTexParameteri(target, GL_TEXTURE_WRAP_R, wrapR);
     }
-
-    public void wrapST(int wrap) {
-        wrapST(wrap,wrap);
-    }
-
-    public void wrapSTR(int wrap) {
-        wrapSTR(wrap,wrap,wrap);
-    }
-
     public void repeat() {
         switch (target) {
-            case GL_TEXTURE_1D -> wrapS(GL_REPEAT);
-            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> wrapST(GL_REPEAT);
-            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> wrapSTR(GL_REPEAT);
+            case GL_TEXTURE_1D -> textureWrapS(GL_REPEAT);
+            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> textureWrapST(GL_REPEAT);
+            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> textureWrapSTR(GL_REPEAT);
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
     }
-
     public void clampToBorder() {
         switch (target) {
-            case GL_TEXTURE_1D -> wrapS(GL_CLAMP_TO_BORDER);
-            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> wrapST(GL_CLAMP_TO_BORDER);
-            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> wrapSTR(GL_CLAMP_TO_BORDER);
+            case GL_TEXTURE_1D -> textureWrapS(GL_CLAMP_TO_BORDER);
+            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> textureWrapST(GL_CLAMP_TO_BORDER);
+            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> textureWrapSTR(GL_CLAMP_TO_BORDER);
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
     }
-
     public void clampToEdge() {
         switch (target) {
-            case GL_TEXTURE_1D -> wrapS(GL_CLAMP_TO_EDGE);
-            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> wrapST(GL_CLAMP_TO_EDGE);
-            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> wrapSTR(GL_CLAMP_TO_EDGE);
+            case GL_TEXTURE_1D -> textureWrapS(GL_CLAMP_TO_EDGE);
+            case GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY -> textureWrapST(GL_CLAMP_TO_EDGE);
+            case GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY -> textureWrapSTR(GL_CLAMP_TO_EDGE);
             default -> throw new IllegalStateException("Unexpected value: " + target);
         }
     }
-
-    public void nearest() {
-        filter(GL_NEAREST,GL_NEAREST);
-    }
-
-    public void linear() { filter(GL_LINEAR,GL_LINEAR); }
-
+    public void filterNearest() { filter(GL_NEAREST,GL_NEAREST); }
+    public void filterLinear() { filter(GL_LINEAR,GL_LINEAR); }
     public void filter(int min, int mag) {
         glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min);
         glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag);
     }
 
-    public void toRepository(final Repository repository, String key, boolean replace) {
-        if (target == GL_TEXTURE_2D || target == GL_TEXTURE_1D) {
-            if (!replace && repository.contains(key)) return;
-            int w = width;
-            int h = height;
-            int c = format().channels;
-            int stride = w * c;
-            int raw_size = stride * h;
-            long window = Engine.get().window().handle();
-            ByteBuffer texture_data = MemoryUtil.memAlloc(raw_size);
-            bindToActiveSlot();
-            get(texture_data);
-            STBIWriteCallback callback = new STBIWriteCallback() {
-                public void invoke(long context, long data, int size) {
-                    ByteBuffer _native = STBIWriteCallback.getData(data, size);
-                    ByteBuffer _direct = ByteBuffer.allocateDirect(size);
-                    for (int i = 0; i < size; i++) {
-                        _direct.put(_native.get(i));
-                    } repository.put(key,_direct.flip(),replace);
-                }
-            }; stbi_flip_vertically_on_write(false);
-            STBImageWrite.stbi_write_png_to_func(callback,window,w,h,c,texture_data,stride);
-            MemoryUtil.memFree(texture_data);
-            Callback.free(callback.address());
+    public static String glWrapEnumToString(int glEnum) {
+        return switch (glEnum) {
+            case GL_REPEAT -> "GL_REPEAT";
+            case GL_MIRRORED_REPEAT -> "GL_MIRRORED_REPEAT";
+            case GL_CLAMP_TO_BORDER -> "GL_CLAMP_TO_BORDER";
+            case GL_CLAMP_TO_EDGE -> "GL_CLAMP_TO_EDGE";
+            default -> "INVALID_ENUM";
+        };
+    }
+
+    public static String glFilterEnumToString(int glEnum) {
+        return switch (glEnum) {
+            case GL_LINEAR -> "GL_LINEAR";
+            case GL_NEAREST -> "GL_NEAREST";
+            case GL_NEAREST_MIPMAP_NEAREST -> "GL_NEAREST_MIPMAP_NEAREST";
+            case GL_NEAREST_MIPMAP_LINEAR -> "GL_NEAREST_MIPMAP_LINEAR";
+            case GL_LINEAR_MIPMAP_NEAREST -> "GL_LINEAR_MIPMAP_NEAREST";
+            case GL_LINEAR_MIPMAP_LINEAR -> "GL_LINEAR_MIPMAP_LINEAR";
+            default -> "INVALID_ENUM";
+        };
+    }
+
+    public static boolean glWrapEnumIsValid(int glEnum) {
+        return glEnum == GL_REPEAT ||
+                glEnum == GL_MIRRORED_REPEAT ||
+                glEnum == GL_CLAMP_TO_EDGE ||
+                glEnum == GL_CLAMP_TO_BORDER;
+    }
+
+    public static boolean glFilterEnumIsValid(int glEnum) {
+        return glEnum == GL_LINEAR ||
+                glEnum == GL_NEAREST ||
+                glEnum == GL_NEAREST_MIPMAP_NEAREST ||
+                glEnum == GL_NEAREST_MIPMAP_LINEAR ||
+                glEnum == GL_LINEAR_MIPMAP_NEAREST ||
+                glEnum == GL_LINEAR_MIPMAP_LINEAR;
+    }
+
+
+
+
+
+    private static int targetIndex(int target) {
+        switch (target) {
+            case GL_TEXTURE_2D -> { return 1; }
+            case GL_TEXTURE_1D -> { return 0; }
+            case GL_TEXTURE_3D -> { return 2; }
+            case GL_TEXTURE_2D_ARRAY -> { return 4; }
+            case GL_TEXTURE_1D_ARRAY -> { return 3; }
+            case GL_TEXTURE_CUBE_MAP -> { return 5; }
+            default -> throw new IllegalStateException("Unsupported texture target: " + target);
+        }
+    }
+
+    private static void bindToSlot(int slot, int target, int texture) {
+        if (slot != active_slot) {
+            glActiveTexture(slot + GL_TEXTURE0);
+            active_slot = slot;
+        } bindToActiveSlot(target,texture);
+    }
+
+    private static void bindToActiveSlot(int target, int texture) {
+        int target_index = targetIndex(target);
+        if (!(SLOTS[active_slot][target_index] == texture)) {
+            SLOTS[active_slot][target_index] = texture;
+            glBindTexture(target,texture);
+        }
+    }
+
+    private static int bindToAny(int target, int texture) {
+        int slot = findSlot(target,texture);
+        if (slot == active_slot) return slot;
+        if (slot == NO_SLOT) {
+            bindToActiveSlot(target,texture);
+        } else { glActiveTexture(slot + GL_TEXTURE0);
+            active_slot = slot;
+        } return active_slot;
+    }
+
+    private static int findSlot(int target, int texture) {
+        int target_index = targetIndex(target);
+        for (int slot = 0; slot < NUM_SLOTS; slot++) {
+            if (SLOTS[slot][target_index] == texture) return slot;
+        } return NO_SLOT;
+    }
+
+    private static void removeFromSlots(int target, int texture) {
+        int target_index = targetIndex(target);
+        for (int slot = 0; slot < NUM_SLOTS; slot++) {
+            if (SLOTS[slot][target_index] == texture) {
+                SLOTS[slot][target_index] = 0;
+            }
         }
     }
 
@@ -581,6 +460,95 @@ public class Texture implements Disposable {
         return U.log2(Math.min(width,height)) + 1;
     }
 
+    public void dispose() {
+        if (!hasBeenDisposed()) {
+            removeFromSlots(target, gl_texture);
+            glDeleteTextures(gl_texture);
+            allocated = false;
+            gl_texture = -1;
+        }
+    }
+
+
+
+
+
+
+
+
+
+    // various (Testing, Utility ETC)
+
+    public void generateMipmapCustom() throws Exception {
+        if (mip_levels > 1) {
+            if (target == GL_TEXTURE_2D) {
+                int mipmap_levels = calculateMipmapLevels();
+                if (mipmap_levels > 1) {
+                    bindToSlot(0);
+                    Framebuffer framebuffer = new Framebuffer(width,height);
+                    Framebuffer.bind(framebuffer);
+                    Framebuffer.attachColor(this,0,false);
+                    Framebuffer.drawBuffer(0);
+                    Framebuffer.checkStatus();
+                    int prev_min_filter = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER);
+                    int prev_mag_filter = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER);
+                    int prev_tex_wrap_u = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S);
+                    int prev_tex_wrap_v = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T);
+                    clampToEdge();
+                    filterLinear();
+                    glDisable(GL_DEPTH_TEST);
+                    glDisable(GL_BLEND);
+                    ShaderProgram.bindProgram(ShaderProgram.commonPrograms().mipmap_gen_program);
+                    ShaderProgram.setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,0);
+                    for (int sample_level = 0; sample_level < mipmap_levels - 1; sample_level++) {
+                        int target_level = sample_level + 1;
+                        ShaderProgram.setUniform(ShaderProgram.UNIFORM_LOD,sample_level);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, sample_level);
+                        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, sample_level);
+                        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl_texture, target_level);
+                        Framebuffer.viewport(target_level);
+                        if (sample_level == 0) ShaderProgram.shaderPass().draw();
+                        else ShaderProgram.shaderPass().drawRepeat();
+                    }
+                    framebuffer.dispose();
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1000);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, prev_min_filter);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, prev_mag_filter);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, prev_tex_wrap_u);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, prev_tex_wrap_v);
+                } else Logger.warn("cannot generate mipmap, single level");
+            } else Logger.warn("cannot generate custom mipmap for target != TEXTURE_2D");
+        }  else Logger.warn("attempted to generate mipmap, but storage not allocated");
+    }
+
+    public void toRepository(final Repository repository, String key, boolean replace) {
+        if (target == GL_TEXTURE_2D || target == GL_TEXTURE_1D) {
+            if (!replace && repository.contains(key)) return;
+            int w = width;
+            int h = height;
+            int c = format().channels;
+            int stride = w * c;
+            int raw_size = stride * h;
+            long window = Engine.get().window().handle();
+            ByteBuffer texture_data = MemoryUtil.memAlloc(raw_size);
+            bindToActiveSlot();
+            get(texture_data);
+            STBIWriteCallback callback = new STBIWriteCallback() {
+                public void invoke(long context, long data, int size) {
+                    ByteBuffer _native = STBIWriteCallback.getData(data, size);
+                    ByteBuffer _direct = ByteBuffer.allocateDirect(size);
+                    for (int i = 0; i < size; i++) {
+                        _direct.put(_native.get(i));
+                    } repository.put(key,_direct.flip(),replace);
+                }
+            }; stbi_flip_vertically_on_write(false);
+            STBImageWrite.stbi_write_png_to_func(callback,window,w,h,c,texture_data,stride);
+            MemoryUtil.memFree(texture_data);
+            Callback.free(callback.address());
+        }
+    }
+
     /**
      * Interleaves 2d-texture data into one singe packed buffer.
      * The textures must be of equal width and height.
@@ -620,27 +588,11 @@ public class Texture implements Disposable {
         } return combined.flip();
     }
 
-    public static void setActiveSlot(int slot) {
-        slot = Math.clamp(0,31, slot);
-        if (slot != active_slot) {
-            glActiveTexture(slot + GL_TEXTURE0);
-            active_slot = slot;
-        }
-    }
-
-    public static void unbindActiveSlot(int target) {
-        glBindTexture(target,0);
-    }
-
-    public static void unbind(int slot, int target) {
-        setActiveSlot(slot);
-        unbindActiveSlot(target);
-    }
 
     public static Texture generateTilemapBlendTexture(int size) throws Exception {
         Texture blend_map = generate2D(size);
         blend_map.bindToActiveSlot();
-        blend_map.wrapST(GL_REPEAT);
+        blend_map.textureWrapST(GL_REPEAT);
         blend_map.filter(GL_LINEAR,GL_LINEAR);
         blend_map.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
         GLContext.checkError();
@@ -667,41 +619,6 @@ public class Texture implements Disposable {
         return blend_map;
     }
 
-    public static String glWrapEnumToString(int glEnum) {
-        return switch (glEnum) {
-            case GL_REPEAT -> "GL_REPEAT";
-            case GL_MIRRORED_REPEAT -> "GL_MIRRORED_REPEAT";
-            case GL_CLAMP_TO_BORDER -> "GL_CLAMP_TO_BORDER";
-            case GL_CLAMP_TO_EDGE -> "GL_CLAMP_TO_EDGE";
-            default -> "INVALID_ENUM";
-        };
-    }
 
-    public static String glFilterEnumToString(int glEnum) {
-        return switch (glEnum) {
-            case GL_LINEAR -> "GL_LINEAR";
-            case GL_NEAREST -> "GL_NEAREST";
-            case GL_NEAREST_MIPMAP_NEAREST -> "GL_NEAREST_MIPMAP_NEAREST";
-            case GL_NEAREST_MIPMAP_LINEAR -> "GL_NEAREST_MIPMAP_LINEAR";
-            case GL_LINEAR_MIPMAP_NEAREST -> "GL_LINEAR_MIPMAP_NEAREST";
-            case GL_LINEAR_MIPMAP_LINEAR -> "GL_LINEAR_MIPMAP_LINEAR";
-            default -> "INVALID_ENUM";
-        };
-    }
 
-    public static boolean glWrapEnumIsValid(int glEnum) {
-        return glEnum == GL_REPEAT ||
-                glEnum == GL_MIRRORED_REPEAT ||
-                glEnum == GL_CLAMP_TO_EDGE ||
-                glEnum == GL_CLAMP_TO_BORDER;
-    }
-
-    public static boolean glFilterEnumIsValid(int glEnum) {
-        return glEnum == GL_LINEAR ||
-                glEnum == GL_NEAREST ||
-                glEnum == GL_NEAREST_MIPMAP_NEAREST ||
-                glEnum == GL_NEAREST_MIPMAP_LINEAR ||
-                glEnum == GL_LINEAR_MIPMAP_NEAREST ||
-                glEnum == GL_LINEAR_MIPMAP_LINEAR;
-    }
 }

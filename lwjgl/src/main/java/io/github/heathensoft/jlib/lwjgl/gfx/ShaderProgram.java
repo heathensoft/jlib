@@ -35,20 +35,25 @@ public class ShaderProgram {
     public static final String path_frag_bubble_demo = "res/jlib/lwjgl/glsl/gfx_bubble_demo.frag";
     public static final String path_vert_blur_pass = "res/jlib/lwjgl/glsl/gfx_blur_pass.vert";
     public static final String path_frag_blur_pass = "res/jlib/lwjgl/glsl/gfx_blur_pass.frag";
+    public static final String path_vert_mipmap_gen = "res/jlib/lwjgl/glsl/gfx_mipmap_gen.vert";
+    public static final String path_frag_mipmap_gen = "res/jlib/lwjgl/glsl/gfx_mipmap_gen.frag";
     public static final String UNIFORM_SAMPLER_1D = "u_sampler1D";
     public static final String UNIFORM_SAMPLER_2D = "u_sampler2D";
     public static final String UNIFORM_RESOLUTION = "u_resolution";
     public static final String UNIFORM_CURSOR = "u_cursor";
     public static final String UNIFORM_TIME = "u_time";
+    public static final String UNIFORM_LOD = "u_lod";
 
     public static final class JLIBShaders {
         public final int texture_pass_program;
         public final int bubble_demo_program;
         public final int blur_pass_program;
+        public final int mipmap_gen_program;
         private JLIBShaders() {
             int texture_pass_handle = -1;
             int bubble_demo_handle = -1;
             int blur_pass_handle = -1;
+            int mipmap_gen_handle = -1;
             try { ShaderProgram program;
                 String v_source, g_source, f_source;
                 v_source = Resources.asString(path_vert_texture_pass);
@@ -63,6 +68,10 @@ public class ShaderProgram {
                 f_source = Resources.asString(path_frag_blur_pass);
                 program = new ShaderProgram("gfx_blur_pass",v_source,f_source);
                 blur_pass_handle = program.glHandle();
+                v_source = Resources.asString(path_vert_mipmap_gen);
+                f_source = Resources.asString(path_frag_mipmap_gen);
+                program = new ShaderProgram("gfx_mipmap_gen",v_source,f_source);
+                mipmap_gen_handle = program.glHandle();
             } catch (Exception e) {
                 Logger.error(e.getMessage());
                 Logger.error("Error While Compiling JLIB Shaders");
@@ -71,6 +80,7 @@ public class ShaderProgram {
                 texture_pass_program = texture_pass_handle;
                 bubble_demo_program = bubble_demo_handle;
                 blur_pass_program = blur_pass_handle;
+                mipmap_gen_program = mipmap_gen_handle;
             }
         }
     }
@@ -162,12 +172,12 @@ public class ShaderProgram {
     public static void blurPassTest(Texture texture, int times) {
         if (times > 0 && texture.target() == GL_TEXTURE_2D) {
             texture.bindToActiveSlot();
-            boolean mipmap = texture.usingMipmap();
+            boolean mipmap = texture.mipLevels() > 1;
             int prev_min_filter = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER);
             int prev_mag_filter = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER);
             int prev_tex_wrap_u = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S);
             int prev_tex_wrap_v = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T);
-            texture.linear();
+            texture.filterLinear();
             texture.clampToEdge();
             try {
 
@@ -180,7 +190,7 @@ public class ShaderProgram {
                 Texture tmp_texture = Texture.generate2D(texture.width(),texture.height());
                 tmp_texture.bindToActiveSlot();
                 tmp_texture.allocate(texture.format());
-                tmp_texture.linear();
+                tmp_texture.filterLinear();
                 tmp_texture.clampToEdge();
                 Framebuffer framebuffer_1 = new Framebuffer(texture.width(),texture.height());
                 Framebuffer.bind(framebuffer_1);
@@ -209,7 +219,7 @@ public class ShaderProgram {
             } catch (Exception e) {
                 Logger.error(e);
             } finally {
-                texture.wrapST(prev_tex_wrap_u,prev_tex_wrap_v);
+                texture.textureWrapST(prev_tex_wrap_u,prev_tex_wrap_v);
                 texture.filter(prev_min_filter,prev_mag_filter);
             }
         }

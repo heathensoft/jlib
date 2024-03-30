@@ -36,7 +36,7 @@ public class ImageTest extends RootContainer {
             Bitmap bitmap = Resources.image("res/jlib/test/lord.png");
             texture = bitmap.asTexture(false);
             texture.repeat();
-            texture.linear();
+            texture.filterLinear();
             bitmap.dispose();
         } catch (Exception e) {
             Logger.warn(e);

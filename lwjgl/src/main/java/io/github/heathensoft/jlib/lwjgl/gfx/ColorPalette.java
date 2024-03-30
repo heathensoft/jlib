@@ -51,7 +51,7 @@ public class ColorPalette implements Iterable<Vector4f>{
         Texture texture = Texture.generate1D(bitmap.width());
         texture.bindToActiveSlot();
         texture.filter(min_filter, mag_filter);
-        if (repeat) texture.wrapS(GL_REPEAT);
+        if (repeat) texture.textureWrapS(GL_REPEAT);
         else texture.clampToEdge();
         texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
         texture.uploadData(bitmap.pixels());
