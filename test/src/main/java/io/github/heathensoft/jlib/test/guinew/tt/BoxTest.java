@@ -1,6 +1,6 @@
 package io.github.heathensoft.jlib.test.guinew.tt;
 
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.ui.box.Box;
 import io.github.heathensoft.jlib.ui.box.BoxWindow;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
@@ -24,7 +24,7 @@ public class BoxTest extends Box {
 
 
     protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-        Rectanglef quad = bounds(MathLib.rectf(),x,y);
+        Rectanglef quad = bounds(U.rectf(),x,y);
         renderer.drawElement(quad,color,parent_id);
     }
 }

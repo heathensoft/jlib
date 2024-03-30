@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.ui.box;
 
 
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.CursorObjects;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.ui.GUI;
@@ -117,7 +117,7 @@ public abstract class RootContainer extends BoxContainer {
     /** Call this when rendering container to have default window control */
     protected void processRootInteraction(BoxWindow window, float x, float y) {
         if (iHasID()) {
-            Vector2f mouse_position = GUI.mouse_position(MathLib.vec2());
+            Vector2f mouse_position = GUI.mouse_position(U.vec2());
             WindowAnchor anchor = window.anchor();
             final int NONE      = 0x00;
             final int CENTER    = 0x01;
@@ -161,7 +161,7 @@ public abstract class RootContainer extends BoxContainer {
                     }
                     switch (drag_zone) {
                         case CENTER -> {
-                            Vector2f drag_vector = GUI.mouse_drag_vector(MathLib.vec2(),Mouse.LEFT);
+                            Vector2f drag_vector = GUI.mouse_drag_vector(U.vec2(),Mouse.LEFT);
                             if (grabbed) window.move(drag_vector);
                         } case TOP -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             if (grabbed) window.dragTop(mouse_position);

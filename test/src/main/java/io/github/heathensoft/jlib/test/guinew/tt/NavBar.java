@@ -3,7 +3,6 @@ package io.github.heathensoft.jlib.test.guinew.tt;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.box.Box;
@@ -36,7 +35,7 @@ public class NavBar extends Box {
     protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
 
 
-        Rectanglef quad = bounds(MathLib.rectf(),x,y);
+        Rectanglef quad = bounds(U.rectf(),x,y);
         renderer.drawElement(quad,color,parent_id);
         TextureRegion region = GUI.default_icons.getRegion(CLOSE_BTN);
         Texture texture = GUI.default_icons.texture(0);

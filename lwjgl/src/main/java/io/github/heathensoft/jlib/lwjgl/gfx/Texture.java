@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.lwjgl.gfx;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import io.github.heathensoft.jlib.common.utils.U;
+import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.joml.Math;
@@ -10,8 +11,12 @@ import org.lwjgl.stb.STBIWriteCallback;
 import org.lwjgl.stb.STBImageWrite;
 import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryUtil;
+import org.tinylog.Logger;
 
+import java.io.IOException;
 import java.nio.*;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_1D;
@@ -25,7 +30,7 @@ import static org.lwjgl.stb.STBImageWrite.stbi_flip_vertically_on_write;
 
 /**
  *
- * TEXTURE SLOTS = 0- > 31
+ * TEXTURE SLOTS = 0 --> 31
  *
  * @author Frederik Dahl
  * 12/01/2023
@@ -43,6 +48,7 @@ public class Texture implements Disposable {
     private final int width;
     private final int height;
     private final int depth;
+    private boolean mipmaps_allocated;
 
     private Texture(int target, int width, int height, int depth) {
         this.id = glGenTextures();
@@ -87,6 +93,7 @@ public class Texture implements Disposable {
         if (isAllocated()) throw new IllegalStateException("texture storage already allocated");
         int levels = mipmap ? calculateMipmapLevels() : 1;
         int i_format = format.sized_format;
+        this.mipmaps_allocated = levels > 1;
         this.format = format;
         switch (target) {
             case GL_TEXTURE_1D -> glTexStorage1D(target,levels,i_format,width);
@@ -308,9 +315,17 @@ public class Texture implements Disposable {
         uploadSubData(data,0);
     }
 
-    public void get(ByteBuffer pixels) {
-        get(pixels,0);
+    public Bitmap bitmap(int level) {
+        int level_max = calculateMipmapLevels() - 1;
+        int l = Math.min(level_max,Math.max(0,level));
+        int w = this.width / (int)(java.lang.Math.pow(2,l));
+        int h = this.height / (int)(java.lang.Math.pow(2,l));
+        int c = this.format.channels;
+        ByteBuffer pixels = MemoryUtil.memAlloc(w*h*c);
+        get(pixels,l); return new Bitmap(pixels,w,h,c);
     }
+
+    public void get(ByteBuffer pixels) { get(pixels,0); }
 
     public void get(ByteBuffer pixels, int level) {
         glPixelStorei(GL_PACK_ALIGNMENT,format.pack_alignment);
@@ -346,7 +361,8 @@ public class Texture implements Disposable {
 
 
     public void generateMipmap() {
-        glGenerateMipmap(target);
+        if (mipmaps_allocated) glGenerateMipmap(target);
+        else Logger.warn("attempted to generate mipmaps, but storage not allocated");
     }
 
     public void bindToActiveSlot() {
@@ -377,6 +393,8 @@ public class Texture implements Disposable {
         return format != null;
     }
 
+    public boolean usingMipmap() { return mipmaps_allocated; }
+
     public boolean isDisposed() {
         return id == -1;
     }
@@ -399,6 +417,12 @@ public class Texture implements Disposable {
 
     public int target() {
         return target;
+    }
+
+    public IntBuffer getTexParametersI(IntBuffer buffer) {
+
+        glGetTexParameterIiv(target,0,buffer);
+        return buffer;
     }
 
     public void wrapS(int wrapS) {
@@ -614,86 +638,33 @@ public class Texture implements Disposable {
     }
 
     public static Texture generateTilemapBlendTexture(int size) throws Exception {
-
-        Texture blendMapTexture = generate2D(size);
-        blendMapTexture.bindToActiveSlot();
-        blendMapTexture.wrapST(GL_REPEAT);
-        blendMapTexture.filter(GL_LINEAR,GL_LINEAR);
-        blendMapTexture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
+        Texture blend_map = generate2D(size);
+        blend_map.bindToActiveSlot();
+        blend_map.wrapST(GL_REPEAT);
+        blend_map.filter(GL_LINEAR,GL_LINEAR);
+        blend_map.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
         GLContext.checkError();
-
         Framebuffer framebuffer = new Framebuffer(size,size);
         Framebuffer.bind(framebuffer);
-        Framebuffer.attachColor(blendMapTexture,0,false);
+        Framebuffer.attachColor(blend_map,0,false);
         Framebuffer.checkStatus();
-
-        final String VERTEX_SHADER = "#version 440 core\n" +
-                "layout (location = 0) in vec2 a_uv;\n" +
-                "out vec2 uv;\n" +
-                "void main() {\n" +
-                "    uv = a_uv;\n" +
-                "    vec2 pos = vec2(uv.x,1.0 - uv.y);\n" +
-                "    pos = pos * 2.0 - 1.0;\n" +
-                "    gl_Position = vec4(pos,0.0,1.0);\n" +
-                "}";
-
-
-        final String FRAGMENT_SHADER = "#version 440 core\n" +
-                "#define SQRT_2 1.41421356\n" +
-                "#define CORNER_WEIGHT .25\n" +
-                "#define EDGES_WEIGHT .50\n" +
-                "layout (location=0) out vec4 f_color;\n" +
-                "in vec2 uv;\n" +
-                "float _clamp(float v) { return v > 1.0 ? 1.0 : (v < 0.0 ? 0.0 : v); }\n" +
-                "float _lerp(float a, float b, float t) { return a * (1.0 - t) + b * t; }\n" +
-                "float _smooth(float v) { return v * v * (3.0 - 2.0 * v); }\n" +
-                "void main() {\n" +
-                "    float edge_x;\n" +
-                "    float edge_y;\n" +
-                "    float dist_x;\n" +
-                "    float dist_y; \n" +
-                "    float dist_c; \n" +
-                "    if(uv.x < 0.5) {\n" +
-                "        edge_x = 0.0;\n" +
-                "        dist_x = (0.5 - uv.x) * 2.0;\n" +
-                "    } else {\n" +
-                "        edge_x = 1.0;\n" +
-                "        dist_x = (uv.x - 0.5) * 2.0;\n" +
-                "    }if(uv.y < 0.5) {\n" +
-                "        edge_y = 0.0;\n" +
-                "        dist_y = (0.5 - uv.y) * 2.0;\n" +
-                "    } else {\n" +
-                "        edge_y = 1.0;\n" +
-                "        dist_y = (uv.y - 0.5) * 2.0;\n" +
-                "    }\n" +
-                "    dist_c = 1.0 -_clamp((2.0 * distance(vec2(edge_x,edge_y),uv))/SQRT_2);\n" +
-                "    float value_c = _smooth(dist_c) * CORNER_WEIGHT;\n" +
-                "    float value_x = max(0.0,(_smooth(dist_x) * EDGES_WEIGHT) - value_c);\n" +
-                "    float value_y = max(0.0,(_smooth(dist_y) * EDGES_WEIGHT) - value_c);\n" +
-                "    f_color = vec4(value_x,value_y,value_c,1.0);\n" +
-                "}";
-
-
-        ShaderProgramOld shader = new ShaderProgramOld(VERTEX_SHADER,FRAGMENT_SHADER);
-
-        Vao vao = new Vao().bind();
-        BufferObject vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_STATIC_DRAW);
-        BufferObject indexBuffer = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
-
-        float[] vertices = {1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f,};
-        indexBuffer.bind().bufferData(new short[]{ 2, 1, 0, 0, 1, 3});
-        vertexBuffer.bind().bufferData(vertices);
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * Float.BYTES, 0);
-        glEnableVertexAttribArray(0);
-
-        shader.use();
         Framebuffer.viewport();
-        glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_SHORT,0);
-        Framebuffer.bindDefault();
-        Framebuffer.viewport();
-
-        Disposable.dispose(vao,vertexBuffer,shader,framebuffer,indexBuffer);
-        return blendMapTexture;
+        String name = "gfx_tile_blendmap_program";
+        Optional<ShaderProgram> optionalProgram = ShaderProgram.optionalProgramByName(name);
+        ShaderProgram program = optionalProgram.orElseGet(() -> {
+            try { String vSource = Resources.asString("res/jlib/lwjgl/glsl/gfx_tile_blendmap.vert");
+                String fSource = Resources.asString("res/jlib/lwjgl/glsl/gfx_tile_blendmap.frag");
+                return new ShaderProgram(name,vSource, fSource);
+            } catch (Exception e) {
+                Logger.error(e);
+                return null;
+            }
+        });
+        if (program == null) throw new Exception("Unable to create Texture");
+        ShaderProgram.bindProgram(program);
+        ShaderProgram.shaderPass().draw();
+        Disposable.dispose(framebuffer);
+        return blend_map;
     }
 
     public static String glWrapEnumToString(int glEnum) {

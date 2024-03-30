@@ -1,6 +1,10 @@
 package io.github.heathensoft.jlib.common.utils;
 
 import io.github.heathensoft.jlib.common.noise.Noise;
+import org.joml.*;
+import org.joml.Math;
+import org.joml.primitives.Rectanglef;
+
 
 import java.nio.*;
 
@@ -13,99 +17,149 @@ import java.nio.*;
 
 public class U {
 
+    private static final int[] logTable = new int[256];
 
-    public static final float ROT_0 = 0f;
-    public static final float ROT_90 =  (float)(    (Math.PI / 2));
-    public static final float ROT_180 = (float)(2 * (Math.PI / 2));
-    public static final float ROT_270 = (float)(3 * (Math.PI / 2));
-    public static final float ROT_360 = (float)(4 * (Math.PI / 2));
-
-    private static final int[] logTable;
+    private static final byte v2Count = 16;
+    private static final byte v3Count = 16;
+    private static final byte v4Count = 16;
+    private static final byte m3Count = 4;
+    private static final byte m4Count = 8;
+    private static final byte rfCount = 16;
+    private static final Vector2f[] vec2 = new Vector2f[v2Count];
+    private static final Vector3f[] vec3 = new Vector3f[v3Count];
+    private static final Vector4f[] vec4 = new Vector4f[v4Count];
+    private static final Matrix3f[] mat3 = new Matrix3f[m3Count];
+    private static final Matrix4f[] mat4 = new Matrix4f[m4Count];
+    private static final Rectanglef[] rect = new Rectanglef[rfCount];
+    private static int rfIdx = -1;
+    private static int v4Idx = -1;
+    private static int v3Idx = -1;
+    private static int v2Idx = -1;
+    private static int m4Idx = -1;
+    private static int m3Idx = -1;
 
     static {
-        logTable = new int[256];
-        logTable[0] = logTable[1] = 0;
-        for (int i=2; i<256; i++) logTable[i] = 1 + logTable[i/2];
-        logTable[0] = -1;
+        {
+            logTable[0] = logTable[1] = 0;
+            for (int i=2; i<256; i++) logTable[i] = 1 + logTable[i/2];
+            logTable[0] = -1;
+        }
+        for (int i = 0; i < vec2.length; i++) vec2[i] = new Vector2f();
+        for (int i = 0; i < vec3.length; i++) vec3[i] = new Vector3f();
+        for (int i = 0; i < vec4.length; i++) vec4[i] = new Vector4f();
+        for (int i = 0; i < mat3.length; i++) mat3[i] = new Matrix3f();
+        for (int i = 0; i < mat4.length; i++) mat4[i] = new Matrix4f();
+        for (int i = 0; i < rect.length; i++) rect[i] = new Rectanglef();
+
     }
 
-    public static int[][] adj_8 = new int[][] {{-1,0},{ 0,1},{ 1,0},{ 0,-1},{-1,1},{1,1},{-1,1},{-1,-1}};
+    public static final float ROT_0 = 0f;
+    public static final float ROT_90 =  (float)(    (Math.PI / 2d));
+    public static final float ROT_180 = (float)(2 * (Math.PI / 2d));
+    public static final float ROT_270 = (float)(3 * (Math.PI / 2d));
+    public static final float ROT_360 = (float)(4 * (Math.PI / 2d));
+    public static final int[][] adj_8 = new int[][] {
+            {-1, 0},{ 0, 1},{ 1, 0},
+            { 0,-1},        {-1, 1},
+            { 1, 1},{-1, 1},{-1,-1}};
 
-    public static boolean float_equals(double a, double b) { return float_equals(a, b,(1e-9)); }
 
-    public static boolean float_equals(double a, double b, double epsilon) { return Math.abs(a - b) < epsilon; }
+    public static Vector2f vec2() {
+        return vec2[++v2Idx % v2Count];
+    }
+    public static Vector3f vec3() {
+        return vec3[++v3Idx % v3Count];
+    }
+    public static Vector4f vec4() {
+        return vec4[++v4Idx % v4Count];
+    }
+    public static Matrix3f mat3() {
+        return mat3[++m3Idx % m3Count];
+    }
+    public static Matrix4f mat4() {
+        return mat4[++m4Idx % m4Count];
+    }
+    public static Rectanglef rectf() {
+        return rect[++rfIdx % rfCount];
+    }
+    public static Vector2f vec2(Vector2f v2) { return vec2(v2.x,v2.y); }
+    public static Vector3f vec3(Vector3f v3) { return vec3(v3.x,v3.y,v3.z); }
+    public static Vector4f vec4(Vector4f v4) { return vec4(v4.x,v4.y,v4.z,v4.w); }
+    public static Rectanglef rectf(Rectanglef r) { return rectf(r.minX,r.minY,r.maxX,r.maxY); }
+    public static Vector2f vec2(float x, float y) { return vec2[++v2Idx % v2Count].set(x, y); }
+    public static Vector3f vec3(float x, float y, float z) { return vec3[++v3Idx % v3Count].set(x,y,z); }
+    public static Vector4f vec4(float x, float y, float z, float w) { return vec4[++v4Idx % v4Count].set(x, y, z, w); }
+    public static Rectanglef rectf(float minX, float minY, float maxX, float maxY) { return rect[++rfIdx % rfCount].setMin(minX,minY).setMax(maxX,maxY); }
 
-    public static float clamp(float v) {
-        return v < 0 ? 0 : (v > 1 ? 1 : v);
+
+    public static float angle2D(float x, float y) { return Math.atan2(y,x); }
+    public static float angle2D(Vector2f v) { return Math.atan2(v.y,v.x); }
+    public static Vector2f rotate2D(Vector2f dst, float rad) {
+        float a = angle2D(dst);
+        float l = dst.length();
+        float x = l * Math.cos(a + rad);
+        float y = l * Math.sin(a + rad);
+        return dst.set(x,y);
     }
 
-    public static float clamp(float v, float min, float max) {
-        return Math.max(min,Math.min(v,max));
-    }
 
-    public static int clamp(int v, int min, int max) {
-        return Math.max(min,Math.min(v,max));
-    }
-
+    public static boolean floatEquals(double a, double b) { return floatEquals(a, b,(1e-9)); }
+    public static boolean floatEquals(double a, double b, double epsilon) { return Math.abs(a - b) < epsilon; }
+    public static float clamp(float v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
+    public static float clamp(float v, float min, float max) { return Math.max(min,Math.min(v,max)); }
+    public static int clamp(int v, int min, int max) { return Math.max(min,Math.min(v,max)); }
     public static float remap(float v, float v_min, float v_max, float out_min, float out_max) { return lerp(out_min,out_max, unLerp(v_min,v_max,v)); }
-
-    public static float unLerp(float a, float b, float t) {
-        return clamp((t - a) / (b - a));
-    }
-
+    public static float unLerp(float a, float b, float t) { return clamp((t - a) / (b - a)); }
     public static float smooth(float v) { return v * v * (3.0f - 2.0f * v); }
-
-    public static float quadratic_erase_out(float v) {
-        return 1.0f - (1.0f - v) * (1.0f - v);
-    }
-
-    public static float fract(float v) {
-        return Math.abs(v - (int)v);
-    }
-
-    public static int floor(float v) {
-        return (int) Math.floor(v);
-    }
-
-    public static int ceil(float v) {
-        return (int) Math.ceil(v);
-    }
-
-    public static float square(float v) {
-        return v * v;
-    }
-
-    public static float abs(float f) {
-        return Math.abs(f);
-    }
-
-    public static float sqrt(float v) {
-        return (float) Math.sqrt(v);
-    }
-
-    public static float pow(float v, float e) {
-        return (float)Math.pow(v,e);
-    }
+    public static float quadraticEraseOut(float v) { return 1.0f - (1.0f - v) * (1.0f - v); }
+    public static float fract(float v) { return Math.abs(v - (int)v); }
+    public static int floor(float v) { return (int) Math.floor(v); }
+    public static int ceil(float v) { return (int) Math.ceil(v); }
+    public static float square(float v) { return v * v; }
+    public static float abs(float f) { return Math.abs(f); }
+    public static float sqrt(float v) { return Math.sqrt(v); }
+    public static float pow(float v, float e) { return (float) java.lang.Math.pow(v,e); }
     /** Modulo for repeating patterns / maps etc. */
-    public static int mod_repeat(int v, int range) {
-        return v < 0 ? (range + (v % range)) % range : v % range;
+    public static int modRepeat(int v, int range) { return v < 0 ? (range + (v % range)) % range : v % range; }
+    public static int round(float f) { return Math.round(f); }
+    public static int round(double d) { return (int) Math.round(d); }
+    public static float round(double d, int digits) {
+        if (digits <= 0) return round(d);
+        double e = 10 * digits;
+        return (float) (Math.round(d * e) / e);
     }
-
-    public static float lerp(float a, float b, float t) {
-        return a * (1-t) + b * t;
-    }
-
+    public static float lerp(float a, float b, float t) { return a * (1-t) + b * t; }
     public static float lerp(float a, float b, float c, float t) {
         if (t < 0.5f) return lerp(a,b, unLerp(0,0.5f,t));
         if (t > 0.5f) return lerp(b,c, unLerp(0.5f,1.0f,t));
         return b;
     }
-
     // lerp default value a between 0 - 1 , ((t = 0.5) == a)
     public static float lerp(float a, float t) {
         if (t < 0.5f) return unLerp(0,0.5f,t) * a;
         if (t > 0.5f) return unLerp(0.5f,1.0f,t) * (1 - a) + a;
         return a;
+    }
+
+    public static int nextPowerOfTwo(int value) {
+        if (value-- == 0) return 1;
+        value |= value >>> 1;
+        value |= value >>> 2;
+        value |= value >>> 4;
+        value |= value >>> 8;
+        value |= value >>> 16;
+        return value + 1;
+    }
+
+    public static int log2(float f) {
+        int x = Float.floatToIntBits(f);
+        int c = x >> 23;
+        if (c != 0) return c - 127; //Compute directly from exponent.
+        else { //Subnormal, must compute from mantissa.
+            int t = x >> 16;
+            if (t != 0) return logTable[t] - 133;
+            else return (x >> 8 != 0) ? logTable[t] - 141 : logTable[x] - 149;
+        }
     }
 
     public static float brighten(float v, float b) {
@@ -130,70 +184,37 @@ public class U {
         } return lerp(start,target,adjustment);
     }
 
-    public static int round(float f) {
-        return Math.round(f);
-    }
-
-    public static int round(double d) { return (int) Math.round(d); }
-
-    public static float round(double d, int digits) {
-        if (digits <= 0) return round(d);
-        double e = 10 * digits;
-        return (float) (Math.round(d * e) / e);
-    }
-
-    public static int nextPowerOfTwo(int value) {
-        if (value-- == 0) return 1;
-        value |= value >>> 1;
-        value |= value >>> 2;
-        value |= value >>> 4;
-        value |= value >>> 8;
-        value |= value >>> 16;
-        return value + 1;
-    }
-
-    public static int log2(float f) {
-        int x = Float.floatToIntBits(f);
-        int c = x >> 23;
-        if (c != 0) return c - 127; //Compute directly from exponent.
-        else { //Subnormal, must compute from mantissa.
-            int t = x >> 16;
-            if (t != 0) return logTable[t] - 133;
-            else return (x >> 8 != 0) ? logTable[t] - 141 : logTable[x] - 149;
-        }
-    }
-
-    public static byte[] splice(byte[] src1, byte[] src2) {
+    public static byte[] arraySplice(byte[] src1, byte[] src2) {
         byte[] dst = new byte[src1.length + src2.length];
         ByteBuffer buffer = ByteBuffer.wrap(dst);
         return buffer.put(src1).put(src2).array();
     }
 
-    public static char[] splice(char[] src1, char[] src2) {
+    public static char[] arraySplice(char[] src1, char[] src2) {
         char[] dst = new char[src1.length + src2.length];
         CharBuffer buffer = CharBuffer.wrap(dst);
         return buffer.put(src1).put(src2).array();
     }
 
-    public static short[] splice(short[] src1, short[] src2) {
+    public static short[] arraySplice(short[] src1, short[] src2) {
         short[] dst = new short[src1.length + src2.length];
         ShortBuffer buffer = ShortBuffer.wrap(dst);
         return buffer.put(src1).put(src2).array();
     }
 
-    public static int[] splice(int[] src1, int[] src2) {
+    public static int[] arraySplice(int[] src1, int[] src2) {
         int[] dst = new int[src1.length + src2.length];
         IntBuffer buffer = IntBuffer.wrap(dst);
         return buffer.put(src1).put(src2).array();
     }
 
-    public static float[] splice(float[] src1, float[] src2) {
+    public static float[] arraySplice(float[] src1, float[] src2) {
         float[] dst = new float[src1.length + src2.length];
         FloatBuffer buffer = FloatBuffer.wrap(dst);
         return buffer.put(src1).put(src2).array();
     }
 
-    public static float[][] copy_array(float[][] src) {
+    public static float[][] arrayCopy(float[][] src) {
         final int rows = src.length;
         final int cols = src[0].length;
         final float[][] dst = new float[rows][cols];
@@ -204,7 +225,7 @@ public class U {
         } return dst;
     }
 
-    public static int[][] copy_array(int[][] src) {
+    public static int[][] arrayCopy(int[][] src) {
         final int rows = src.length;
         final int cols = src[0].length;
         final int[][] dst = new int[rows][cols];
@@ -215,7 +236,7 @@ public class U {
         } return dst;
     }
 
-    public static float[][] sharpen_array(float[][] src) {
+    public static float[][] arraySharpen(float[][] src) {
         float[] kernel = {
                 -0.250f, -1.000f, -0.250f,
                 -1.000f,  6.0000f,-1.000f,
@@ -245,14 +266,47 @@ public class U {
 
     }
 
-    public static float[][] smoothen_array(float[][] src, int n) {
-        float[][] dst = src;
+    public static int[][] arraySmoothen(int[][] src) {
+        return arraySmoothen(src,1);
+    }
+
+    public static int[][] arraySmoothen(int[][] src, int n) {
+        int rows = src.length;
+        int cols = src[0].length;
+        int[][] tmp0 = new int[rows][cols];
+        int[][] tmp1 = src;
+        int[][] dst = tmp0;
+        int[][] adj = new int[][] {
+                {-1, 1},{ 0, 1},{ 1, 1},
+                {-1, 0},{ 0, 0},{ 1, 0},
+                {-1,-1},{ 0,-1},{ 1,-1}};
+        int[] frequency = new int[9];
         for (int i = 0; i < n; i++) {
-            dst = smoothen_array(dst);
+            for (int r = 0; r < rows; r++) {
+                for (int c = 0; c < cols; c++) {
+                    int acc = 0;
+                    for (int[] j : adj) {
+                        int nx = c + j[0];
+                        int ny = r + j[1];
+                        if (!(nx < 0 || nx == cols || ny < 0 || ny == rows))
+                            frequency[acc++] = tmp1[ny][nx];
+                    } tmp0[r][c] = mostFrequent(frequency,acc);
+                }
+            }
+            dst = tmp0;
+            tmp0 = tmp1;
+            tmp1 = dst;
         } return dst;
     }
 
-    public static float[][] smoothen_array(float[][] src) {
+    public static float[][] arraySmoothen(float[][] src, int n) {
+        float[][] dst = src;
+        for (int i = 0; i < n; i++) {
+            dst = arraySmoothen(dst);
+        } return dst;
+    }
+
+    public static float[][] arraySmoothen(float[][] src) {
         float[] kernel = new float[] {
                 0.0778f,0.1233f,0.0778f,
                 0.1233f,0.1953f,0.1233f,
@@ -282,12 +336,12 @@ public class U {
     }
 
 
-    public static float[][] scale_array(float[][] src, int target_size) {
-        return scale_array(src,target_size,target_size);
+    public static float[][] arrayScale(float[][] src, int target_size) {
+        return arrayScale(src,target_size,target_size);
     }
 
 
-    public static float[][] scale_array(float[][] src, int rows, int cols) {
+    public static float[][] arrayScale(float[][] src, int rows, int cols) {
         Noise.Sampler2D sampler = new Noise.Sampler2D(src);
         float[][] dst = new float[rows][cols];
         for (int r = 0; r < rows; r++) {
@@ -300,11 +354,11 @@ public class U {
     }
 
 
-    public static int[][] scale_array(int[][] src, int target_size) {
-        return scale_array(src,target_size,target_size);
+    public static int[][] arrayScale(int[][] src, int target_size) {
+        return arrayScale(src,target_size,target_size);
     }
 
-    public static int[][] scale_array(int[][] src, int rows, int cols) {
+    public static int[][] arrayScale(int[][] src, int rows, int cols) {
         int src_rows = src.length;
         int src_cols = src[0].length;
         int[][] dst = new int[rows][cols];
@@ -319,38 +373,7 @@ public class U {
         } return dst;
     }
 
-    public static int[][] smoothen_array(int[][] src) {
-        return smoothen_array(src,1);
-    }
 
-    public static int[][] smoothen_array(int[][] src, int n) {
-        int rows = src.length;
-        int cols = src[0].length;
-        int[][] tmp0 = new int[rows][cols];
-        int[][] tmp1 = src;
-        int[][] dst = tmp0;
-        int[][] adj = new int[][] {
-                {-1, 1},{ 0, 1},{ 1, 1},
-                {-1, 0},{ 0, 0},{ 1, 0},
-                {-1,-1},{ 0,-1},{ 1,-1}};
-        int[] frequency = new int[9];
-        for (int i = 0; i < n; i++) {
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    int acc = 0;
-                    for (int[] j : adj) {
-                        int nx = c + j[0];
-                        int ny = r + j[1];
-                        if (!(nx < 0 || nx == cols || ny < 0 || ny == rows))
-                            frequency[acc++] = tmp1[ny][nx];
-                    } tmp0[r][c] = most_frequent(frequency,acc);
-                }
-            }
-            dst = tmp0;
-            tmp0 = tmp1;
-            tmp1 = dst;
-        } return dst;
-    }
 
     public static void interleaveBuffers(ByteBuffer src1, int channels1, ByteBuffer src2, int channels2, ByteBuffer dst, int dst_size) {
         int src1_index = 0, src2_index = 0, dst_index = 0;
@@ -363,7 +386,7 @@ public class U {
         }
     }
 
-    private static int most_frequent(int[] arr, int n)  {
+    private static int mostFrequent(int[] arr, int n)  {
         int max_count = 0;
         int most_frequent = 0;
         for (int i = 0; i < n; i++) {
@@ -385,16 +408,16 @@ public class U {
      * @param rng random generator
      * @return grown array
      */
-    public static int[][] grow_biomes(int[][] src, int target_size, Rand rng) {
+    public static int[][] growBiomes(int[][] src, int target_size, Rand rng) {
         if (src[0].length != src.length) {
             throw new IllegalArgumentException("argument array must be of size: n * n");
-        } int[][] dst = scale_array(src, next_valid_growing_size(src.length));
+        } int[][] dst = arrayScale(src, next_valid_growing_size(src.length));
         while(dst.length < target_size) {
-            dst = grow_biomes(dst,rng);
-        } return scale_array(dst,target_size);
+            dst = growBiomes(dst,rng);
+        } return arrayScale(dst,target_size);
     }
 
-    private static int[][] grow_biomes(int[][] src, Rand rng) {
+    private static int[][] growBiomes(int[][] src, Rand rng) {
         int[][] dst = prepare_for_growth(src);
         int rows = dst.length;
         int cols = dst[0].length;

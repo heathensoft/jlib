@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.gui.dev;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.joml.Vector2f;
@@ -108,6 +109,7 @@ public class ColorPicker implements Disposable {
 
     public Texture hue_slider_texture() { return hue_slider_buffer.texture(0); }
 
+    @SuppressWarnings("SuspiciousNameCombination")
     public float pickerPositionX() { return hsv.y; }
 
     public float pickerPositionY() { return hsv.z; }

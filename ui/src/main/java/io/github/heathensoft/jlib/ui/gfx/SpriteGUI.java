@@ -1,12 +1,11 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Framebuffer;
 import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
-import io.github.heathensoft.jlib.ui.GUI;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
@@ -44,11 +43,18 @@ public class SpriteGUI {
         this.texture = texture;
     }
 
+    private SpriteGUI(Texture texture, TextureRegion region) {
+        if (texture == null) throw new RuntimeException("ImageGUI Null Texture");
+        this.scale = new Vector2f(1,1);
+        this.texture = texture;
+        this.region = region;
+    }
+
     public void previewStretch(RendererGUI renderer, Rectanglef quad, float glow, int tint, int id) {
         renderer.drawElement(texture,region,quad,tint,id,glow);
     }
 
-    public void previewFit(RendererGUI renderer, Rectanglef quad, float glow, int tint, int id) {
+    public void previewFit(RendererGUI renderer, Rectanglef quad, float glow, int tint, int id) { // these should move out
         float box_width = quad.lengthX();
         float box_height = quad.lengthY();
         float aspect_ratio = width() / height();
@@ -59,7 +65,7 @@ public class SpriteGUI {
             aspect_width = aspect_height * aspect_ratio;
         } float x = (box_width / 2f) - (aspect_width / 2f) + quad.minX;
         float y = (box_height / 2f) - (aspect_height / 2f) + quad.minY;
-        quad = MathLib.rectf(x,y,x+aspect_width,y+aspect_height);
+        quad = U.rectf(x,y,x+aspect_width,y+aspect_height);
         renderer.drawElement(texture,region,quad,tint,id,glow);
     }
 
@@ -70,7 +76,7 @@ public class SpriteGUI {
         float center_y = offset.y * scale + quad.minY + box_h / 2f;
         float width = width() * scale;
         float height = height() * scale;
-        Rectanglef rect = MathLib.rectf();
+        Rectanglef rect = U.rectf();
         rect.minX = center_x - width * 0.5f;
         rect.minY = center_y - height * 0.5f;
         rect.maxX = rect.minX + width;
@@ -104,10 +110,12 @@ public class SpriteGUI {
 
     public Texture texture() { return texture; }
 
-    public SpriteGUI copy() { // copy properties as well
-        SpriteGUI copy = new SpriteGUI(texture);
-        copy.region.set(region.x(), region.y(), region.w(), region.h());
-        return copy;
+    public SpriteGUI copy(boolean copy_properties) {
+        SpriteGUI copy = new SpriteGUI(texture,region.copy());
+        if (copy_properties) {
+            copy.rotation = rotation;
+            copy.scale.set(scale);
+        } return copy;
     }
 
     public TextureRegion regionCopy() { return region.copy(); }
@@ -116,33 +124,30 @@ public class SpriteGUI {
 
     public Vector2f scale(Vector2f dst) { return dst.set(scale); }
 
-    public Rectanglef bounds(Rectanglef dst, Vector2f center) {
+    public Rectanglef bounds(Rectanglef dst, boolean rotation) {
 
         return dst;
     }
 
     public Texture createTexture(boolean allocate_mipmaps) throws Exception {
-        Texture texture;
-        try { GUI.renderer.pause(); // do external instead
-            int width = round(width());
-            int height = round(height());
-            Framebuffer framebuffer = new Framebuffer(width,height);
-            Framebuffer.bind(framebuffer);
-            texture = Texture.generate2D(width,height);
-            texture.bindToActiveSlot();
-            texture.allocate(this.texture.format(),allocate_mipmaps);
-            texture.nearest(); texture.repeat();
-            Framebuffer.attachColor(texture,0,false);
-            Framebuffer.drawBuffer(0);
-            Framebuffer.checkStatus();
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_BLEND);
-            Framebuffer.viewport();
-            Vector4f uv = region.getUVs(MathLib.vec4());
-            ShaderProgram.texturePass(this.texture,uv);
-            Disposable.dispose(framebuffer);
-        } finally { GUI.renderer.resume();
-        } return texture;
+        int width = round(width());
+        int height = round(height());
+        Framebuffer framebuffer = new Framebuffer(width,height);
+        Framebuffer.bind(framebuffer);
+        Texture texture = Texture.generate2D(width,height);
+        texture.bindToActiveSlot();
+        texture.allocate(this.texture.format(),allocate_mipmaps);
+        texture.nearest(); texture.repeat();
+        Framebuffer.attachColor(texture,0,false);
+        Framebuffer.drawBuffer(0);
+        Framebuffer.checkStatus();
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
+        Framebuffer.viewport();
+        Vector4f uv = region.getUVs(U.vec4());
+        ShaderProgram.texturePass(this.texture,uv);
+        Disposable.dispose(framebuffer);
+        return texture;
     }
 
     public void setScale(float x, float y) {

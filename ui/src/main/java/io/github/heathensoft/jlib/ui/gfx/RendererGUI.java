@@ -1,8 +1,9 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.ui.text.Text;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
 import org.joml.Vector2f;
@@ -172,7 +173,7 @@ public class RendererGUI implements Disposable {
     public void drawText(Text text, Rectanglef bounds, float y_offset, int font, float padding, float size, boolean wrap, boolean show_cursor) { drawText(text,bounds,y_offset,font,padding,size,0,wrap,show_cursor); }
     public void drawText(Text text, Rectanglef bounds, float y_offset, int font, float padding, float size, float glow, boolean wrap, boolean show_cursor) {
         if (rendering && !paused && size > 1f && !text.isBlank()) {
-            Rectanglef r = MathLib.rectf(
+            Rectanglef r = U.rectf(
                     bounds.minX + padding,
                     bounds.minY + padding,
                     bounds.maxX - padding,
@@ -378,7 +379,7 @@ public class RendererGUI implements Disposable {
     public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id, float glow) { drawElement(diffuse,  quad, abgr, id, glow, true); }
     public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
         if (rendering && !paused && quad.isValid()) {
-            Vector4f region = MathLib.vec4(0,0,1,1);
+            Vector4f region = U.vec4(0,0,1,1);
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -665,7 +666,7 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-            } Rectanglef rect = MathLib.rectf().set(scroll_bar);
+            } Rectanglef rect = U.rectf().set(scroll_bar);
             float sb_length_x = scroll_bar.lengthX();
             float sb_length_y = scroll_bar.lengthY();
             if (sb_length_x < sb_length_y) {
@@ -701,7 +702,7 @@ public class RendererGUI implements Disposable {
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id) { drawOutline(quad,thickness,abgr,id,0f,true); }
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, boolean invisible_id) { drawOutline(quad, thickness, abgr, id,0,invisible_id); }
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, float glow, boolean invisible_id) {
-        Rectanglef outline = MathLib.rectf().set(quad);
+        Rectanglef outline = U.rectf().set(quad);
         outline.minY = quad.maxY - thickness;
         drawElement(outline, abgr, id, glow);
         outline.minY = quad.minY;
@@ -839,7 +840,7 @@ public class RendererGUI implements Disposable {
     public void flush() {
         if (rendering) {
             if (active_batch == TEXT_BATCH) {
-                textBatch.flush();;
+                textBatch.flush();
             } else if (active_batch == SPRITE_BATCH) {
                 spriteBatch.flush();
             }

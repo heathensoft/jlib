@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;

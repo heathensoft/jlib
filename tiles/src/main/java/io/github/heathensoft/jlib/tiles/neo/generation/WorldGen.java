@@ -12,8 +12,7 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.Color;
 
 
 import java.util.ArrayList;
@@ -522,7 +521,7 @@ public class WorldGen {
                     }
                 }
             }
-        }return U.smoothen_array(elevation,4);
+        }return U.arraySmoothen(elevation,4);
     }
 
     private float[][] apply_rivers(float[][] elevation, Rand rng) {
@@ -560,7 +559,6 @@ public class WorldGen {
         int cols = elevation[0].length;
         Area area = new Area(0,0,cols-1,rows-1);
         if (area.contains(start) && area.contains(end) && distance > 0) {
-            int[][] adjacent = U.adj_8;
             int initial_cap = U.nextPowerOfTwo(distance * 4);
             HeapSet<AStarNode> open = new HeapSet<>(initial_cap);
             Set<AStarNode> closed = new HashSet<>(initial_cap);
@@ -575,7 +573,7 @@ public class WorldGen {
                     return new NodeChain(current_node).retracePath(false);
                 } closed.add(current_node);
                 for (int i = 0; i < 8; i++) {
-                    int[] offset = adjacent[i];
+                    int[] offset = U.adj_8[i];
                     int adjacent_x = current_node.x + offset[0];
                     int adjacent_y = current_node.y + offset[1];
                     if (area.contains(adjacent_x,adjacent_y)) {
@@ -642,7 +640,7 @@ public class WorldGen {
         WFC wfc = new WFC(WFC_LANDMASS_TRAINING_DATA,rng.next_int(),true);
         int[][] wfc_result = new int[17][17]; // 5, 9, 17, 33 etc. are sweet spots
         if (wfc.generate(wfc_result,1000,false)) {
-            return grow_biomes(wfc_result, WORLD_MAP_SIZE,rng);
+            return growBiomes(wfc_result, WORLD_MAP_SIZE,rng);
         } else throw new Exception("WFC Failed to generate"); // Should never happen
     }
 
@@ -764,7 +762,7 @@ public class WorldGen {
             case MID -> v = .50f;
             case HIGH -> v = .75f;
         }
-        return Color.rgb_to_intBits(Color.hsv_to_rgb(MathLib.vec4().set(h,s,v,1.0f)));
+        return Color.rgb_to_intBits(Color.hsv_to_rgb(U.vec4().set(h,s,v,1.0f)));
     }
 
     private int get_region_color(int region_data) {

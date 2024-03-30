@@ -71,9 +71,9 @@ public class Box implements Interactable {
     
     public boolean isBuilt() { return built; }
 
-    public boolean isRestoredX() { return U.float_equals(current_width,desired_width,0.5f); }
+    public boolean isRestoredX() { return U.floatEquals(current_width,desired_width,0.5f); }
 
-    public boolean isRestoredY() { return U.float_equals(current_height,desired_height,0.5f); }
+    public boolean isRestoredY() { return U.floatEquals(current_height,desired_height,0.5f); }
 
     public boolean isRestored() { return isRestoredX() && isRestoredY(); }
 

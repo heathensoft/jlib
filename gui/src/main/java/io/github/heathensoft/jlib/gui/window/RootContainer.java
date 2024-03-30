@@ -1,8 +1,8 @@
 package io.github.heathensoft.jlib.gui.window;
 
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.GUI;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.CursorObjects;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector2f;
@@ -68,7 +68,7 @@ public class RootContainer extends BoxContainer {
         final int BOTTOM = 8;
         final int LEFT = 16;
 
-        Vector2f mouse_position = context.mouse_position(MathLib.vec2());
+        Vector2f mouse_position = context.mouse_position(U.vec2());
         final float mouse_x = mouse_position.x;
         final float mouse_y = mouse_position.y;
         final float width = currentSize.width();
@@ -121,7 +121,7 @@ public class RootContainer extends BoxContainer {
 
                 switch (drag_area) {
                     case CENTER -> {
-                        Vector2f drag_vector = context.mouse_drag_vector(MathLib.vec2(),Mouse.LEFT);
+                        Vector2f drag_vector = context.mouse_drag_vector(U.vec2(),Mouse.LEFT);
                         if (grabbed) context.move(drag_vector);
                     } case TOP -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                         if (grabbed) context.dragTop();

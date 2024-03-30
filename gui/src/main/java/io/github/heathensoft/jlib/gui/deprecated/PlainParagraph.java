@@ -141,7 +141,7 @@ public class PlainParagraph extends Paragraph {
             } else if (p == index) {
                 // Atp. We are in the space between two words.
                 // We are not between a word and '\n' (EOL)
-                Word spliced = new Word(U.splice(w,words[i+1].get()));
+                Word spliced = new Word(U.arraySplice(w,words[i+1].get()));
                 words[i] = spliced;
                 words[i+1] = null;
                 Word[] new_words = new Word[words.length - 1];

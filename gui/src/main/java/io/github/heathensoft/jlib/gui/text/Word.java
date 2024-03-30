@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.gui.text;
 
 
 import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.common.utils.Color;
 import org.joml.Vector4f;
 
 import java.nio.charset.StandardCharsets;

@@ -3,7 +3,6 @@ package io.github.heathensoft.jlib.tiles.neo;
 import io.github.heathensoft.jlib.ai.pathfinding.AStarGrid;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.storage.primitive.BitSet;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import org.joml.primitives.Rectanglef;
 import org.joml.primitives.Rectanglei;
 
@@ -127,7 +126,7 @@ public abstract class Tilemap implements AStarGrid, Disposable {
         }
 
         { // UPDATE CHUNKS IN VIEW (IF VIEW HAS CHANGED)
-            Rectanglei view = MathLib.recti(
+            Rectanglei view = new Rectanglei(
                     floor(orthographic_view.minX), floor(orthographic_view.minY),
                     ceil(orthographic_view.maxX), ceil(orthographic_view.maxY));
 
@@ -395,7 +394,7 @@ public abstract class Tilemap implements AStarGrid, Disposable {
 
     private void query_chunks_in_view(ByteBuffer dst, Rectanglei view) {
         int size = map_size.length_tiles;
-        Rectanglei quad = MathLib.recti(0,0,size,size);
+        Rectanglei quad = new Rectanglei(0,0,size,size);
         if (view.intersectsRectangle(quad)) query_chunks_in_view(dst,view,quad);
     }
 

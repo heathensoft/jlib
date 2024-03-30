@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.ui.GUI;
 import org.joml.Vector4f;
@@ -38,7 +39,7 @@ public class SpriteBatchGUI extends BatchGUI {
     private final SamplerArray samplersDiffuse;
     private final SamplerArray samplersNormals;
 
-    SpriteBatchGUI(int capacity, int width, int height) throws Exception {
+    SpriteBatchGUI(int capacity, int width, int height) {
         int vertex_size = 6;
         int sprite_size = vertex_size * 4;
         int vertex_size_bytes = vertex_size * Float.BYTES;

@@ -5,17 +5,16 @@ import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.window.Box;
 import io.github.heathensoft.jlib.gui.window.WindowGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureAtlas;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector2f;
 import org.joml.primitives.Rectanglef;
 
 import static io.github.heathensoft.jlib.common.utils.U.clamp;
-import static io.github.heathensoft.jlib.common.utils.U.quadratic_erase_out;
+import static io.github.heathensoft.jlib.common.utils.U.quadraticEraseOut;
 import static java.lang.Math.max;
 
 /**
@@ -55,16 +54,15 @@ public class Slider extends Box {
         float slider_circle_radius = slider_height / 2f;
         float slider_rect_x = x + slider_circle_radius;
         float slider_rect_y = y - (bounds_height / 2f) + (slider_height / 2f);
-        Rectanglef rect = MathLib.rectf();
+        Rectanglef rect = U.rectf();
         TextureAtlas default_icons = GUI.default_icons;
         Texture icons_diffuse_texture = default_icons.texture(0);
         TextureRegion circle_region = default_icons.getRegion(GUI.icon_default_circle);
         if (iPressed(Mouse.LEFT)) { context.focus();
-            Vector2f mouse = context.mouse_position(MathLib.vec2());
-            float min = slider_rect_x;
+            Vector2f mouse = context.mouse_position(U.vec2());
             float max = slider_rect_x + slider_width;
-            float mouse_x = U.clamp(mouse.x,min,max);
-            current_value = U.remap(mouse_x,min,max,0,1);
+            float mouse_x = U.clamp(mouse.x, slider_rect_x,max);
+            current_value = U.remap(mouse_x, slider_rect_x,max,0,1);
         }
 
         if (iPressed(Mouse.LEFT) || (iHovered() &! iAnyInteractablePressed())) { // Hot
@@ -86,11 +84,11 @@ public class Slider extends Box {
             } else { float t = 0f;
                 if (iPressed(Mouse.LEFT)) { t = iPressedDuration();
                 } if (iHovered()) { t = max(t,iHoveredDuration());
-                } t = quadratic_erase_out(clamp(t * 4.0f));
+                } t = quadraticEraseOut(clamp(t * 4.0f));
                 int color_slider_active = Color.rgb_to_intBits(Color.lerp(
                         GUI.color_slider_inactive,
                         GUI.color_slider_active,
-                        t, MathLib.vec4()
+                        t, U.vec4()
                 ));
 
                 if (current_value >= 1) {

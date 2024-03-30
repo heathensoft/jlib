@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import static io.github.heathensoft.jlib.lwjgl.gfx.Color.*;
+import static io.github.heathensoft.jlib.common.utils.Color.*;
 import static org.lwjgl.opengl.GL11.GL_REPEAT;
 
 /**

@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.gui.text;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.gui.gfx.TextBatchGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.Color;
 import org.joml.Vector4f;
 
 import java.util.Iterator;
@@ -311,7 +311,7 @@ public class Paragraph implements Iterable<Word> {
             float glow = clamp(custom.glow());
             info_bits |= ((round(glow * 127.0f) & 0x7F) << 13);
         }
-        Vector4f color_rgb = MathLib.vec4();
+        Vector4f color_rgb = U.vec4();
         Vector4f prev_color = null;
         y -= fonts.ascent() * scale;
         float color_floatBits = 0;
@@ -352,7 +352,7 @@ public class Paragraph implements Iterable<Word> {
                 float glow = clamp(custom.glow());
                 info_bits |= ((round(glow * 127.0f) & 0x7F) << 13);
             }
-            Vector4f color_rgb = MathLib.vec4();
+            Vector4f color_rgb = U.vec4();
             Vector4f prev_color = null;
             float color_floatBits = 0;
             for (Word word : words) {

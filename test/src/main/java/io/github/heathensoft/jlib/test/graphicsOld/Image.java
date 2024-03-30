@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.test.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.U;
 import org.joml.Math;
 import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
@@ -53,11 +53,9 @@ public class Image implements Disposable {
         if (notDisposed()) {
             final ByteBuffer b = data;
             final int w = width;
-            final int h = height;
-            final int c = components;
-            if (c == 4) {
+            if (components == 4) {
                 int stride = w * 4;
-                for (int y = 0; y < h; y++) {
+                for (int y = 0; y < height; y++) {
                     for (int x = 0; x < w; x++) {
                         int i = y * stride + x * 4;
                         float alpha = (b.get(i + 3) & 0xFF) / 255.0f;
@@ -87,16 +85,16 @@ public class Image implements Disposable {
                         int r = (data.get(i) & 0xFF);
                         int g = (data.get(i + 1) & 0xFF);
                         int b = (data.get(i + 2) & 0xFF);
-                        Vector3f color = MathLib.vec3();
+                        Vector3f color = U.vec3();
                         color.set(r * n,g * n,b * n);
-                        Vector3f normal = MathLib.vec3();
+                        Vector3f normal = U.vec3();
                         normal.x = (color.x - 0.5f) * 2f;
                         normal.y = (color.y - 0.5f) * 2f;
                         normal.z = (color.z - 0.5f) * 2f;
                         float angle = flatSurface.angle(normal);
                         if (angle > maxAngle) {
                             float rotation = maxAngle - angle;
-                            Vector3f cross = MathLib.vec3();
+                            Vector3f cross = U.vec3();
                             flatSurface.cross(normal,cross);
                             normal.rotateAxis(rotation,cross.x,cross.y,cross.z);
                             normal.normalize();

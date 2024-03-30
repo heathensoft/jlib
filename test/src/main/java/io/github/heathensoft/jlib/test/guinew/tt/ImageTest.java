@@ -2,11 +2,7 @@ package io.github.heathensoft.jlib.test.guinew.tt;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
-import io.github.heathensoft.jlib.lwjgl.gfx.TextureAtlas;
-import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.ui.GUI;
@@ -20,7 +16,6 @@ import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 import org.tinylog.Logger;
 
-import static org.lwjgl.opengl.GL11.GL_NEAREST;
 
 /**
  * @author Frederik Dahl
@@ -30,9 +25,7 @@ import static org.lwjgl.opengl.GL11.GL_NEAREST;
 
 public class ImageTest extends RootContainer {
 
-    //box_window_border_corner_top_left_10px
-    //box_window_border_edge_top_10px
-    //
+
     private Texture texture;
     private Texture region_texture;
     private final static String BORDER_EDGE_TOP = "box_window_border_edge_top_10px";
@@ -50,6 +43,22 @@ public class ImageTest extends RootContainer {
         }
 
 
+        /*
+        if (texture != null) {
+            try {
+                Texture texture = Texture.generateTilemapBlendTexture(128);
+                Bitmap bitmap = texture.bitmap(0);
+                texture.dispose();
+                bitmap.compressToDisk("tile_blend.png");
+                bitmap.dispose();
+            } catch (Exception e) {
+                Logger.error(e);
+            }
+        }
+
+         */
+
+
         VBoxContainer root_container = new VBoxContainer();
         NavBar nav_bar = new NavBar(0xFF232323,18);
         HBoxContainer image_container = new HBoxContainer();
@@ -62,9 +71,10 @@ public class ImageTest extends RootContainer {
         root_container.setInnerSpacing(3);
 
         ImageBox1 box1 = new ImageBox1(new SpriteGUI(texture),100,100);
-        box1.image.setScale(0.125f,0.125f);
+        box1.image.setScale(0.25f,0.25f);
 
         try {
+
             region_texture = box1.image.createTexture(false);
 
         } catch (Exception e) {
@@ -107,7 +117,7 @@ public class ImageTest extends RootContainer {
     protected void onWindowPrepare(BoxWindow window, float dt) { }
 
     protected void renderContainer(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-        Rectanglef quad = bounds(MathLib.rectf(),x,y);
+        Rectanglef quad = bounds(U.rectf(),x,y);
         quad.minX += border_padding;
         quad.maxX -= border_padding;
         quad.minY += border_padding;
@@ -129,7 +139,7 @@ public class ImageTest extends RootContainer {
                 Texture texture = atlas.texture(0);
                 TextureRegion edge_top = atlas.getRegion(BORDER_EDGE_TOP);
                 TextureRegion corner_top_left = atlas.getRegion(BORDER_CORNER_TOP_LEFT);
-                Rectanglef rect = MathLib.rectf();
+                Rectanglef rect = U.rectf();
                 rect.maxY = bounds.maxY;
                 rect.minY = rect.maxY - border_padding;
                 rect.minX = bounds.minX;
@@ -187,9 +197,9 @@ public class ImageTest extends RootContainer {
 
         protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
             image.rotateRadians((float) ((Math.PI / 2) * dt));
-            Rectanglef bounds = bounds(MathLib.rectf(),x,y);
+            Rectanglef bounds = bounds(U.rectf(),x,y);
             if (iGrabbed(Mouse.LEFT)) {
-                Vector2f drag_vector = MathLib.vec2();
+                Vector2f drag_vector = U.vec2();
                 GUI.mouse_drag_vector(drag_vector,Mouse.LEFT).div((float) Math.pow(2,(int)zoom));
                 image_offset.set(drag_origin).add(drag_vector.x,drag_vector.y);
             } else if (iJustPressed(Mouse.LEFT)) {
@@ -226,7 +236,7 @@ public class ImageTest extends RootContainer {
         }
 
         protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-            image.render(window,renderer,bounds(MathLib.rectf(),x,y),0,0,dt);
+            image.render(window,renderer,bounds(U.rectf(),x,y),0,0,dt);
         }
 
         public void dispose() {

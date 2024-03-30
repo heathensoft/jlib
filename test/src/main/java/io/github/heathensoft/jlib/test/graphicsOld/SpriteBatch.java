@@ -1,14 +1,14 @@
 package io.github.heathensoft.jlib.test.graphicsOld;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.common.utils.Color;
 import org.joml.Math;
 import org.lwjgl.system.MemoryUtil;
 import org.tinylog.Logger;
 
 import java.nio.FloatBuffer;
 
-import static io.github.heathensoft.jlib.lwjgl.gfx.Sprite.*;
+import static io.github.heathensoft.jlib.gui.deprecated.SpriteOld.*;
 
 
 /**
@@ -231,20 +231,18 @@ public class SpriteBatch implements Disposable {
                 y2 = localYCos + localXSin + worldOriginY;
                 x3 = localX2Cos - localYSin + worldOriginX;
                 y3 = localYCos + localX2Sin + worldOriginY;
-                x4 = x1 + (x3 - x2);
-                y4 = y3 - (y2 - y1);
+                //x4 = x1 + (x3 - x2);
+                //y4 = y3 - (y2 - y1);
             } else {
-                x1 = localX + worldOriginX;
+                //x1 = localX + worldOriginX;
                 y1 = localY + worldOriginY;
                 x2 = localX2 + worldOriginX;
                 y2 = localY2 + worldOriginY;
 
-                // TODO: !!!!!!!!!!!!!!!!!
-
-                x3 = x2;
-                y3 = y1;
-                x4 = x2;
-                y4 = y2;
+                //x3 = x2;
+                //y3 = y1;
+                //x4 = x2;
+                //y4 = y2;
             }
             vertexBuffer
                     .put(x).put(y2).put(u).put(v).put(color).put(id)

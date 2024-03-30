@@ -1,8 +1,10 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.GLContext;
+import org.joml.Math;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -248,6 +250,25 @@ public class Framebuffer implements Disposable {
         }
     }
 
+    /** @param level mipmap level */
+    public static void viewport(int level) {
+        if (drawBuffer == null) {
+            Logger.warn("called mipmap viewport for default framebuffer");
+            Engine.get().window().viewport().refresh();
+        } else { int mipmap_max;
+            int w = drawBuffer.width;
+            int h = drawBuffer.height;
+            mipmap_max = U.log2(Math.min(w,h)); // 0 to max
+            int l = Math.min(mipmap_max,Math.max(0,level));
+            if (l != level) {
+                Logger.warn("drawBuffer mipmap level requested: {} , clamped to: {}",level,l);
+            }  w = w / (int)(java.lang.Math.pow(2,l));
+            h = h / (int)(java.lang.Math.pow(2,l));
+            Engine.get().window().viewport().set(w,h);
+        }
+
+    }
+
     public static void viewport() {
         if (usingDefaultDrawBuffer()) {
             Engine.get().window().viewport().refresh();
@@ -415,7 +436,7 @@ public class Framebuffer implements Disposable {
             RGB_8_FORMAT = (red.get(0) == 8 && gre.get(0) == 8 && blu.get(0) == 8);
             GLContext.checkError();
         } if (RGB_8_FORMAT) {
-            int width = 0, height = 0;
+            int width, height;
             try (MemoryStack stack = MemoryStack.stackPush()){
                 IntBuffer w = stack.mallocInt(1);
                 IntBuffer h = stack.mallocInt(1);
@@ -472,8 +493,8 @@ public class Framebuffer implements Disposable {
     public void dispose() {
         if (this == readBuffer) bindRead(null);
         if (this == drawBuffer) bindDraw(null);
-        for (int i = 0; i < colorAttachments.length; i++) {
-            Disposable.dispose(colorAttachments[i]);
+        for (ColorAttachment colorAttachment : colorAttachments) {
+            Disposable.dispose(colorAttachment);
         } Disposable.dispose(depthStencilAttachment);
         Disposable.dispose(stencilAttachment);
         Disposable.dispose(depthAttachment);

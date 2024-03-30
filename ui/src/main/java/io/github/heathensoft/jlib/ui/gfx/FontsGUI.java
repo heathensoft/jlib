@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.ui.gfx;
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import io.github.heathensoft.jlib.ui.text.Paragraph;
 import io.github.heathensoft.jlib.ui.text.Word;
@@ -345,14 +345,14 @@ public class FontsGUI implements Disposable {
     }
 
     public float colorFloatBits(Paragraph.Type pType, Word.Type wType, float alpha) {
-        if (last_pType == pType && last_wType == wType && U.float_equals(last_alpha,alpha,1e-4)) {
+        if (last_pType == pType && last_wType == wType && U.floatEquals(last_alpha,alpha,1e-4)) {
             return last_color_float_bits;
         } last_pType = pType;
         last_wType = wType;
         last_alpha = alpha;
         Vector4f rgb = colorRGB(pType,wType);
         if (alpha < 1.0f) {
-            rgb = MathLib.vec4(rgb);
+            rgb = U.vec4(rgb);
             rgb.w *= alpha;
         } last_color_float_bits = Color.rgb_to_floatBits(rgb);
         return last_color_float_bits;
@@ -483,7 +483,7 @@ public class FontsGUI implements Disposable {
         public String toString() { return Character.toString(character); }
         public void get(FloatBuffer buffer) {
             buffer.put(u).put(v).put(u2).put(v2);
-            buffer.put(width).put(height);
+            buffer.put(w).put(h);
             buffer.put(offsetX).put(offsetY);
         }
     }

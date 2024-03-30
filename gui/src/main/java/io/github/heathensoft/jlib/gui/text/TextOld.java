@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.gui.text;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.gui.gfx.TextBatchGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.Color;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 
@@ -82,7 +82,7 @@ public class TextOld implements RenderableText, Iterable<Paragraph> {
         float line_height = line_gap + ascent + descent;
         int shared_bits = (fonts.currentFont() << 29);
         shared_bits |= (((round(font_size) - 1) & 0xFF) << 21);
-        Vector4f rgb = MathLib.vec4();
+        Vector4f rgb = U.vec4();
         float color_alpha;
         float color_float_bits;
         float y = bounds.maxY;

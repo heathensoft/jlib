@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.gui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;

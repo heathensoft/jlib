@@ -303,7 +303,7 @@ public class FontsGUI implements Disposable {
         public String toString() { return Character.toString(character); }
         public void get(FloatBuffer buffer) {
             buffer.put(u).put(v).put(u2).put(v2);
-            buffer.put(width).put(height);
+            buffer.put(w).put(h);
             buffer.put(offsetX).put(offsetY);
         }
     }

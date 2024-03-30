@@ -1,11 +1,11 @@
 package io.github.heathensoft.jlib.gui.dev;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.text.TextOld;
 import io.github.heathensoft.jlib.gui.window.Box;
 import io.github.heathensoft.jlib.gui.window.WindowGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.Color;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 
@@ -33,13 +33,13 @@ public class TextBox extends Box {
 
     public void render(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
         int id = use_parent_id ? parent_id : 0;
-        Rectanglef bounds = bounds(MathLib.rectf(),x,y);
+        Rectanglef bounds = bounds(U.rectf(),x,y);
         renderer.drawElement(bounds, Color.rgb_to_intBits(background_color),id);
     }
 
     public void renderText(RendererGUI renderer, float x, float y) {
         if (text != null && !text.isBlank()) {
-            Rectanglef bounds = bounds(MathLib.rectf(),x,y);
+            Rectanglef bounds = bounds(U.rectf(),x,y);
             if (padding > 0) {
                 bounds.minX += padding;
                 bounds.minY += padding;

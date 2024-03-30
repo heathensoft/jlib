@@ -1,5 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -97,7 +98,7 @@ public class Camera2D {
     }
     
     public void unProject(Vector2f ndc) {
-        Vector3f v3 = MathLib.vec3(ndc.x,ndc.y,0);
+        Vector3f v3 = U.vec3(ndc.x,ndc.y,0);
         v3.mulProject(INV);
         ndc.set(v3.x,v3.y);
     }

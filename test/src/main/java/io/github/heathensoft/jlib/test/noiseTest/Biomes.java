@@ -1,7 +1,9 @@
 package io.github.heathensoft.jlib.test.noiseTest;
 
+import io.github.heathensoft.jlib.common.utils.U;
+
 import static io.github.heathensoft.jlib.common.utils.Rand.white_noise;
-import static io.github.heathensoft.jlib.common.utils.U.scale_array;
+import static io.github.heathensoft.jlib.common.utils.U.arrayScale;
 
 /**
  * @author Frederik Dahl
@@ -14,11 +16,11 @@ public class Biomes {
 
     public static int[][] grow(int[][] src, int pow_2, int[] noise_position, int seed) {
         if (src[0].length != src.length) throw new IllegalArgumentException("array must be of size: n * n");
-        int[][] dst = scale_array(src,next_valid_sample_size(src.length));
+        int[][] dst = U.arrayScale(src,next_valid_sample_size(src.length));
         int target_size = (int)Math.pow(2,pow_2);
         while (dst.length < target_size) {
             dst = grow(dst,noise_position,seed);
-        } return scale_array(dst,target_size);
+        } return U.arrayScale(dst,target_size);
     }
 
     public static int[][] grow(int[][] src, int[] noise_position, int seed) {

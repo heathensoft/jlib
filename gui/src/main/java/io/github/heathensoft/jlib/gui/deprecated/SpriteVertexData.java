@@ -1,7 +1,9 @@
-package io.github.heathensoft.jlib.lwjgl.gfx;
+package io.github.heathensoft.jlib.gui.deprecated;
 
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
+import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
 
 import java.nio.FloatBuffer;
 
@@ -29,20 +31,20 @@ class SpriteVertexData implements Disposable {
         vertexData = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
         vao = new Vao().bind();
         indices.bind();
-        indices.bufferData(Sprite.generateIndices(sprites));
+        indices.bufferData(SpriteOld.generateIndices(sprites));
         vertexData.bind();
-        vertexData.bufferData((long) Sprite.SIZE * sprites * Float.BYTES);
+        vertexData.bufferData((long) SpriteOld.SIZE * sprites * Float.BYTES);
         int pointer = 0;
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, Sprite.VERTEX_SIZE * Float.BYTES, pointer);
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, SpriteOld.VERTEX_SIZE * Float.BYTES, pointer);
         glEnableVertexAttribArray(0);
-        pointer += Sprite.POS_SIZE * Float.BYTES;
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, Sprite.VERTEX_SIZE * Float.BYTES, pointer);
+        pointer += SpriteOld.POS_SIZE * Float.BYTES;
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, SpriteOld.VERTEX_SIZE * Float.BYTES, pointer);
         glEnableVertexAttribArray(1);
-        pointer += Sprite.UV_SIZE * Float.BYTES;
-        glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, true, Sprite.VERTEX_SIZE * Float.BYTES, pointer);
+        pointer += SpriteOld.UV_SIZE * Float.BYTES;
+        glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, true, SpriteOld.VERTEX_SIZE * Float.BYTES, pointer);
         glEnableVertexAttribArray(2);
-        pointer += Sprite.COLOR_SIZE * Float.BYTES;
-        glVertexAttribPointer(3, 1, GL_FLOAT, false, Sprite.VERTEX_SIZE * Float.BYTES, pointer);
+        pointer += SpriteOld.COLOR_SIZE * Float.BYTES;
+        glVertexAttribPointer(3, 1, GL_FLOAT, false, SpriteOld.VERTEX_SIZE * Float.BYTES, pointer);
         glEnableVertexAttribArray(3);
     }
     
@@ -51,7 +53,7 @@ class SpriteVertexData implements Disposable {
         vao.bind();
         vertexData.bind();
         vertexData.bufferSubData(vertexBuffer,0);
-        glDrawElements(GL_TRIANGLES, Sprite.NUM_INDICES * sprites,GL_UNSIGNED_SHORT,0);
+        glDrawElements(GL_TRIANGLES, SpriteOld.NUM_INDICES * sprites,GL_UNSIGNED_SHORT,0);
         vertexBuffer.clear();
     }
     

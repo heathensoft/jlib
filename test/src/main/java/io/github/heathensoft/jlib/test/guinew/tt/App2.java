@@ -28,9 +28,9 @@ public class App2 extends Application {
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         config.settings_width = 1280;
         config.settings_height = 720;
-        //config.settings_width = 1920;
-        //config.settings_height = 1080;
-        config.windowed_mode = true;
+        config.settings_width = 1920;
+        config.settings_height = 1080;
+        config.windowed_mode = false;
         config.auto_resolution = false;
         supported.add(Resolution.R_1280x720);
         supported.add(Resolution.R_1920x1080);
@@ -51,12 +51,13 @@ public class App2 extends Application {
         GUI.initialize(resolution);
         clear_color = new Vector4f(0.3f,0.3f,0.3f,1.0f);
         BoxWindow textWindow = new BoxWindow(new Root(),"TextWindow");
-        BoxWindow imageWindow = new BoxWindow(new ImageTest(),"ImageWindow");
+        //BoxWindow imageWindow = new BoxWindow(new ImageTest(),"ImageWindow");
+        BoxWindow mipmapTestWindow = new BoxWindow(new MipmapTest(),"MipmapTestWindow");
         //window.autoRestoreOnClose(true);
         GUI.windows.register(textWindow);
-        GUI.windows.register(imageWindow);
+        GUI.windows.register(mipmapTestWindow);
         GUI.windows.openWindow(textWindow);
-        GUI.windows.openWindow(imageWindow);
+        GUI.windows.openWindow(mipmapTestWindow);
     }
 
     protected void on_update(float delta) {

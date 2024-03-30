@@ -9,7 +9,7 @@ import io.github.heathensoft.jlib.common.utils.Coordinate;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 
@@ -95,7 +95,7 @@ public class MapGen implements Disposable {
     private void drawMountains(float divide) {
         int rows = heightmap.rows();
         int cols = heightmap.cols();
-        int mod = 0;
+        int mod;
         for (int r = 0; r < rows; r++) {
             int y0 = r * 16;
             for (int c = 0; c < cols; c++) {

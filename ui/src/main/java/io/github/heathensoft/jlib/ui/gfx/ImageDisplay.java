@@ -1,9 +1,8 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.Interactable;
@@ -70,14 +69,14 @@ public class ImageDisplay implements Interactable {
                         float texture_height = texture.height();
                         if (scale.x > 0 && scale.y > 0) {
                             if (iGrabbed(Mouse.LEFT)) {
-                                Vector2f drag_vector = MathLib.vec2();
+                                Vector2f drag_vector = U.vec2();
                                 GUI.mouse_drag_vector(drag_vector,Mouse.LEFT).div(scale);
                                 position.set(grab_origin).sub(drag_vector.x,-drag_vector.y);
                             } else if (iJustPressed(Mouse.LEFT)) {
                                 grab_origin.set(position);
                             }
 
-                            else if (!U.float_equals(velocity.lengthSquared(),0,0.01f)) {
+                            else if (!U.floatEquals(velocity.lengthSquared(),0,0.01f)) {
                                 position.x += (velocity.x * dt);
                                 position.y += (velocity.y * dt);
                             } position.x = position.x % texture_width;
@@ -86,7 +85,7 @@ public class ImageDisplay implements Interactable {
                             float v1 = position.y / texture_height;
                             float u2 = u1 + (quad.lengthX() / texture_width) * (1f/scale.x);
                             float v2 = v1 + (quad.lengthY() / texture_height) * (1f/scale.y);
-                            Vector4f region = MathLib.vec4(u1,v1,u2,v2);
+                            Vector4f region = U.vec4(u1,v1,u2,v2);
                             renderer.drawElement(texture,region,quad,color,id,glow);
                         }
                     }
@@ -104,7 +103,7 @@ public class ImageDisplay implements Interactable {
                         }
                         if (scale.x > 0 && scale.y > 0) {
                             if (iGrabbed(Mouse.LEFT)) {
-                                Vector2f drag_vector = MathLib.vec2();
+                                Vector2f drag_vector = U.vec2();
                                 GUI.mouse_drag_vector(drag_vector,Mouse.LEFT);
                                 position.set(grab_origin).add(drag_vector.x,drag_vector.y);
                             } else if (iJustPressed(Mouse.LEFT)) {
@@ -112,7 +111,7 @@ public class ImageDisplay implements Interactable {
                             } else if (position.lengthSquared() <= 1f) {
                                 position.zero();
                             } else { // pull spring
-                                Vector2f v = MathLib.vec2(-position.x,-position.y).normalize();
+                                Vector2f v = U.vec2(-position.x,-position.y).normalize();
                                 float speed = Math.max(10f,position.length());
                                 position.add(v.mul(speed * dt));
                             } position.x = position.x % texture.width();
@@ -129,7 +128,7 @@ public class ImageDisplay implements Interactable {
                             float virtual_y1 = virtual_center_y - virtual_height / 2f;
                             float virtual_x2 = virtual_x1 + virtual_width;
                             float virtual_y2 = virtual_y1 + virtual_height;
-                            Rectanglef virtual_quad = MathLib.rectf(virtual_x1,virtual_y1,virtual_x2,virtual_y2);
+                            Rectanglef virtual_quad = U.rectf(virtual_x1,virtual_y1,virtual_x2,virtual_y2);
                             if (id == interactableID() && quad.containsRectangle(virtual_quad)) {
                                 renderer.drawElement(quad,0,id,0,true);
                             } if (virtual_quad.intersectsRectangle(quad)) {
@@ -146,7 +145,7 @@ public class ImageDisplay implements Interactable {
                             }
                         }
                     }
-                    case STRETCH -> { renderer.drawElement(texture,quad,color,id,glow); }
+                    case STRETCH -> renderer.drawElement(texture,quad,color,id,glow);
                     case FIT -> {
                         float box_width = quad.lengthX();
                         float box_height = quad.lengthY();
@@ -159,7 +158,7 @@ public class ImageDisplay implements Interactable {
                         }
                         float x = (box_width / 2f) - (aspect_width / 2f) + quad.minX;
                         float y = (box_height / 2f) - (aspect_height / 2f) + quad.minY;
-                        Rectanglef fit_quad = MathLib.rectf(x,y,x+aspect_width,y+aspect_height);
+                        Rectanglef fit_quad = U.rectf(x,y,x+aspect_width,y+aspect_height);
                         renderer.drawElement(texture,fit_quad,color,id,glow);
                     }
                 }

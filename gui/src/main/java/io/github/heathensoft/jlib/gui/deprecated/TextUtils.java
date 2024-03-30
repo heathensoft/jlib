@@ -1,7 +1,6 @@
 package io.github.heathensoft.jlib.gui.deprecated;
 
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.gfx.SpriteBatch;
 import org.joml.Vector2f;
 
 import java.util.HexFormat;
@@ -150,7 +149,7 @@ public class TextUtils {
                     x_offset += space;
                 } else {
                     float next = pointer_x + space;
-                    if (next > width) return;;
+                    if (next > width) return;
                     if (cursor_index == character_index && cursor_visible) {
                         Glyph glyph = font.getChar(' ');
                         batch.draw(glyph,x0 + pointer_x,y0,space,font_height,color,shaderCursor);

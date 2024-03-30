@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
-import static io.github.heathensoft.jlib.common.utils.U.scale_array;
+import static io.github.heathensoft.jlib.common.utils.U.arrayScale;
 
 /**
  * @author Frederik Dahl
@@ -237,7 +237,7 @@ public class WorldGenerator {
                     }
                 }
             }
-        }return U.smoothen_array(elevation,4);
+        }return U.arraySmoothen(elevation,4);
     }
 
     private float[][] apply_rivers(float[][] elevation, Rand rng) {
@@ -276,7 +276,6 @@ public class WorldGenerator {
         int cols = elevation[0].length;
         Area area = new Area(0,0,cols-1,rows-1);
         if (area.contains(start) && area.contains(end) && distance > 0) {
-            int[][] adjacent = U.adj_8;
             int initial_cap = U.nextPowerOfTwo(distance * 4);
             HeapSet<AStarNode> open = new HeapSet<>(initial_cap);
             Set<AStarNode> closed = new HashSet<>(initial_cap);
@@ -291,7 +290,7 @@ public class WorldGenerator {
                     return new NodeChain(current_node).retracePath(false);
                 } closed.add(current_node);
                 for (int i = 0; i < 8; i++) {
-                    int[] offset = adjacent[i];
+                    int[] offset = U.adj_8[i];
                     int adjacent_x = current_node.x + offset[0];
                     int adjacent_y = current_node.y + offset[1];
                     if (area.contains(adjacent_x,adjacent_y)) {
@@ -365,10 +364,10 @@ public class WorldGenerator {
     public static int[][] grow_biomes(int[][] src, int target_size, Rand rng) {
         if (src[0].length != src.length) {
             throw new IllegalArgumentException("argument array must be of size: n * n");
-        } int[][] dst = scale_array(src, next_valid_growing_size(src.length));
+        } int[][] dst = U.arrayScale(src, next_valid_growing_size(src.length));
         while(dst.length < target_size) {
             dst = grow_biomes(dst,rng);
-        } return scale_array(dst,target_size);
+        } return U.arrayScale(dst,target_size);
     }
 
     private static int[][] grow_biomes(int[][] src, Rand rng) {
@@ -411,7 +410,7 @@ public class WorldGenerator {
                     t2 = n < 0.5f ? tb : tt;
                 }
                 float n = rng.white_noise();
-                dst[r][c] = n < 0.5f ? t1 : t2;;
+                dst[r][c] = n < 0.5f ? t1 : t2;
             }
         }
         return dst;

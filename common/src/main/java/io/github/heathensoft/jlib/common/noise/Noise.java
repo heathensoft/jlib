@@ -166,13 +166,12 @@ public class Noise {
     public static int[] local_minima(float[][] src) { // edges are excluded
         int rows = src.length - 1;
         int cols = src[0].length - 1;
-        int[][] adj = adj_8;
         IntQueue q = new IntQueue(rows + cols);
         for (int r = 1; r < rows; r++) {
             for (int c = 1; c < cols; c++) {
                 float h = src[r][c];
                 boolean maxima = true;
-                for (int[] i : adj) {
+                for (int[] i : adj_8) {
                     if (h >= src[r+i[1]][c+i[0]]) {
                         maxima = false;
                         break;
@@ -195,13 +194,12 @@ public class Noise {
     public static int[] local_maxima(float[][] src) { // edges are excluded
         int rows = src.length - 1;
         int cols = src[0].length - 1;
-        int[][] adj = adj_8;
         IntQueue q = new IntQueue(rows + cols);
         for (int r = 1; r < rows; r++) {
             for (int c = 1; c < cols; c++) {
                 float h = src[r][c];
                 boolean maxima = true;
-                for (int[] i : adj) {
+                for (int[] i : adj_8) {
                     if (h <= src[i[1]][i[0]]) {
                         maxima = false;
                         break;
@@ -338,23 +336,23 @@ public class Noise {
     }
 
     public static float[][] smoothen(float[][] src) {
-        return smoothen_array(src);
+        return arraySmoothen(src);
     }
 
     public static float[][] smoothen(float[][] src, int n) {
-        return smoothen_array(src,n);
+        return arraySmoothen(src,n);
     }
 
     public static float[][] sharpen(float[][] src) {
-        return sharpen_array(src);
+        return arraySharpen(src);
     }
 
     public static float[][] scale(float[][] src, int rows, int cols) {
-        return scale_array(src,rows,cols);
+        return arrayScale(src,rows,cols);
     }
 
     public static float[][] scale(float[][] src, int target_size) {
-        return scale_array(src,target_size);
+        return arrayScale(src,target_size);
     }
 
     public static ByteBuffer bytes(float[][] src, ByteBuffer dst) {

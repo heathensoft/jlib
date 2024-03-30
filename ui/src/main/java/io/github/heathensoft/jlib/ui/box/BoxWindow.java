@@ -2,8 +2,7 @@ package io.github.heathensoft.jlib.ui.box;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.GlobalVariables;
@@ -73,7 +72,7 @@ public final class BoxWindow extends Window {
     protected void prepare(float dt) { content.onWindowPrepare(this,dt); }
 
     protected void render(RendererGUI renderer, float dt) {
-        Rectanglef bounds = bounds(MathLib.rectf());
+        Rectanglef bounds = bounds(U.rectf());
         Resolution resolution = GUI.resolution();
         final float screen_width = resolution.width();
         final float screen_height = resolution.height();
@@ -195,7 +194,7 @@ public final class BoxWindow extends Window {
             }
         }
         // Transform ***********************************************************
-        Rectanglef transform = MathLib.rectf();
+        Rectanglef transform = U.rectf();
         if (isTransforming()) {
             transform_timer += (dt * 5f);
             float t = U.smooth(U.clamp(transform_timer));
@@ -228,7 +227,7 @@ public final class BoxWindow extends Window {
         if (!GUI.state.anyInteractablePressed()) { clearStateCurrentlyDragging(); }
     }
 
-    protected void onInit(String name) throws Exception {
+    protected void onInit(String name)  {
         anchorContent(content);
         content.onWindowInit(this,null);
     }
@@ -428,7 +427,7 @@ public final class BoxWindow extends Window {
                 clearStateCurrentlyRestoringY();
                 clearStateCurrentlyMaximizingX();
                 clearStateCurrentlyMaximizingY();
-                Vector2f origin_translation = MathLib.vec2(
+                Vector2f origin_translation = U.vec2(
                         transform_initial.minX,
                         transform_initial.maxY);
                 origin_translation.sub(
@@ -897,7 +896,7 @@ public final class BoxWindow extends Window {
                 GlobalVariables global = GUI.variables;
                 int padding = global.boxWindow_fadDisplay_padding;
                 int font = global.boxWindow_fadeDisplay_font;
-                Vector4f rgb = MathLib.vec4(0,0,0,alpha * 0.75f);
+                Vector4f rgb = U.vec4(0,0,0,alpha * 0.75f);
                 int bg_color = Color.rgb_to_intBits(rgb);
                 rgb.set(GUI.variables.boxWindow_fadeDisplay_textColor);
                 rgb.w *= alpha;
@@ -917,7 +916,7 @@ public final class BoxWindow extends Window {
                         if (string_bounds.intersectsRectangle(value_bounds)) { // Combine
                             TextAlignment alignment = TextAlignment.CENTERED;
                             String combined_string = string + " " +  value;
-                            Rectanglef combined_rect = MathLib.rectf();
+                            Rectanglef combined_rect = U.rectf();
                             combined_rect.minX = string_bounds.minX;
                             combined_rect.maxX = value_bounds.maxX;
                             combined_rect.maxY = value_bounds.maxY;

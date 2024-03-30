@@ -1,8 +1,5 @@
-package io.github.heathensoft.jlib.lwjgl.gfx;
+package io.github.heathensoft.jlib.common.utils;
 
-import io.github.heathensoft.jlib.common.utils.Rand;
-import io.github.heathensoft.jlib.common.utils.U;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -185,9 +182,9 @@ public class Color {
         } return dst;
     }
 
-    public static String hsv_to_hex(Vector4f hsv) { return rgb_to_hex(hsv_to_rgb(MathLib.vec4().set(hsv))); }
+    public static String hsv_to_hex(Vector4f hsv) { return rgb_to_hex(hsv_to_rgb(U.vec4().set(hsv))); }
 
-    public static int hsv_to_intBits(Vector4f hsv) { return rgb_to_intBits(hsv_to_rgb(MathLib.vec4().set(hsv))); }
+    public static int hsv_to_intBits(Vector4f hsv) { return rgb_to_intBits(hsv_to_rgb(U.vec4().set(hsv))); }
 
     public static float hsv_to_floatBits(Vector4f hsv) { return intBits_to_floatBits(hsv_to_intBits(hsv)); }
 
@@ -248,18 +245,18 @@ public class Color {
     }
 
     public static float lab_distance(Vector4f lab1, Vector4f lab2) {
-        Vector3f v1 = MathLib.vec3(lab1.x,lab1.y,lab1.z);
-        Vector3f v2 = MathLib.vec3(lab2.x,lab2.y,lab2.z);
+        Vector3f v1 = U.vec3(lab1.x,lab1.y,lab1.z);
+        Vector3f v2 = U.vec3(lab2.x,lab2.y,lab2.z);
         return v1.distance(v2);
     }
 
-    public static Vector4f lerp(Vector4f a, Vector4f b, float t) { return lerp(a,b,t, MathLib.vec4()); }
+    public static Vector4f lerp(Vector4f a, Vector4f b, float t) { return lerp(a,b,t, U.vec4()); }
 
     public static Vector4f lerp(Vector4f a, Vector4f b, float t, Vector4f dst) {
         if (t <= 0) return dst.set(a);
         else if (t >= 1) return dst.set(b);
-        Vector4f hsv1 = Color.rgb_to_hsv(Color.sRGB_to_linear(MathLib.vec4(a)));
-        Vector4f hsv2 = Color.rgb_to_hsv(Color.sRGB_to_linear(MathLib.vec4(b)));
+        Vector4f hsv1 = Color.rgb_to_hsv(Color.sRGB_to_linear(U.vec4(a)));
+        Vector4f hsv2 = Color.rgb_to_hsv(Color.sRGB_to_linear(U.vec4(b)));
         return Color.linear_to_sRGB(hsv_to_rgb(lerp_hsv(hsv1,hsv2,t,dst)));
     }
 
@@ -320,10 +317,5 @@ public class Color {
         return dst;
     }
 
-    public static ColorPalette ramp(int abgr1, int abgr2, int samples) { return ColorPalette.ramp(abgr1,abgr2,samples); }
-
-    public static ColorPalette ramp(String hex1, String hex2, int samples) { return ColorPalette.ramp(hex1,hex2,samples); }
-
-    public static ColorPalette ramp(Vector4f rgb1, Vector4f rgb2, int samples) { return ColorPalette.ramp(rgb1,rgb2,samples); }
 
 }

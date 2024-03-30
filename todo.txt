@@ -1,16 +1,28 @@
 
-
+************************************************************************************************************************
 ENGINE:
 
 Need an opengl struct in engine with version, limitations, compatibility / core.
 Then query this when creating shaders and allocating buffers.
 i.e. cannon use (#define version 460 core) when gl version is 4.3 or running on mac-os etc.
 
-
-Gotu, liberationMono, Play
-
+Move reusable vectors etc. from MathLib to U
 
 
+************************************************************************************************************************
+Tiles:
+
+[Complete]
+We Found the Tile Blend Texture Shaders in Texture.class.
+
+
+************************************************************************************************************************
+Shaders:
+
+Add default blur, sharpen, bloom etc. shaders / passes:  Shader.bloomPass(texture)
+
+
+************************************************************************************************************************
 GUI:
 
 A gui class that stores textures generically generated. Like background from sprite etc. Loaded Textures too?.
@@ -50,7 +62,7 @@ Last thing to be drawn.
 
 Text draw order
 
-
+************************************************************************************************************************
 
 
 

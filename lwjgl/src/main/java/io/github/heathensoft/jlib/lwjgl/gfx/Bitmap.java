@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.Math;
 import org.joml.Vector3f;
@@ -140,6 +141,7 @@ public class Bitmap implements Disposable {
         float y2 = y + h;
         int ix1 = Math.max(floor(x),0);
         int iy1 = Math.max(floor(y),0);
+        @SuppressWarnings("SuspiciousNameCombination")
         int ix2 = Math.min(ceil(x2),width);
         int iy2 = Math.min(ceil(y2),height);
         if (source.channels == 4 && channels == 4) {
@@ -207,6 +209,7 @@ public class Bitmap implements Disposable {
         float y2 = y + h;
         int ix1 = Math.max(floor(x),0);
         int iy1 = Math.max(floor(y),0);
+        @SuppressWarnings("SuspiciousNameCombination")
         int ix2 = Math.min(ceil(x2),width);
         int iy2 = Math.min(ceil(y2),height);
         if (source.channels == 4 && channels == 4) {
@@ -343,7 +346,7 @@ public class Bitmap implements Disposable {
         int floorX = floor(px); float fractX = px - floorX;
         int floorY = floor(py); float fractY = py - floorY;
         for (int i = 0; i < channels; i++) {
-            int bl = getColorComponent(floorX + 0,floorY + 0,i);
+            int bl = getColorComponent(floorX, floorY,i);
             int br = getColorComponent(floorX + 1,floorY + 0,i);
             int tl = getColorComponent(floorX + 0,floorY + 1,i);
             int tr = getColorComponent(floorX + 1,floorY + 1,i);
@@ -611,6 +614,7 @@ public class Bitmap implements Disposable {
     }
 
     protected int clampToEdgeX(int x) {
+        //noinspection SuspiciousNameCombination
         return Math.max(0,Math.min(width - 1, x));
     }
 

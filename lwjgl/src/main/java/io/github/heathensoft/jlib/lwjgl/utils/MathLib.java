@@ -1,5 +1,6 @@
 package io.github.heathensoft.jlib.lwjgl.utils;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import org.joml.*;
 import org.joml.Math;
 import org.joml.primitives.*;
@@ -27,46 +28,17 @@ public class MathLib {
     
     public static final LightSpace lightSpace;
     public static final RayCast rayCast;
-    
     public static final Vector3f UP_VECTOR;
     public static final Matrix4f BIAS_MATRIX;
-
-    // todo: Put in common.utils.U instead
-
-    private static final byte rfCount = 16;
-    private static final byte riCount = 4;
-    private static final byte v4Count = 16;
-    private static final byte v3Count = 16;
-    private static final byte v2Count = 16;
-    private static final byte m4Count = 8;
-    private static final byte m3Count = 4;
     private static final byte rayCount = 8;
     private static final byte rayAbbCount = 4;
     private static final byte frustumCount = 4;
-
-    private static int rfIdx = -1;
-    private static int riIdx = -1;
-    private static int v4Idx = -1;
-    private static int v3Idx = -1;
-    private static int v2Idx = -1;
-    private static int m4Idx = -1;
-    private static int m3Idx = -1;
     private static int rayIdx = -1;
     private static int rayAbbIdx = -1;
     private static int frustumIdx = -1;
-
-    private static final Rectanglef[] rectf;
-    private static final Rectanglei[] recti;
-    private static final Vector4f[] vec4;
-    private static final Vector3f[] vec3;
-    private static final Vector2f[] vec2;
-    private static final Matrix4f[] mat4;
-    private static final Matrix3f[] mat3;
     private static final Rayf[] ray;
     private static final RayAabIntersection[] rayAabIntersection;
     private static final FrustumIntersection[] frustum;
-    
-    
     
     static {
         
@@ -74,31 +46,13 @@ public class MathLib {
         lightSpace = new LightSpace();
         UP_VECTOR = new Vector3f(0,1,0);
         BIAS_MATRIX = new Matrix4f().translate(0.5f,0.5f,0.5f).scale(0.5f);
-
         rayAabIntersection = new RayAabIntersection[rayAbbCount];
         frustum = new FrustumIntersection[frustumCount];
-        rectf = new Rectanglef[rfCount];
-        recti = new Rectanglei[riCount];
-        vec4 = new Vector4f[v4Count];
-        vec3 = new Vector3f[v3Count];
-        vec2 = new Vector2f[v2Count];
-        mat4 = new Matrix4f[m4Count];
-        mat3 = new Matrix3f[m3Count];
         ray = new Rayf[rayCount];
-
         for (int i = 0; i < rayAabIntersection.length; i++) rayAabIntersection[i] = new RayAabIntersection();
         for (int i = 0; i < frustum.length; i++) frustum[i] = new FrustumIntersection();
-        for (int i = 0; i < rectf.length; i++) rectf[i] = new Rectanglef();
-        for (int i = 0; i < recti.length; i++) recti[i] = new Rectanglei();
-        for (int i = 0; i < vec4.length; i++) vec4[i] = new Vector4f();
-        for (int i = 0; i < vec3.length; i++) vec3[i] = new Vector3f();
-        for (int i = 0; i < vec2.length; i++) vec2[i] = new Vector2f();
-        for (int i = 0; i < mat4.length; i++) mat4[i] = new Matrix4f();
-        for (int i = 0; i < mat3.length; i++) mat3[i] = new Matrix3f();
         for (int i = 0; i < ray.length; i++) ray[i] = new Rayf();
-
     }
-
 
     public static int closestNumber(int n, int m) { // WTF is this again?
         int q = n / m; // find the quotient
@@ -112,70 +66,6 @@ public class MathLib {
         return n2;
     }
 
-    public static Rectanglef rectf() {
-        return rectf[++rfIdx % rfCount];
-    }
-
-    public static Rectanglef rectf(float minX, float minY, float maxX, float maxY) {
-        Rectanglef rect = rectf[++rfIdx % rfCount];
-        rect.setMin(minX,minY);
-        return rect.setMax(maxX,maxY);
-    }
-
-    public static Rectanglei recti() {
-        return recti[++riIdx % riCount];
-    }
-
-    public static Rectanglei recti(int minX, int minY, int maxX, int maxY) {
-        Rectanglei rect = recti[++riIdx % riCount];
-        rect.setMin(minX,minY);
-        return rect.setMax(maxX,maxY);
-    }
-
-    public static Vector4f vec4() {
-        return vec4[++v4Idx % v4Count];
-    }
-
-    public static Vector4f vec4(Vector4f vec) {
-        Vector4f v = vec4[++v4Idx % v4Count];
-        return v.set(vec);
-    }
-    
-    public static Vector4f vec4(float x, float y, float z, float w) {
-        Vector4f v = vec4[++v4Idx % v4Count];
-        return v.set(x, y, z, w);
-    }
-    
-    public static Vector3f vec3() {
-        return vec3[++v3Idx % v3Count];
-    }
-    
-    public static Vector3f vec3(float x, float y, float z) {
-        Vector3f v = vec3[++v3Idx % v3Count];
-        return v.set(x,y,z);
-    }
-    
-    public static Vector2f vec2() {
-        return vec2[++v2Idx % v2Count];
-    }
-    
-    public static Vector2f vec2(Vector2f v2) {
-        return vec2(v2.x,v2.y);
-    }
-    
-    public static Vector2f vec2(float x, float y) {
-        Vector2f v = vec2[++v2Idx % v2Count];
-        return v.set(x, y);
-    }
-    
-    public static Matrix4f mat4() {
-        return mat4[++m4Idx % m4Count];
-    }
-    
-    public static Matrix3f mat3() {
-        return mat3[++m3Idx % m3Count];
-    }
-    
     public static Rayf ray() {
         return ray[++rayIdx % rayCount];
     }
@@ -195,8 +85,8 @@ public class MathLib {
     public static final class RayCast {
         
         public void mouse(Matrix4f projectionINV, Matrix4f viewINV, Vector3f position, float ndcX, float ndcY, Rayf dest) {
-            Vector4f v4 = vec4();
-            Vector3f v3 = vec3();
+            Vector4f v4 = U.vec4();
+            Vector3f v3 = U.vec3();
             v4.set(ndcX,ndcY,-1.0f,1.0f);
             v4.mul(projectionINV);
             v4.z = -1.0f;
@@ -364,13 +254,13 @@ public class MathLib {
         }
     
         public void viewPerspective(Vector3f lightPosition, Vector3f lightDirection, Matrix4f dest) {
-            Vector3f center = vec3();
+            Vector3f center = U.vec3();
             center.set(lightPosition).add(lightDirection);
             dest.identity().lookAt(lightPosition, center, UP_VECTOR);
         }
         
         public void viewOrtho(Matrix4f cameraCombinedINV, Vector3f lightDirection, Matrix4f dest) {
-            Vector3f frustumCenter = vec3();
+            Vector3f frustumCenter = U.vec3();
             frustumCenter.zero();
             int i = 0;
             for (int x = 0; x < 2; x++) {
@@ -383,13 +273,13 @@ public class MathLib {
                 }
             }
             frustumCenter.div(8);
-            Vector3f eye = vec3();
+            Vector3f eye = U.vec3();
             eye.set(frustumCenter).sub(lightDirection);
             dest.identity().lookAt(eye,frustumCenter,UP_VECTOR);
         }
     
         public void viewOrtho(Matrix4f cameraProjection, Matrix4f cameraView, Vector3f lightDirection, Matrix4f dest) {
-            viewOrtho(mat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest);
+            viewOrtho(U.mat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest);
         }
     
         /**
@@ -400,7 +290,7 @@ public class MathLib {
          */
     
         public void projectionOrtho(Matrix4f lightView, Matrix4f dest) {
-            Vector4f corner = vec4();
+            Vector4f corner = U.vec4();
             float minX = Float.MAX_VALUE;
             float minY = Float.MAX_VALUE;
             float minZ = Float.MAX_VALUE;
@@ -429,21 +319,21 @@ public class MathLib {
         }
     
         public void combinedPerspective(Matrix4f lightProjection, Vector3f lightPosition, Vector3f lightDirection, Matrix4f dest, boolean useBiasMatrix) {
-            Matrix4f lightView = mat4();
+            Matrix4f lightView = U.mat4();
             viewPerspective(lightPosition,lightDirection,lightView);
             combinedPerspective(lightProjection,lightView,dest,useBiasMatrix);
         }
     
         public void combinedOrtho(Matrix4f cameraCombinedINV, Vector3f lightDirection, Matrix4f dest, boolean useBiasMatrix) {
-            Matrix4f lightView = mat4();
-            Matrix4f lightProjection = mat4();
+            Matrix4f lightView = U.mat4();
+            Matrix4f lightProjection = U.mat4();
             viewOrtho(cameraCombinedINV,lightDirection,lightView);
             projectionOrtho(lightView,lightProjection);
             combined(lightProjection,lightView,dest,useBiasMatrix);
         }
     
         public void combinedOrtho(Matrix4f cameraProjection, Matrix4f cameraView, Vector3f lightDirection, Matrix4f dest, boolean useBiasMatrix) {
-            combinedOrtho(mat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest, useBiasMatrix);
+            combinedOrtho(U.mat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest, useBiasMatrix);
         }
     
         /**
@@ -463,8 +353,8 @@ public class MathLib {
          * @param dest the destination frustumIntersection object
          */
         public void psc(Vector3f dir, Vector3f pos, float fov, float aspect, float near, float far, float border, FrustumIntersection dest) {
-            Matrix4f projection = mat4();
-            Matrix4f view = mat4();
+            Matrix4f projection = U.mat4();
+            Matrix4f view = U.mat4();
             Vector3f up = UP_VECTOR;
             final float offset = border / org.joml.Math.sin(fov/2.0f);
             final float eX = pos.x - dir.x * offset;

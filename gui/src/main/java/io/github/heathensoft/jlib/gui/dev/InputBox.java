@@ -1,12 +1,12 @@
 package io.github.heathensoft.jlib.gui.dev;
 
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.text.CommandLine;
 import io.github.heathensoft.jlib.gui.window.Box;
 import io.github.heathensoft.jlib.gui.window.WindowGUI;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.CursorObjects;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.primitives.Rectanglef;
@@ -42,7 +42,7 @@ public class InputBox extends Box {
     }
 
     public void render(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-        Rectanglef quad = bounds(MathLib.rectf(),x,y);
+        Rectanglef quad = bounds(U.rectf(),x,y);
         renderer.drawElement(quad, 0x66000000,id);
         if (iHovered()) GUI.state.useCursorIcon(CursorObjects.CURSOR_TEXT_INPUT);
         if (iJustPressed(Mouse.LEFT)) {
@@ -61,7 +61,7 @@ public class InputBox extends Box {
     }
 
     public void renderText(RendererGUI renderer, float x, float y) {
-        Rectanglef quad = bounds(MathLib.rectf(),x,y);
+        Rectanglef quad = bounds(U.rectf(),x,y);
         renderer.drawParagraphDynamicSize(commandLine,quad,font, padding,1.0f,centered);
     }
 

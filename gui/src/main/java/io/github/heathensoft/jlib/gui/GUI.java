@@ -1,11 +1,12 @@
 package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.text.TextUtils;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Keyboard;
@@ -86,7 +87,7 @@ public class GUI {
         state.update(renderer.pixelID(),dt);
         renderer.begin(mouse.position());
         //windows.renderAll(renderer,dt);
-        Rectanglef rect = MathLib.rectf();
+        Rectanglef rect = U.rectf();
         float x0 = 50;
         float y0 = 80;
         String string = "Test String 1234567890\n\n Size...";

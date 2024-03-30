@@ -2,7 +2,7 @@ package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.IDPool;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.*;
@@ -33,26 +33,36 @@ public class ShaderProgram {
     public static final String path_frag_texture_pass = "res/jlib/lwjgl/glsl/gfx_texture_pass.frag";
     public static final String path_vert_bubble_demo = "res/jlib/lwjgl/glsl/gfx_bubble_demo.vert";
     public static final String path_frag_bubble_demo = "res/jlib/lwjgl/glsl/gfx_bubble_demo.frag";
+    public static final String path_vert_blur_pass = "res/jlib/lwjgl/glsl/gfx_blur_pass.vert";
+    public static final String path_frag_blur_pass = "res/jlib/lwjgl/glsl/gfx_blur_pass.frag";
+    public static final String UNIFORM_SAMPLER_1D = "u_sampler1D";
     public static final String UNIFORM_SAMPLER_2D = "u_sampler2D";
     public static final String UNIFORM_RESOLUTION = "u_resolution";
+    public static final String UNIFORM_CURSOR = "u_cursor";
     public static final String UNIFORM_TIME = "u_time";
 
     public static final class JLIBShaders {
         public final int texture_pass_program;
         public final int bubble_demo_program;
+        public final int blur_pass_program;
         private JLIBShaders() {
             int texture_pass_handle = -1;
             int bubble_demo_handle = -1;
+            int blur_pass_handle = -1;
             try { ShaderProgram program;
                 String v_source, g_source, f_source;
                 v_source = Resources.asString(path_vert_texture_pass);
                 f_source = Resources.asString(path_frag_texture_pass);
-                program = new ShaderProgram("gfx_texture_pass_program",v_source,f_source);
+                program = new ShaderProgram("gfx_texture_pass",v_source,f_source);
                 texture_pass_handle = program.glHandle();
                 v_source = Resources.asString(path_vert_bubble_demo);
                 f_source = Resources.asString(path_frag_bubble_demo);
-                program = new ShaderProgram("gfx_bubble_demo_program",v_source,f_source);
+                program = new ShaderProgram("gfx_bubble_demo",v_source,f_source);
                 bubble_demo_handle = program.glHandle();
+                v_source = Resources.asString(path_vert_blur_pass);
+                f_source = Resources.asString(path_frag_blur_pass);
+                program = new ShaderProgram("gfx_blur_pass",v_source,f_source);
+                blur_pass_handle = program.glHandle();
             } catch (Exception e) {
                 Logger.error(e.getMessage());
                 Logger.error("Error While Compiling JLIB Shaders");
@@ -60,6 +70,7 @@ public class ShaderProgram {
             } finally {
                 texture_pass_program = texture_pass_handle;
                 bubble_demo_program = bubble_demo_handle;
+                blur_pass_program = blur_pass_handle;
             }
         }
     }
@@ -77,7 +88,9 @@ public class ShaderProgram {
             glVertexAttribPointer(1, 2, GL_FLOAT, false, 16, 8);
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
-        } public void draw(Vector4f pos, Vector4f uv) { draw(pos.x,pos.y,pos.z,pos.w,uv.x,uv.y,uv.z,uv.w); }
+        }
+
+        public void draw(Vector4f pos, Vector4f uv) { draw(pos.x,pos.y,pos.z,pos.w,uv.x,uv.y,uv.z,uv.w); }
         public void draw() { draw(0,0,1,1); }
         public void draw(float u1, float v1, float u2, float v2) { draw(0,0,1,1,u1,v1,u2,v2); }
         public void draw(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2) {
@@ -89,6 +102,9 @@ public class ShaderProgram {
                 buffer.put(x2).put(y2).put(u2).put(v2);
                 vertices.bind().bufferSubData(buffer.flip(),0);
             } vertexAttributes.bind();
+            glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0);
+        } public void drawRepeat() {
+            vertexAttributes.bind();
             glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_BYTE,0);
         } public void dispose() { Disposable.dispose(vertexAttributes,indices,vertices); }
     }
@@ -131,9 +147,11 @@ public class ShaderProgram {
     public int glHandle() { return handle; }
     public boolean isBound() { return this == current_program; }
 
+    public static boolean programNameExist(String program_name) { return programs_by_name.containsKey(program_name); }
     public static int programCount() { return programs_by_id.size(); }
     public static ShaderProgram currentProgram() { return current_program; }
-    public static Optional<ShaderProgram> currentProgramOptional() { return Optional.of(current_program); }
+    public static Optional<ShaderProgram> optionalProgramByName(String program_name) { return Optional.ofNullable(programs_by_name.get(program_name)); }
+    public static Optional<ShaderProgram> optionalCurrentProgram() { return Optional.of(current_program); }
     public static List<ShaderProgram> getAllPrograms() { return programs_by_id.values().stream().toList(); }
     public static List<ShaderProgram> getAllPrograms(List<ShaderProgram> dst) {
         for (var entry : programs_by_id.entrySet()) {
@@ -141,12 +159,68 @@ public class ShaderProgram {
         } return dst;
     }
 
+    public static void blurPassTest(Texture texture, int times) {
+        if (times > 0 && texture.target() == GL_TEXTURE_2D) {
+            texture.bindToActiveSlot();
+            boolean mipmap = texture.usingMipmap();
+            int prev_min_filter = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER);
+            int prev_mag_filter = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER);
+            int prev_tex_wrap_u = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S);
+            int prev_tex_wrap_v = glGetTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T);
+            texture.linear();
+            texture.clampToEdge();
+            try {
+
+                Framebuffer framebuffer0 = new Framebuffer(texture.width(),texture.height());
+                Framebuffer.bind(framebuffer0);
+                Framebuffer.attachColor(texture,0,false);
+                Framebuffer.drawBuffer(0);
+                Framebuffer.checkStatus();
+
+                Texture tmp_texture = Texture.generate2D(texture.width(),texture.height());
+                tmp_texture.bindToActiveSlot();
+                tmp_texture.allocate(texture.format());
+                tmp_texture.linear();
+                tmp_texture.clampToEdge();
+                Framebuffer framebuffer_1 = new Framebuffer(texture.width(),texture.height());
+                Framebuffer.bind(framebuffer_1);
+                Framebuffer.attachColor(tmp_texture,0,false);
+                Framebuffer.drawBuffer(0);
+                Framebuffer.checkStatus();
+
+                Framebuffer.viewport();
+                glDisable(GL_DEPTH_TEST);
+                glDisable(GL_BLEND);
+
+                bindProgram(commonPrograms().texture_pass_program);
+                setUniform(ShaderProgram.UNIFORM_RESOLUTION,1f,1f);
+                setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,0);
+                texture.bindToSlot(0);
+                shaderPass().draw();
+
+                Framebuffer.bind(framebuffer0);
+                bindProgram(commonPrograms().blur_pass_program);
+                setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,0);
+                tmp_texture.bindToSlot(0);
+                shaderPass().drawRepeat();
+
+                Disposable.dispose(framebuffer0,framebuffer_1,tmp_texture);
+
+            } catch (Exception e) {
+                Logger.error(e);
+            } finally {
+                texture.wrapST(prev_tex_wrap_u,prev_tex_wrap_v);
+                texture.filter(prev_min_filter,prev_mag_filter);
+            }
+        }
+    }
+
     public static void texturePass(Texture texture) {
-        texturePass(texture, MathLib.vec4(0,0,1,1));
+        texturePass(texture, U.vec4(0,0,1,1));
     }
 
     public static void texturePass(Texture texture, Vector4f uv) {
-        texturePass(texture, MathLib.vec2(1,1),MathLib.vec4(0,0,1,1),uv);
+        texturePass(texture, U.vec2(1,1),U.vec4(0,0,1,1),uv);
     }
 
     public static void texturePass(Texture texture, Vector2f resolution, Vector4f pos, Vector4f uv) {
@@ -181,8 +255,8 @@ public class ShaderProgram {
             glDeleteProgram(program_handle);
         } Disposable.dispose(shader_pass);
         current_program = null;
-        programs_by_id.clear();;
-        programs_by_name.clear();;
+        programs_by_id.clear();
+        programs_by_name.clear();
         unnamed_suffix_pool.clear();
         common_programs = null;
         shader_pass = null;

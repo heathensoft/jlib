@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
@@ -24,7 +25,7 @@ public class TextBatchGUI extends BatchGUI {
 
     private final FontsGUI fonts;
 
-    TextBatchGUI(FontsGUI fonts, int capacity, int width, int height) throws Exception {
+    TextBatchGUI(FontsGUI fonts, int capacity, int width, int height) {
         int vertex_size = 4;
         int vertex_size_bytes = vertex_size * Float.BYTES;
         this.fonts = fonts;

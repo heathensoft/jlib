@@ -3,11 +3,10 @@ package io.github.heathensoft.jlib.gui.window;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureAtlas;
 import io.github.heathensoft.jlib.lwjgl.gfx.TextureRegion;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -15,7 +14,6 @@ import org.joml.primitives.Rectanglef;
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 
 /**
  * @author Frederik Dahl
@@ -55,7 +53,7 @@ public class SliderOld extends Box {
         float slider_circle_radius = slider_rect_height / 2f;
         float slider_rect_x = x + slider_circle_radius;
         float slider_rect_y = y - slider_circle_radius;
-        Rectanglef rect = MathLib.rectf();
+        Rectanglef rect = U.rectf();
         TextureAtlas default_icons = GUI.default_icons;
         Texture icons_diffuse_texture = default_icons.texture(0);
         TextureRegion circle_region = default_icons.getRegion(GUI.icon_default_circle);
@@ -63,11 +61,10 @@ public class SliderOld extends Box {
         int color_slider_background = 0xFF333333;
         int color_slider_active = 0xFF33AA33;
         if (iPressed(Mouse.LEFT)) { context.focus();
-            Vector2f mouse = context.mouse_position(MathLib.vec2());
-            float min = slider_rect_x;
+            Vector2f mouse = context.mouse_position(U.vec2());
             float max = slider_rect_x + slider_rect_width;
-            float mouse_x = U.clamp(mouse.x,min,max);
-            current_value = U.remap(mouse_x,min,max,0,1);
+            float mouse_x = U.clamp(mouse.x, slider_rect_x,max);
+            current_value = U.remap(mouse_x, slider_rect_x,max,0,1);
         }
 
         rect.minY = slider_rect_y - slider_rect_height;
@@ -116,14 +113,14 @@ public class SliderOld extends Box {
         float w = currentSize.width() - 2;
         float h = currentSize.height() - 2;
         if (iPressed(Mouse.LEFT)) { context.focus();
-            Vector2f mouse = context.mouse_position(MathLib.vec2());
+            Vector2f mouse = context.mouse_position(U.vec2());
             float min = x + (h/2f) + 1;
             float max = x + w -(h/2f) - 1;
             float mouse_x = U.clamp(mouse.x,min,max);
             current_value = U.remap(mouse_x,min,max,0,1);
         }
 
-        Rectanglef quad = MathLib.rectf(x,y - currentSize.height(),x + currentSize.width(),y);
+        Rectanglef quad = U.rectf(x,y - currentSize.height(),x + currentSize.width(),y);
         float slider_pos = x + 1 + current_value * (w - h);
 
 
@@ -284,7 +281,7 @@ public class SliderOld extends Box {
     }
 
     public void setValue(float value) {
-        if (!float_equals(current_value,value,1e-6)) {
+        if (!floatEquals(current_value,value,1e-6)) {
             this.previous_value = current_value;
             this.current_value = clamp(value);
         }

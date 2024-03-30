@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.test.gui.window.window;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.test.gui.interactable.OnGrab;
 import io.github.heathensoft.jlib.test.gui.interactable.OnRelease;
 import io.github.heathensoft.jlib.test.gui.interactable.UInteractable;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import org.joml.Vector2f;
 
@@ -30,7 +30,7 @@ public class WindowDragZone extends UInteractable implements OnGrab, OnRelease {
     public void executeOnGrab(Vector2f origin, Vector2f vector, int button) {
         if (button == Mouse.LEFT) {
             if (dragging) {
-                Vector2f position = MathLib.vec2();
+                Vector2f position = U.vec2();
                 position.set(start).add(vector);
                 window.setPosition(position);
             } else {

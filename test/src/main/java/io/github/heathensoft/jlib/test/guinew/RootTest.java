@@ -1,9 +1,9 @@
 package io.github.heathensoft.jlib.test.guinew;
 
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.gui.window.RootContainer;
 import io.github.heathensoft.jlib.gui.window.WindowGUI;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import org.joml.primitives.Rectanglef;
 
 /**
@@ -26,7 +26,7 @@ public class RootTest extends RootContainer {
     }
 
     public void renderBackground(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-        Rectanglef quad = bounds(MathLib.rectf(),x,y);
+        Rectanglef quad = bounds(U.rectf(),x,y);
         renderer.drawElement(quad,0x7F000000,id,0,true);
     }
 }

@@ -2,12 +2,11 @@ package io.github.heathensoft.jlib.ui.text;
 
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
-import org.joml.Vector4f;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static io.github.heathensoft.jlib.lwjgl.gfx.Color.hex_to_rgb;
+import static io.github.heathensoft.jlib.common.utils.Color.hex_to_rgb;
 
 /**
  * @author Frederik Dahl

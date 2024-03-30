@@ -4,7 +4,6 @@ import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.GUI;
 import io.github.heathensoft.jlib.gui.gfx.RendererGUI;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import org.joml.Vector2f;
@@ -119,7 +118,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_y = transform_initial.maxY;
-                float mouse_y = mouse_position(MathLib.vec2()).y;
+                float mouse_y = mouse_position(U.vec2()).y;
                 mouse_y = U.clamp(mouse_y,0,res.height());
                 float dy = mouse_y - origin_y;
                 float y = origin_y + dy;
@@ -153,7 +152,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_x = transform_initial.maxX;
-                float mouse_x = mouse_position(MathLib.vec2()).x;
+                float mouse_x = mouse_position(U.vec2()).x;
                 mouse_x = U.clamp(mouse_x,0,res.width());
                 float dx = mouse_x - origin_x;
                 float x = origin_x + dx;
@@ -187,7 +186,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_y = transform_initial.minY;
-                float mouse_y = mouse_position(MathLib.vec2()).y;
+                float mouse_y = mouse_position(U.vec2()).y;
                 mouse_y = U.clamp(mouse_y,0,res.height());
                 float dy = mouse_y - origin_y;
                 float y = origin_y + dy;
@@ -221,7 +220,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_x = transform_initial.minX;
-                float mouse_x = mouse_position(MathLib.vec2()).x;
+                float mouse_x = mouse_position(U.vec2()).x;
                 mouse_x = U.clamp(mouse_x,0,res.width());
                 float dx = mouse_x - origin_x;
                 float x = origin_x + dx;
@@ -253,7 +252,7 @@ public class WindowGUI implements Disposable {
                 restoringY = false;
                 maximizingX = false;
                 maximizingY = false;
-                Vector2f origin_translation = MathLib.vec2(
+                Vector2f origin_translation = U.vec2(
                         transform_initial.minX,
                         transform_initial.maxY);
                 origin_translation.sub(
@@ -290,7 +289,7 @@ public class WindowGUI implements Disposable {
     }
 
     public void render(RendererGUI renderer, float dt) {
-        Rectanglef bounds = bounds(MathLib.rectf());
+        Rectanglef bounds = bounds(U.rectf());
         Resolution resolution = screen_resolution();
         final float screen_width = resolution.width();
         final float screen_height = resolution.height();
@@ -425,7 +424,7 @@ public class WindowGUI implements Disposable {
             }
         }
 
-        Rectanglef transform = MathLib.rectf();
+        Rectanglef transform = U.rectf();
 
         if (isTransforming()) {
             transform_timer += (dt * 5f);

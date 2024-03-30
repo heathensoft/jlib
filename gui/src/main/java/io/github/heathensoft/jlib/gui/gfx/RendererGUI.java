@@ -1,11 +1,11 @@
 package io.github.heathensoft.jlib.gui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.gui.text.Paragraph;
 import io.github.heathensoft.jlib.gui.text.TextOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.gfx.Color;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -248,7 +248,7 @@ public class RendererGUI implements Disposable {
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id) { drawOutline(quad,thickness,abgr,id,0f,false); }
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, boolean invisible_id) { drawOutline(quad, thickness, abgr, id,0,invisible_id); }
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, float glow, boolean invisible_id) {
-        Rectanglef outline = MathLib.rectf().set(quad);
+        Rectanglef outline = U.rectf().set(quad);
         outline.minY = quad.maxY - thickness;
         drawElement(outline, abgr, id, glow);
         outline.minY = quad.minY;
@@ -509,7 +509,7 @@ public class RendererGUI implements Disposable {
     public void flush() {
         if (rendering) {
             if (active_batch == TEXT_BATCH) {
-                textBatch.flush();;
+                textBatch.flush();
             } else if (active_batch == SPRITE_BATCH) {
                 spriteBatch.flush();
             }

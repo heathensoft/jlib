@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.test.guinew.tt;
 
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.lwjgl.utils.MathLib;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.*;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.Interactable;
@@ -116,7 +116,7 @@ public class TextFieldOld extends Box implements TextProcessor {
                 float sb_outer_height = currentHeight();
                 float sb_inner_height = sb_outer_height * normalized_height;
                 float sb_wiggle_room = sb_outer_height - sb_inner_height;
-                float drag_vector_y = GUI.mouse_drag_vector(MathLib.vec2(),Mouse.LEFT).y;
+                float drag_vector_y = GUI.mouse_drag_vector(U.vec2(),Mouse.LEFT).y;
                 float sb__position = sb_grab_y - drag_vector_y;
                 sb__position = clamp(sb__position,0,sb_wiggle_room);
                 float normalized_position = sb__position / sb_wiggle_room;
@@ -156,7 +156,7 @@ public class TextFieldOld extends Box implements TextProcessor {
             if(cursor_y0 < window_y0) scrollUp(window_y0 - cursor_y0);
             else if(cursor_y1 > window_y1) scrollDown(cursor_y1 - window_y1);
         }
-        Rectanglef bounds = bounds(MathLib.rectf(),x,y);
+        Rectanglef bounds = bounds(U.rectf(),x,y);
         if (boxBackground == null) renderer.drawElement(bounds,0xFF212121, iID);
         else boxBackground.render(window,renderer,bounds,0,0,dt);
         bounds.minX = bounds.maxX - sb_width;
@@ -165,7 +165,7 @@ public class TextFieldOld extends Box implements TextProcessor {
     }
 
     protected void displayFadingFontSize() {
-        Rectanglef bounds = MathLib.rectf();
+        Rectanglef bounds = U.rectf();
         if (parent_window.getBoundsOf(this,bounds)) {
             bounds.maxX -= sb_width;
             parent_window.displayFading(null,null,round(text_size),null,bounds);
@@ -179,7 +179,7 @@ public class TextFieldOld extends Box implements TextProcessor {
     protected void renderText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
         if (!text.isBlank()) {
             boolean show_cursor = editing_enabled && iHasFocus();
-            Rectanglef bounds = bounds(MathLib.rectf(),x,y);
+            Rectanglef bounds = bounds(U.rectf(),x,y);
             bounds.maxX -= sb_width;
             renderer.drawText(text,bounds,tf_text_offset,text_font,tf_padding,text_size,text_wrap,show_cursor);
         }
@@ -197,7 +197,7 @@ public class TextFieldOld extends Box implements TextProcessor {
             float sb_height = sb_max_height * normalized_height;
             float sb_wr = sb_max_height - sb_height;
             float sb_position = sb_wr * windowPositionNormalized(text_field_wiggle_room);
-            bounds = MathLib.rectf().set(bounds);
+            bounds = U.rectf().set(bounds);
             bounds.maxY -= sb_position;
             bounds.minY = bounds.maxY - (sb_height + sb_width);
             color = 0xdd0000FF;
@@ -259,7 +259,7 @@ public class TextFieldOld extends Box implements TextProcessor {
     }
 
     private void displayFadingFont() {
-        Rectanglef bounds = MathLib.rectf();
+        Rectanglef bounds = U.rectf();
         if (parent_window.getBoundsOf(this,bounds)) {
             bounds.maxX -= sb_width;
             GUI.fonts.bindFontMetrics(text_font);
@@ -304,7 +304,7 @@ public class TextFieldOld extends Box implements TextProcessor {
     }
 
     protected void refresh() {
-        Rectanglef bounds = bounds(MathLib.rectf(),0,0);
+        Rectanglef bounds = bounds(U.rectf(),0,0);
         bounds.minY += tf_padding;
         bounds.maxY -= tf_padding;
         float tf_window_height = bounds.lengthY();
@@ -386,7 +386,7 @@ public class TextFieldOld extends Box implements TextProcessor {
         float scale = renderer.fonts().relativeScale(text_size);
         float cursor_width = renderer.fonts().averageAdvance() * scale;
         float cursor_height = text_size;
-        Rectanglef rect = MathLib.rectf();
+        Rectanglef rect = U.rectf();
         rect.minX = x + text_cursor_position.x;
         rect.maxX = rect.minX + cursor_width;
         rect.maxY = y + text_cursor_position.y;
@@ -399,7 +399,7 @@ public class TextFieldOld extends Box implements TextProcessor {
     }
 
     private void renderTextFieldBackgroundDebug(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-        Rectanglef bounds = bounds(MathLib.rectf(),x,y);
+        Rectanglef bounds = bounds(U.rectf(),x,y);
         bounds.minX += tf_padding;
         bounds.maxX -= (tf_padding + sb_width);
         bounds.maxY -= tf_padding;
