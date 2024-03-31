@@ -3,7 +3,7 @@ package io.github.heathensoft.jlib.gui.gfx;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
-import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
+import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 import org.lwjgl.system.MemoryUtil;
 
 import java.nio.FloatBuffer;
@@ -15,7 +15,7 @@ import java.nio.FloatBuffer;
 
 
 abstract class BatchGUI implements Disposable  {
-    protected Vao vertexAttribArray;
+    protected VertexAttributes vertexAttribArray;
     protected ShaderProgramOld shaderProgram; // disposed externally
     protected BufferObject vertexBuffer;
     protected FloatBuffer vertices;

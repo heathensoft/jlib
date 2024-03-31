@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import static io.github.heathensoft.jlib.common.utils.Color.*;
-import static org.lwjgl.opengl.GL11.GL_REPEAT;
 
 /**
  * @author Frederik Dahl
@@ -50,11 +49,11 @@ public class ColorPalette implements Iterable<Vector4f>{
         Bitmap bitmap = bitmap();
         Texture texture = Texture.generate1D(bitmap.width());
         texture.bindToActiveSlot();
-        texture.filter(min_filter, mag_filter);
-        if (repeat) texture.textureWrapS(GL_REPEAT);
+        texture.textureFilter(min_filter, mag_filter);
+        if (repeat) texture.textureRepeat();
         else texture.clampToEdge();
         texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
-        texture.uploadData(bitmap.pixels());
+        texture.uploadSubData(bitmap.pixels());
         bitmap.dispose();
         GLContext.checkError();
         return texture;
@@ -63,7 +62,7 @@ public class ColorPalette implements Iterable<Vector4f>{
     public Texture texture3D(int texture_size, int min_filter, int mag_filter) {
         Texture texture = Texture.generate3D(texture_size, texture_size, texture_size);
         texture.bindToActiveSlot();
-        texture.filter(min_filter, mag_filter);
+        texture.textureFilter(min_filter, mag_filter);
         texture.clampToEdge();
         texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
         int num_pixels = texture_size * texture_size * texture_size;
@@ -101,7 +100,7 @@ public class ColorPalette implements Iterable<Vector4f>{
                 }
             }
         }
-        texture.uploadData(buffer.flip());
+        texture.uploadSubData(buffer.flip());
         MemoryUtil.memFree(buffer);
         GLContext.checkError();
         return texture;

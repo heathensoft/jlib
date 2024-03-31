@@ -45,29 +45,17 @@ public class Sprite {
     }
 
     public boolean isFlippedVertically() { return region.isFlippedVertically(); }
-
     public boolean isFlippedHorizontally() { return region.isFlippedHorizontally(); }
-
     public int widthTexels() { return region.w(); }
-
     public int heightTexels() { return region.h(); }
-
     public float width() { return widthTexels() * scale.x; }
-
     public float height() { return heightTexels() * scale.y; }
-
     public float rotationRadians() { return rotation; }
-
     public float rotationDegrees() { return (float) Math.toDegrees(rotation); }
-
     public Texture texture() { return texture; }
-
     public TextureRegion regionCopy() { return region.copy(); }
-
     public Vector4f uvCoordinates(Vector4f dst) { return region.getUVs(dst); }
-
     public Vector2f scale(Vector2f dst) { return dst.set(scale); }
-
     public Rectanglef bounds(Rectanglef dst, boolean centered, boolean rotated) {
         if (rotated) { float w, h;
             if (rotation == ROT_0) { w = width(); h = height();
@@ -111,11 +99,6 @@ public class Sprite {
         return dst;
     }
 
-    public Bitmap createBitmap() throws Exception {
-        //texture.get();
-        return null;
-    }
-
     public Texture createTexture(boolean allocate_mipmaps) throws Exception {
         int width = round(width());
         int height = round(height());
@@ -124,7 +107,7 @@ public class Sprite {
         Texture texture = Texture.generate2D(width,height);
         texture.bindToActiveSlot();
         texture.allocate(this.texture.format(),allocate_mipmaps);
-        texture.filterNearest(); texture.repeat();
+        texture.filterNearest(); texture.textureRepeat();
         Framebuffer.attachColor(texture,0,false);
         Framebuffer.drawBuffer(0);
         Framebuffer.checkStatus();
@@ -187,35 +170,23 @@ public class Sprite {
     public void setRotationDegrees(float degrees) {
         setRotationRadians((float)Math.toRadians(degrees));
     }
-
     public void rotateRadians(float radians) {
         rotation = (rotation + radians) % ROT_360;
         if (rotation < 0) rotation += ROT_360;
     }
-
     public void rotateDegrees(float degrees) { rotateRadians((float) Math.toRadians(degrees)); }
-
     public void translateTexelArea(int dx, int dy) { region.scroll(dx,dy); }
-
     public void setRotation0() { rotation = ROT_0; }
-
     public void setRotation90() { rotation = ROT_90; }
-
     public void setRotation180() { rotation = ROT_180; }
-
     public void setRotation270() { rotation = ROT_270; }
-
     public void setTexelArea(int x, int y, int w, int h) {
         region.set(x,y,w,h);
         clampScale();
     }
-
     public void setTexelPosition(int x, int y) { region.setPosition(x,y); }
-
     public void flipImageHorizontally() { region.flipHorizontally(); }
-
     public void flipImageVertically() { region.flipVertically(); }
-
     public void togglePixelCenteredUV(boolean on) { region.togglePixelCentered(on); }
 
     private void clampScale() {

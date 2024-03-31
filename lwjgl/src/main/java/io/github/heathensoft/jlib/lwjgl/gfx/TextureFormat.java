@@ -12,9 +12,7 @@ import static org.lwjgl.opengl.GL31.*;
  */
 
 
-public enum TextureFormat {
-
-    /* Details below */
+public enum TextureFormat { /* Details below */
 
     INVALID(0,0,0,0,0,false),
     STENCIL8(GL_STENCIL_INDEX8,GL_STENCIL_INDEX,GL_UNSIGNED_BYTE,0,1,false), // OpenGL 4.4
@@ -46,8 +44,8 @@ public enum TextureFormat {
     RGBA8_UNSIGNED_NORMALIZED(GL_RGBA8,GL_RGBA,GL_UNSIGNED_BYTE,4,4,true),
     SRGBA8_UNSIGNED_NORMALIZED(GL_SRGB8_ALPHA8,GL_RGBA,GL_UNSIGNED_BYTE,4,4,true);
 
-    public final int sized_format;
-    public final int pixel_format;
+    public final int sized_format; // Internal formal
+    public final int pixel_format; // Un-sized
     public final int pixel_data_type;
     public final int channels;
     public final int pack_alignment;

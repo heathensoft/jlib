@@ -5,7 +5,7 @@ import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
-import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
+import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
@@ -22,7 +22,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 public class ScreenQuad implements Disposable {
     
-    private final Vao vao;
+    private final VertexAttributes vao;
     private final BufferObject indexBuffer;
     private final BufferObject vertexBuffer;
     private final ShaderProgramOld shaderProgram;
@@ -39,7 +39,7 @@ public class ScreenQuad implements Disposable {
                  1.0f, 1.0f, 1, 1, // Top Right  3
         }; short[] indices = { 0,1,2,2,1,3};
 
-        vao = new Vao().bind();
+        vao = new VertexAttributes().bind();
         indexBuffer.bind();
         indexBuffer.bufferData(indices);
         vertexBuffer.bind();

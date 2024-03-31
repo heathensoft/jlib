@@ -52,7 +52,7 @@ public class IDBuffer extends Framebuffer {
         // initialize id-texture. read/write ops.
         uid_texture = Texture.generate2D(width, height);
         uid_texture.bindToActiveSlot();
-        uid_texture.filter(GL_NEAREST,GL_NEAREST);
+        uid_texture.textureFilter(GL_NEAREST,GL_NEAREST);
         uid_texture.clampToEdge();
         uid_texture.allocate(TextureFormat.R32_UNSIGNED_INTEGER,false);
         attachColor(uid_texture,0,true);

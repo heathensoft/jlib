@@ -4,7 +4,7 @@ import io.github.heathensoft.jlib.gui.text.TextUtils;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
 import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
-import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
+import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.lwjgl.system.MemoryUtil;
 
@@ -35,7 +35,7 @@ public class TextBatchGUI extends BatchGUI {
         int vertex_size_bytes = vertex_size * Float.BYTES;
         this.fonts = fonts;
         buffer_capacity = capacity;
-        vertexAttribArray = new Vao().bind();
+        vertexAttribArray = new VertexAttributes().bind();
         vertices = MemoryUtil.memAllocFloat(capacity * vertex_size);
         vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
         vertexBuffer.bind().bufferData((long) vertex_size_bytes * capacity);

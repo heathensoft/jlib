@@ -35,12 +35,12 @@ public class DebugLines2D {
     private static ShaderProgramOld shaderProgram;
     private static FloatBuffer vertices;
     private static BufferObject vbo;
-    private static Vao vao;
+    private static VertexAttributes vao;
     
     
     public static void initialize() {
         if (!initialized) {
-            try { vao = new Vao().bind();
+            try { vao = new VertexAttributes().bind();
                 vertices = MemoryUtil.memAllocFloat(MAX_LINES * LINE_SIZE);
                 vbo = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW).bind();
                 vbo.bufferData((long)MAX_LINES * LINE_SIZE * Float.BYTES);

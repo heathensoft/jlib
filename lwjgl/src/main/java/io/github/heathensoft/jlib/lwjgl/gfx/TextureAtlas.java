@@ -152,8 +152,8 @@ public class TextureAtlas implements Disposable {
             Logger.debug("Allocating Texture[{}]: Width: {}, Height: {}, Channels: {}, SRGB Format: {}",
                     i,bitmap.width(),bitmap.height(),bitmap.channels(),srgb);
             textures[i] = bitmap.asTexture(texture_entry_allocate_mip_map,srgb);
-            textures[i].textureWrapST(texture_entry_wrap); // invalid enum must be checked before this
-            textures[i].filter(texture_entry_min_filter,texture_entry_mag_filter);
+            textures[i].textureWrap(texture_entry_wrap); // invalid enum must be checked before this
+            textures[i].textureFilter(texture_entry_min_filter,texture_entry_mag_filter);
             if (texture_entry_allocate_mip_map) {
                 Logger.debug("Generating Mip Map");
                 textures[i].generateMipmap();

@@ -48,8 +48,8 @@ public class BubbleDemo implements Disposable {
         Texture texture = Texture.generate2D(width, height);
         texture.bindToActiveSlot();
         texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
-        texture.filter(GL_LINEAR,GL_LINEAR);
-        texture.repeat();
+        texture.textureFilter(GL_LINEAR,GL_LINEAR);
+        texture.textureRepeat();
         Framebuffer.attachColor(texture,0,true);
         Framebuffer.drawBuffer(0);
         Framebuffer.checkStatus();

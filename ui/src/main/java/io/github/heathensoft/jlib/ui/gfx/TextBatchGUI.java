@@ -30,7 +30,7 @@ public class TextBatchGUI extends BatchGUI {
         int vertex_size_bytes = vertex_size * Float.BYTES;
         this.fonts = fonts;
         buffer_capacity = capacity;
-        vertexAttribArray = new Vao().bind();
+        vertexAttribArray = new VertexAttributes().bind();
         vertices = MemoryUtil.memAllocFloat(capacity * vertex_size);
         vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
         vertexBuffer.bind().bufferData((long) vertex_size_bytes * capacity);

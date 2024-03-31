@@ -47,30 +47,10 @@ public class SamplerArray {
                 return prev_slot;
             }
         }
-        if (next_slot == length)
-            return length;
+        if (next_slot == length) return length;
         else { slots[next_slot] = texture;
             prev_slot = next_slot++;
             return prev_slot;
-        }
-    }
-
-    /**
-     * Uploads the uniform and clears the array
-     * @param shader used shader
-     * @param uniform uniform name
-     */
-    public void uploadUniform(ShaderProgramOld shader, String uniform) {
-        if (next_slot > 0) {
-            try (MemoryStack stack = MemoryStack.stackPush()){
-                IntBuffer buffer = stack.mallocInt(next_slot);
-                for (int slot = 0; slot < next_slot; slot++) { buffer.put(slot);
-                } shader.use().setUniform1iv(uniform,buffer.flip());
-                for (int slot = 0; slot < next_slot; slot++) {
-                    slots[slot].bindToSlot(slot + glActiveSlotOffset);
-                    slots[slot] = null;
-                } next_slot = prev_slot = 0;
-            }
         }
     }
 

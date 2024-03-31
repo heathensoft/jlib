@@ -563,7 +563,7 @@ public class Bitmap implements Disposable {
             default -> format = TextureFormat.INVALID;
         } texture.bindToActiveSlot();
         texture.allocate(format,allocate_mipmap);
-        texture.uploadData(pixels);
+        texture.uploadSubData(pixels);
         return texture;
     }
 

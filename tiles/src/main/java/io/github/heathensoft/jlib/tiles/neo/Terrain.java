@@ -28,14 +28,14 @@ public class Terrain implements Disposable {
         blend_map = Texture.generate2D(mapSize.length_tiles);
         blend_map.bindToActiveSlot();
         blend_map.allocate(TextureFormat.RGBA4_UNSIGNED_NORMALIZED,true);
-        blend_map.filter(GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR);
+        blend_map.textureFilter(GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR);
         blend_map.clampToEdge();
 
         texture_array_diffuse = Texture.generate2DArray(terrain_texture_size,5);
         texture_array_diffuse.bindToActiveSlot();
         texture_array_diffuse.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED,true);
-        texture_array_diffuse.filter(GL_LINEAR_MIPMAP_LINEAR,GL_NEAREST);
-        texture_array_diffuse.repeat();
+        texture_array_diffuse.textureFilter(GL_LINEAR_MIPMAP_LINEAR,GL_NEAREST);
+        texture_array_diffuse.textureRepeat();
 
         this.terrain_texture_size = terrain_texture_size;
     }

@@ -29,10 +29,9 @@ public class MipmapTest extends RootContainer {
     public MipmapTest() throws Exception {
         Bitmap bitmap = Resources.image("res/jlib/test/lord.png");
         texture = bitmap.asTexture(true);
-        texture.filter(GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR);
-        texture.repeat();
-        //texture.generateMipmap();
-        texture.generateMipmapCustom();
+        texture.textureFilter(GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR);
+        texture.textureRepeat();
+        texture.generateMipmap();
         bitmap.dispose();
 
         Sprite sprite = new Sprite(texture);

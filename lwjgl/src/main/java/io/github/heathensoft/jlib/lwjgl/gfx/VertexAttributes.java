@@ -17,28 +17,16 @@ import static org.lwjgl.opengl.GL30.*;
  */
 
 
-public class Vao implements Disposable {
-    
+public class VertexAttributes implements Disposable {
     private static int bound = GL_NONE;
-    
     private final int id;
-    
-    public Vao() {
+    public VertexAttributes() {
         id = glGenVertexArrays();
     }
-    
-    public Vao bind() {
-        if (bound != id)
-            glBindVertexArray(bound = id);
+    public VertexAttributes bind() {
+        if (bound != id)  glBindVertexArray(bound = id);
         return this;
-    }
-    
-    public static void bindZERO() {
-        glBindVertexArray(bound = GL_NONE);
-    }
-    
-    public void dispose() {
-        glDeleteVertexArrays(id);
-        if (bound == id) bindZERO();
+    } public void dispose() { glDeleteVertexArrays(id);
+        if (bound == id) bound = GL_NONE;
     }
 }

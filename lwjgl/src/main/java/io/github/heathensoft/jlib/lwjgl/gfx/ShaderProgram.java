@@ -86,12 +86,12 @@ public class ShaderProgram {
     }
 
     public static class ShaderPass implements Disposable {
-        private final Vao vertexAttributes;
+        private final VertexAttributes vertexAttributes;
         private final BufferObject indices, vertices;
         private ShaderPass() {
             this.indices = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
             this.vertices = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
-            this.vertexAttributes = new Vao().bind();
+            this.vertexAttributes = new VertexAttributes().bind();
             this.indices.bind().bufferData(new byte[] { 0,1,2,2,1,3});
             this.vertices.bind().bufferData((long) 16 * Float.BYTES);
             glVertexAttribPointer(0, 2, GL_FLOAT, false, 16, 0);
@@ -219,8 +219,9 @@ public class ShaderProgram {
             } catch (Exception e) {
                 Logger.error(e);
             } finally {
-                texture.textureWrapST(prev_tex_wrap_u,prev_tex_wrap_v);
-                texture.filter(prev_min_filter,prev_mag_filter);
+                texture.texParameteri(GL_TEXTURE_WRAP_S,prev_tex_wrap_u);
+                texture.texParameteri(GL_TEXTURE_WRAP_T,prev_tex_wrap_v);
+                texture.textureFilter(prev_min_filter,prev_mag_filter);
             }
         }
     }
@@ -236,8 +237,7 @@ public class ShaderProgram {
     public static void texturePass(Texture texture, Vector2f resolution, Vector4f pos, Vector4f uv) {
         bindProgram(commonPrograms().texture_pass_program);
         setUniform(ShaderProgram.UNIFORM_RESOLUTION,resolution);
-        setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,0);
-        texture.bindToSlot(0);
+        setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,texture.bindTooAnySlot());
         ShaderProgram.shaderPass().draw();
     }
 

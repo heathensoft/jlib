@@ -90,11 +90,11 @@ public class DepthMap8 implements Disposable {
     public Texture toTexture(int wrap, int min_filter, int max_filter, boolean mipmap) {
         Texture texture = Texture.generate2D(width,height);
         texture.bindToActiveSlot();
-        texture.filter(min_filter,max_filter);
-        texture.textureWrapST(wrap);
+        texture.textureFilter(min_filter,max_filter);
+        texture.textureWrap(wrap);
         texture.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED,mipmap);
         if (mipmap) texture.generateMipmap();
-        texture.uploadData(data);
+        texture.uploadSubData(data);
         return texture;
     }
 

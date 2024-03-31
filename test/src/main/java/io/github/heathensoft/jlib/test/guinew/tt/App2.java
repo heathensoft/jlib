@@ -28,9 +28,9 @@ public class App2 extends Application {
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         config.settings_width = 1280;
         config.settings_height = 720;
-        config.settings_width = 1920;
-        config.settings_height = 1080;
-        config.windowed_mode = false;
+        //config.settings_width = 1920;
+        //config.settings_height = 1080;
+        //config.windowed_mode = false;
         config.auto_resolution = false;
         supported.add(Resolution.R_1280x720);
         supported.add(Resolution.R_1920x1080);

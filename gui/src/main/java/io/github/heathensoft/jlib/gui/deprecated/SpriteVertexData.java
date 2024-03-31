@@ -3,7 +3,7 @@ package io.github.heathensoft.jlib.gui.deprecated;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
-import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
+import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 
 import java.nio.FloatBuffer;
 
@@ -21,7 +21,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
 
 class SpriteVertexData implements Disposable {
     
-    private final Vao vao;
+    private final VertexAttributes vao;
     private final BufferObject indices;
     private final BufferObject vertexData;
     
@@ -29,7 +29,7 @@ class SpriteVertexData implements Disposable {
     SpriteVertexData(int sprites) {
         indices = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
         vertexData = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
-        vao = new Vao().bind();
+        vao = new VertexAttributes().bind();
         indices.bind();
         indices.bufferData(SpriteOld.generateIndices(sprites));
         vertexData.bind();

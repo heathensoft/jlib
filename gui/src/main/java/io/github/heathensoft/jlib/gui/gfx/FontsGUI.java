@@ -94,8 +94,8 @@ public class FontsGUI implements Disposable {
             font_normals.dispose();
             font_alpha.dispose();
             texture = bitmap.asTexture(fontMetrics.mipMap,false);
-            texture.textureWrapST(fontMetrics.textureWrap); // invalid enum must be checked before this
-            texture.filter(fontMetrics.minFilter,fontMetrics.magFilter);
+            texture.textureWrap(fontMetrics.textureWrap); // invalid enum must be checked before this
+            texture.textureFilter(fontMetrics.minFilter,fontMetrics.magFilter);
             bitmap.dispose();
         } { // Upload Glyphs
             font_name[slot] = fontMetrics.name;

@@ -6,7 +6,7 @@ import io.github.heathensoft.jlib.common.storage.primitive.IntQueue;
 import io.github.heathensoft.jlib.common.storage.primitive.IntStack;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
-import io.github.heathensoft.jlib.lwjgl.gfx.Vao;
+import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
@@ -32,13 +32,13 @@ import static org.lwjgl.opengl.GL30.glVertexAttribIPointer;
 public class Chunk implements Disposable {
 
     private IntBuffer rooms;
-    private final Vao gfx_tiles_vao;
+    private final VertexAttributes gfx_tiles_vao;
     private final BufferObject gfx_tiles_vbo;
 
 
     public Chunk() {
         rooms = IntBuffer.allocate(4).flip(); // Not allocating max (256). Auto-grows if needed. (read-mode on init)
-        gfx_tiles_vao = new Vao().bind();
+        gfx_tiles_vao = new VertexAttributes().bind();
         gfx_tiles_vbo = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW).bind();
         gfx_tiles_vbo.bufferData((long) 256 * Integer.BYTES);
         glVertexAttribIPointer(0,1,GL_UNSIGNED_INT,Integer.BYTES,0);

@@ -37,7 +37,7 @@ public class ColorPicker implements Disposable {
     private final Framebuffer hue_slider_buffer;
     private final BufferObject vertexBuffer;
     private final BufferObject indexBuffer;
-    private final Vao vertexArrayObject;
+    private final VertexAttributes vertexArrayObject;
     private final Vector4f hsv;
     private Vector4f rgb;
     private boolean dirty;
@@ -48,7 +48,7 @@ public class ColorPicker implements Disposable {
         vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_STATIC_DRAW);
         float[] vertices = new float[] {1.0f,-1.0f,-1.0f,1.0f,1.0f,1.0f,-1.0f,-1.0f};
         short[] indices = {2, 1, 0, 0, 1, 3};
-        vertexArrayObject = new Vao().bind();
+        vertexArrayObject = new VertexAttributes().bind();
         indexBuffer.bind().bufferData(indices);
         vertexBuffer.bind().bufferData(vertices);
         glVertexAttribPointer(0, 2, GL_FLOAT, false, 2 * Float.BYTES, 0);
@@ -169,7 +169,7 @@ public class ColorPicker implements Disposable {
         Texture hsw_window_texture = Texture.generate2D(HSV_WINDOW_RES_WIDTH,HSV_WINDOW_RES_HEIGHT);
         hsw_window_texture.bindToActiveSlot();
         hsw_window_texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
-        hsw_window_texture.filter(GL_LINEAR,GL_LINEAR);
+        hsw_window_texture.textureFilter(GL_LINEAR,GL_LINEAR);
         hsw_window_texture.clampToEdge();
         Framebuffer.attachColor(hsw_window_texture,0,true);
         Framebuffer.drawBuffer(0);
@@ -185,7 +185,7 @@ public class ColorPicker implements Disposable {
         Texture hue_slider_texture = Texture.generate2D(HUE_SLIDER_RES_WIDTH,HUE_SLIDER_RES_HEIGHT);
         hue_slider_texture.bindToActiveSlot();
         hue_slider_texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
-        hue_slider_texture.filter(GL_LINEAR,GL_LINEAR);
+        hue_slider_texture.textureFilter(GL_LINEAR,GL_LINEAR);
         hue_slider_texture.clampToEdge();
         Framebuffer.attachColor(hue_slider_texture,0,true);
         Framebuffer.drawBuffer(0);

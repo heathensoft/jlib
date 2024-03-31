@@ -49,7 +49,7 @@ public class SpriteBatchGUI extends BatchGUI {
         vertices = MemoryUtil.memAllocFloat(buffer_capacity * vertex_size);
         indices = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
         vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
-        vertexAttribArray = new Vao().bind();
+        vertexAttribArray = new VertexAttributes().bind();
         indices.bind().bufferData(generateIndices(buffer_capacity));
         vertexBuffer.bind().bufferData((long) sprite_size * buffer_capacity * Float.BYTES); int pointer = 0;
         glVertexAttribPointer(0,2,GL_FLOAT,false,vertex_size_bytes,pointer);
