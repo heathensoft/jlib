@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.gui.dev;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Color;
+import io.github.heathensoft.jlib.gui.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.joml.Vector2f;

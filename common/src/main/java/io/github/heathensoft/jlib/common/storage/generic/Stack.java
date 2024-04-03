@@ -38,6 +38,7 @@ public class Stack<E> implements Disposable, Readable<E>  {
     }
     
     public E peak() {
+        if (isEmpty()) return null;
         return items[p - 1];
     }
     

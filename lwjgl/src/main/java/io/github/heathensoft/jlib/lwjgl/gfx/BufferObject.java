@@ -28,9 +28,9 @@ import static org.lwjgl.opengl.GL30.glBindBufferRange;
 public class BufferObject implements Disposable {
     
     protected int target;
-    protected final int usage;
     protected final int name;
-    
+    protected final int usage;
+
     public BufferObject(int target, int usage) {
         this.name = glGenBuffers();
         this.target = target;
@@ -41,52 +41,35 @@ public class BufferObject implements Disposable {
         glBindBuffer(target, name);
         return this;
     }
-    
+
     public void bufferData(byte[] data) {
-        ByteBuffer buffer = null;
-        try { buffer = MemoryUtil.memAlloc(data.length);
-            buffer.put(data).flip();
-            bufferData(buffer);
-        }finally {
-            if (buffer != null)
-                MemoryUtil.memFree(buffer);
-        }
+        ByteBuffer buffer = MemoryUtil.memAlloc(data.length);
+        buffer.put(data).flip();
+        bufferData(buffer.put(data).flip());
+        MemoryUtil.memFree(buffer);
     }
-    
+
     public void bufferData(short[] data) {
-        ShortBuffer buffer = null;
-        try { buffer = MemoryUtil.memAllocShort(data.length);
-            buffer.put(data).flip();
-            bufferData(buffer);
-        }finally {
-            if (buffer != null)
-                MemoryUtil.memFree(buffer);
-        }
+        ShortBuffer buffer = MemoryUtil.memAllocShort(data.length);
+        buffer.put(data).flip();
+        bufferData(buffer.put(data).flip());
+        MemoryUtil.memFree(buffer);
     }
-    
+
     public void bufferData(int[] data) {
-        IntBuffer buffer = null;
-        try { buffer = MemoryUtil.memAllocInt(data.length);
-            buffer.put(data).flip();
-            bufferData(buffer);
-        }finally {
-            if (buffer != null){
-                MemoryUtil.memFree(buffer);
-            }
-        }
+        IntBuffer buffer = MemoryUtil.memAllocInt(data.length);
+        buffer.put(data).flip();
+        bufferData(buffer.put(data).flip());
+        MemoryUtil.memFree(buffer);
     }
-    
+
     public void bufferData(float[] data) {
-        FloatBuffer buffer = null;
-        try { buffer = MemoryUtil.memAllocFloat(data.length);
-            buffer.put(data).flip();
-            bufferData(buffer);
-        }finally {
-            if (buffer != null)
-                MemoryUtil.memFree(buffer);
-        }
+        FloatBuffer buffer = MemoryUtil.memAllocFloat(data.length);
+        buffer.put(data).flip();
+        bufferData(buffer.put(data).flip());
+        MemoryUtil.memFree(buffer);
     }
-    
+
     public void bufferData(long bytes) {
         glBufferData(target,bytes,usage);
     }

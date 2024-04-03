@@ -84,11 +84,10 @@ public class SpriteGUI {
         if (id != 0) {
             renderer.drawElement(quad,0,id,0,true);
         } if (rect.isValid()){
-            renderer.flush();
-            renderer.enableScissor(quad);
-            renderer.drawRotated(texture,region,rect,rotation,tint,id,glow);
-            renderer.flush();
-            renderer.disableScissor();
+            if (renderer.pushScissor(quad)) {
+                renderer.drawRotated(texture,region,rect,rotation,tint,id,glow);
+                renderer.popScissor();
+            }
         }
     }
 

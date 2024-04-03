@@ -5,6 +5,9 @@ import io.github.heathensoft.jlib.lwjgl.window.CursorObjects;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author Frederik Dahl
  * 19/02/2024
@@ -31,6 +34,7 @@ public class State {
     private boolean mouse_grab_last_frame;
     private boolean pause_processing;
     private final IDPool id_pool = new IDPool();
+    private final List<Interactable> consumers = new ArrayList<>(16);
 
     State() { id_pool.obtainID(); }
 
@@ -115,6 +119,19 @@ public class State {
     /** Can use this with text processor events in the box windows */
     public void focus(int id) { focused_element = id; }
     public void yieldFocus(int id) { if (focused_element == id) focused_element = ELEMENT_NONE; }
+
+    /** Can be used to drag and drop items to and from containers */
+    void registerAsConsumer(Interactable consumer) { if (!consumers.contains(consumer)) consumers.add(consumer); }
+    void unRegisterConsumer(Interactable consumer) { consumers.remove(consumer); }
+    Interactable findValidConsumer(Interactable interactable, int consumerID) {
+        for (Interactable consumer : consumers) {
+            if (consumer.interactableID() == consumerID) {
+                if (consumer.iIsValidDrop(interactable)) {
+                    return consumer;
+                }
+            }
+        } return null;
+    }
     boolean hasFocus(int id) { return focused_element == id; }
     boolean isHovered(int id) { return id == hovered_element; }
     boolean justHovered(int id) { return isHovered(id) && last_hovered_element != id; }
@@ -133,6 +150,10 @@ public class State {
     boolean clickedNotGrabbed(int id, int button) { return clicked(id, button) &! justReleasedFromGrab(id); }
     boolean clicked(int id, int button) { return isHovered(id) && justReleased(id,button); }
     int obtainID() { return id_pool.obtainID(); }
+    int obtainIDAAndRegisterAsConsumer(Interactable interactable) {
+        registerAsConsumer(interactable);
+        return id_pool.obtainID();
+    }
     void returnID(int id) {
         if (id > 0) {
             id_pool.returnID(id);

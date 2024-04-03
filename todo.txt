@@ -25,8 +25,26 @@ Add default blur, sharpen, bloom etc. shaders / passes:  Shader.bloomPass(textur
 ************************************************************************************************************************
 GUI:
 
+
+Colored paragraph. Not necessary. Just have draw calls with color.
+
+Rendering paragraphs
+
+Rendering editable paragraphs
+
+Scrollable BoxContainer.
+
+System.out to debut text window
+
+Remove Normal maps entirely from UI. Keep Glow. Leaves room for other functionality. like rendering lines. + more texture slots.
+(Maybe not. When making actual game UI, it might be cool to have)
+
+Delayed rendering. Render delayed commands. To be rendered after all windows. Used for dragged items and "help windows" (hovered descriptors)
+Rendered without ID.
+
 A gui class that stores textures generically generated. Like background from sprite etc. Loaded Textures too?.
 
+[Complete]
 box that can switch between content. only one is shown at a time. desired size is max of all
 
 
@@ -37,7 +55,8 @@ FileCache.
 [COMPLETE]
 Named window boxes. Stored in window, accessed by key
 
-Split Box Containers
+[DISCARDED]
+Split Box Containers (Necessary?) No.
 
 [COMPLETE]
 When rendering GUI elements, invisible id should be true by default. (COMPLETE)

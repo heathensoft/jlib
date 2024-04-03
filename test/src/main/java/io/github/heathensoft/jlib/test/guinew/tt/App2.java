@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.test.guinew.tt;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.io.WorkingDirectory;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.window.*;
 import io.github.heathensoft.jlib.ui.GUI;
@@ -12,6 +13,7 @@ import java.util.List;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 
 /**
  * @author Frederik Dahl
@@ -21,9 +23,7 @@ import static org.lwjgl.opengl.GL11.GL_BLEND;
 
 public class App2 extends Application {
 
-    private Vector4f clear_color;
     private BubbleDemo bubbleDemo;
-
 
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         config.settings_width = 1280;
@@ -37,39 +37,38 @@ public class App2 extends Application {
     }
 
     protected void on_start(Resolution resolution) throws Exception {
-        //String name = "pixel-icons";
-        //String folder = "C:\\dump\\gui\\MaterialIcons\\aseprite";
-        //AtlasData atlas = TextureAtlas.pack(name,new WorkingDirectory(folder),2,GL_CLAMP_TO_EDGE,GL_NEAREST_MIPMAP_LINEAR,GL_LINEAR,true,false);
-        //atlas.export(folder);
+        //String name = "pixeltier_icon_pack";
+        //String folder = "C:\\dump\\gui\\MaterialIcons\\aseprite\\pixelTier";
+        //AtlasData atlas = TextureAtlas.pack(name,new WorkingDirectory(folder),0,GL_CLAMP_TO_EDGE,GL_NEAREST,GL_NEAREST,false,false);
+        //atlas.export("");
         //atlas.dispose();
         //String name = "TradeWinds64";
         //ByteBuffer ttf = Resources.toBuffer("res/jlib/ui/fonts/ttf/TradeWinds-Regular.ttf",10 * 1024);
         //BitmapFont font = BitmapFont.create(name,ttf,64,2,0,0,0,GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR,true);
         //font.exportAsRepo("");
         //font.dispose();
+        Framebuffer.setClearColor(new Vector4f(0.3f,0.3f,0.3f,1.0f));
         bubbleDemo = new BubbleDemo(resolution.width(),resolution.height());
         GUI.initialize(resolution);
-        clear_color = new Vector4f(0.3f,0.3f,0.3f,1.0f);
-        BoxWindow textWindow = new BoxWindow(new Root(),"TextWindow");
-        //BoxWindow imageWindow = new BoxWindow(new ImageTest(),"ImageWindow");
-        BoxWindow mipmapTestWindow = new BoxWindow(new MipmapTest(),"MipmapTestWindow");
-        //window.autoRestoreOnClose(true);
+        BoxWindow textWindow = new BoxWindow(new TextTest(),"TextWindow");
+        BoxWindow toggleWindow = new BoxWindow(new ToggleTest(),"ToggleWindow");
+        BoxWindow mipmapTestWindow = new BoxWindow(new MipTest(),"MipmapTestWindow");
         GUI.windows.register(textWindow);
+        GUI.windows.register(toggleWindow);
         GUI.windows.register(mipmapTestWindow);
         GUI.windows.openWindow(textWindow);
+        GUI.windows.openWindow(toggleWindow);
         GUI.windows.openWindow(mipmapTestWindow);
     }
 
     protected void on_update(float delta) {
-        if (GUI.keys.just_pressed(GLFW_KEY_ESCAPE))
-            Engine.get().exit();
+        if (GUI.keys.just_pressed(GLFW_KEY_ESCAPE)) Engine.get().exit();
         GUI.render_to_gui_framebuffer(delta);
     }
 
     protected void on_render(float frame_time, float alpha) {
         bubbleDemo.renderDemo();
         Framebuffer.bindDefault();
-        Framebuffer.setClearColor(clear_color);
         Framebuffer.viewport();
         Framebuffer.clear();
         glDisable(GL_DEPTH_TEST);
@@ -78,13 +77,8 @@ public class App2 extends Application {
         GUI.render_to_screen_default(0);
     }
 
-    protected void on_exit() {
-        GUI.dispose();
-        Disposable.dispose(bubbleDemo);
-    }
-
+    protected void on_exit() { GUI.dispose(); Disposable.dispose(bubbleDemo); }
     protected void resolution_request(Resolution resolution) throws Exception { GUI.on_app_resolution_update(resolution); }
-
     public static void main(String[] args) {
         Engine.get().run(new App2(),args);
     }

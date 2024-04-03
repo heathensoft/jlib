@@ -1,15 +1,15 @@
 package io.github.heathensoft.jlib.test.guinew.tt;
 
-import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.ui.GUI;
-import io.github.heathensoft.jlib.ui.box.*;
+import io.github.heathensoft.jlib.ui.box.Box;
+import io.github.heathensoft.jlib.ui.box.BoxWindow;
+import io.github.heathensoft.jlib.ui.box.HBoxContainer;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.ui.text.Paragraph;
 import io.github.heathensoft.jlib.ui.text.Text;
 import io.github.heathensoft.jlib.ui.text.Word;
 import org.joml.Vector4f;
-import org.joml.primitives.Rectanglef;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,28 +17,27 @@ import java.util.stream.Collectors;
 
 /**
  * @author Frederik Dahl
- * 08/03/2024
+ * 01/04/2024
  */
 
 
-public class Root extends RootContainer {
+public class TextTest extends DefaultRoot {
 
     private List<Paragraph> stream;
     private int index = 0;
     private float accumulator = 0;
     private Text text;
 
-    public Root() {
+    public TextTest() throws Exception { super(); }
 
-        setBorderPadding(5);
+    protected Box createContent() throws Exception {
+
         TextFieldOld textField = new TextFieldOld(400,200,4,5,22);
         textField.enableEditing(false);
         textField.lockScrollBar(true);
         text = textField.text();
         text.setCapacity(100);
         text.setListOrder(false);
-
-
 
         //textField.enableWrapping(true);
         textField.setFont(3);
@@ -48,19 +47,11 @@ public class Root extends RootContainer {
         textField2.enableEditing(true);
         textField2.setFont(3);
 
-
-        GUI.fonts.setColor(Word.Type.REGULAR, Color.intBits_to_rgb(0xFFAACCCC,new Vector4f()));
-
-
         HBoxContainer hBoxContainer = new HBoxContainer();
         hBoxContainer.setInnerSpacing(3f);
         hBoxContainer.addBoxes(textField,textField2);
-        VBoxContainer vBoxContainer = new VBoxContainer();
-        vBoxContainer.setInnerSpacing(3);
-        vBoxContainer.addBoxes(new NavBar(0xFF232323,18),hBoxContainer);
-        addBox(vBoxContainer);
-        build();
 
+        GUI.fonts.setColor(Word.Type.REGULAR, Color.intBits_to_rgb(0xFFAACCCC,new Vector4f()));
         String string = """
                 > Task :test:App2.main()
                 22:54:09.35 INFO: logger configured, welcome
@@ -232,37 +223,14 @@ public class Root extends RootContainer {
         for (String line : lines) {
             this.stream.add(new Paragraph(line));
         }
+
+        return hBoxContainer;
     }
 
-
-
-    protected void onWindowInitContainer(BoxWindow boxWindow, BoxContainer parent) {
-        iID = iObtainID();
-    }
-
-    protected void onWindowOpenContainer(BoxWindow boxWindow) {
-
-    }
-
-    protected void onWindowCloseContainer(BoxWindow boxWindow) {
-
-    }
-
-    protected void onWindowPrepare(BoxWindow window, float dt) {
-
-    }
-
-    @Override
-    public void dispose() {
-        super.dispose();
-
-    }
 
     protected void renderContainer(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-
-
+        super.renderContainer(window, renderer, x, y, dt, parent_id);
         accumulator += dt;
-
         if (accumulator >= .25f) {
             accumulator = 0;
             int length = stream.size();
@@ -270,10 +238,5 @@ public class Root extends RootContainer {
             text.add(stream.get(index));
             index++;
         }
-
-
-        Rectanglef quad = bounds(U.rectf(),x,y);
-        renderer.drawElement(quad,0xFF000000, iID);
-        processRootInteraction(window,x,y);
     }
 }

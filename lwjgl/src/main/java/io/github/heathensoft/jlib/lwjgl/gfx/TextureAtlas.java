@@ -177,7 +177,7 @@ public class TextureAtlas implements Disposable {
 
     public List<String> listOfRegionNames() { return texture_region_names; }
 
-    public Map<String, TextureRegion> textureRegions() { return texture_regions; }
+    public Map<String,TextureRegion> textureRegions() { return texture_regions; }
 
     public TextureRegion getRegion(String name) { return texture_regions.get(name); }
 
@@ -271,7 +271,6 @@ public class TextureAtlas implements Disposable {
                     region_bitmaps[i] = new Bitmap(8,8,1);
                 } channels = Math.max(channels,region_bitmaps[i].channels());
                 rectangles.put(i).put(region_bitmaps[i].width() + spacing).put(region_bitmaps[i].height() + spacing);
-                MemoryUtil.memFree(image_data);
             }
             IntBuffer bounds = IntBuffer.allocate(2);
             RectPacker.pack(rectangles.flip(),bounds);
@@ -357,7 +356,6 @@ public class TextureAtlas implements Disposable {
                         throw exception;
                     } channels = Math.max(channels,region_bitmaps[i].channels());
                     rectangles.put(i).put(region_bitmaps[i].width() + spacing).put(region_bitmaps[i].height() + spacing);
-                    MemoryUtil.memFree(image_data);
                 } else throw new Exception("missing file: " + region_names.get(i));
             }
 

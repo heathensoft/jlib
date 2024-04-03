@@ -1,16 +1,22 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.storage.generic.Pool;
+import io.github.heathensoft.jlib.common.storage.generic.Stack;
 import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
+import io.github.heathensoft.jlib.lwjgl.window.Resolution;
+import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.text.Text;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
+import org.joml.primitives.Rectanglei;
 import org.lwjgl.system.MemoryUtil;
 
+import java.io.Flushable;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
@@ -54,76 +60,74 @@ public class RendererGUI implements Disposable {
     public static final int SKIP_ID = -1;
     public static final int FONT_UNIFORM_BUFFER_BINDING_POINT = 0;
 
-    protected static final int TEXT_BATCH_CAPACITY = 2048;
-    protected static final int SPRITE_BATCH_CAPACITY = 512;
-    protected static final int FRAMEBUFFER_SLOT_DIFFUSE = 0;
-    protected static final int FRAMEBUFFER_SLOT_NORMALS = 1;
-    protected static final int FRAMEBUFFER_SLOT_EMISSIVE = 2;
-    protected static final int FRAMEBUFFER_SLOT_PIXEL_ID = 3;
+    // CONSTANTS
+    private static final int TEXT_BATCH_CAPACITY = 2048;
+    private static final int SPRITE_BATCH_CAPACITY = 512;
+    private static final int FRAMEBUFFER_SLOT_DIFFUSE = 0;
+    private static final int FRAMEBUFFER_SLOT_NORMALS = 1;
+    private static final int FRAMEBUFFER_SLOT_EMISSIVE = 2;
+    private static final int FRAMEBUFFER_SLOT_PIXEL_ID = 3;
 
     // RENDER STATE
-    protected static final int NULL_BATCH = 0;
-    protected static final int TEXT_BATCH = 1;
-    protected static final int SPRITE_BATCH = 2;
+    private static final int NULL_BATCH = 0;
+    private static final int TEXT_BATCH = 1;
+    private static final int SPRITE_BATCH = 2;
 
     // values are reset every 60 frame
-    protected int shader_swaps_max;
-    protected int shader_swaps;
-    protected int draw_calls_max;
-    protected int draw_calls;
-    protected int active_batch;
-    protected int frame_count;
-    protected boolean rendering;
-    protected boolean paused;
+    private int shader_swaps_max;
+    private int shader_swaps;
+    private int draw_calls_max;
+    private int draw_calls;
+    private int active_batch;
+    private int frame_count;
+    private boolean rendering;
+    private boolean paused;
 
-    // PIXEL UID BUFFER
-    protected IntBuffer syncBuffer;
-    protected ByteBuffer readPixelBuffer;
-    protected BufferObject pixelPackBuffer;
-    protected long syncObject;
-    protected int syncStatus;
-    protected int pixelID;
-
-    // 
-    protected FontsGUI fonts;
-    protected SpriteBatchGUI spriteBatch;
-    protected TextBatchGUI textBatch;
-    protected Framebuffer framebuffer;
+    private Framebuffer framebuffer;
+    private PixelBuffer pixelBuffer;
+    private final FontsGUI fonts;
+    private final SpriteBatchGUI spriteBatch;
+    private final TextBatchGUI textBatch;
+    private final ScissorStack scissorStack;
 
     public RendererGUI(int width, int height) throws Exception {
         initializeFramebuffer(width, height);
-        initializePixelBuffer(width,height);
-        initializeFontCollection();
-        initializeRenderBatches(width,height);
+        fonts = new FontsGUI(FONT_UNIFORM_BUFFER_BINDING_POINT);
+        textBatch = new TextBatchGUI(fonts,TEXT_BATCH_CAPACITY,width,height);
+        spriteBatch = new SpriteBatchGUI(SPRITE_BATCH_CAPACITY,width,height);
+        scissorStack = new ScissorStack(this);
+        pixelBuffer = new PixelBuffer(width, height);
+        fonts.uploadDefaultFonts();
     }
 
-    public void pause() {
-        if (rendering) {
-            if (!paused) {
-                spriteBatch.flush();
-                textBatch.flush();
-                active_batch = NULL_BATCH;
-                paused = true;
-            }
+    public void updateResolution(int width, int height) throws Exception {
+        if (rendering) throw new IllegalStateException("Illegal attempt to update resolution while rendering");
+        if (framebuffer.width() != width || framebuffer.height() != height) {
+            Disposable.dispose(pixelBuffer);
+            pixelBuffer = new PixelBuffer(width, height);
+            initializeFramebuffer(width, height);
+            textBatch.updateResolution(width, height);
+            spriteBatch.updateResolution(width, height);
         }
     }
 
-    public void resume() {
-        if (rendering) {
-            if (paused) {
-                Framebuffer.bind(framebuffer);
-                Framebuffer.viewport();
-                Framebuffer.drawBuffers(0,1,2,3);
-                // Blending diffuse and normals
-                glEnable(GL_BLEND);
-                glBlendEquation(GL_FUNC_ADD);
-                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-                // Blending emissive
-                glBlendEquationi(2,GL_MAX);
-                glBlendFunci(2,GL_ONE,GL_ONE);
-                paused = false;
-            }
-        }
+    public void dispose() { Disposable.dispose(pixelBuffer,spriteBatch,textBatch,framebuffer,fonts); }
+    public FontsGUI fonts() { return fonts; }
+    public Framebuffer framebuffer() { return framebuffer; }
+    public Texture framebufferDiffuseTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_DIFFUSE); }
+    public Texture framebufferNormalsTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_NORMALS); }
+    public Texture framebufferEmissiveTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_EMISSIVE); }
+    public int pixelID() { return pixelBuffer.pixelID; }
+    public long drawCallCount() { return draw_calls_max;  }
+    public long shaderSwapCount() { return shader_swaps_max; }
+    public void uploadFont(BitmapFont font, int slot) throws Exception { fonts.uploadFont(font,slot); }
+    public boolean pushScissor(Rectanglef quad) { if (rendering &! paused) return scissorStack.push(quad);
+        else throw new IllegalStateException("Cannot push/pop scissors while renderer is not rendering / paused");
+    }public boolean pushScissor(float x1, float y1, float x2, float y2) {
+        if (rendering &! paused) return scissorStack.push(x1, y1, x2, y2);
+        else throw new IllegalStateException("Cannot push/pop scissors while renderer is not rendering / paused");
+    }public void popScissor() { if (rendering &! paused) scissorStack.pop();
+        else throw new IllegalStateException("Cannot push/pop scissors while renderer is not rendering / paused");
     }
 
     public void begin(Vector2f mouse) {
@@ -133,21 +137,22 @@ public class RendererGUI implements Disposable {
                 shader_swaps_max = shader_swaps;
                 draw_calls_max = draw_calls;
             } shader_swaps = 0;
-            rendering = true;
             int mouse_screen_x = round(mouse.x * framebuffer.width());
             int mouse_screen_y = round(mouse.y * framebuffer.height());
             Framebuffer.bind(framebuffer);
             Framebuffer.viewport();
-            pixelReadOperation(mouse_screen_x,mouse_screen_y);
+            pixelBuffer.pixelReadOperation(
+                    framebuffer,FRAMEBUFFER_SLOT_PIXEL_ID,
+                    mouse_screen_x,mouse_screen_y);
             Framebuffer.drawBuffers(0,1,2,3);
             Framebuffer.clear();
-            // Blending diffuse and normals
-            glEnable(GL_BLEND);
+            glEnable(GL_BLEND); // Blending diffuse and normals
             glBlendEquation(GL_FUNC_ADD);
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            // Blending emissive
-            glBlendEquationi(2,GL_MAX);
+            glBlendEquationi(2,GL_MAX); // Blending emissive
             glBlendFunci(2,GL_ONE,GL_ONE);
+            glDisable(GL_SCISSOR_TEST);
+            rendering = true;
         }
     }
 
@@ -161,7 +166,38 @@ public class RendererGUI implements Disposable {
             draw_calls_max = max(draw_calls, draw_calls_max);
             shader_swaps_max = max(shader_swaps, shader_swaps_max);
             active_batch = NULL_BATCH;
+            scissorStack.reset();
             rendering = false;
+            paused = false;
+        }
+    }
+
+    public void pause() {
+        if (rendering) {
+            if (!paused) {
+                spriteBatch.flush();
+                textBatch.flush();
+                scissorStack.pause();
+                active_batch = NULL_BATCH;
+                paused = true;
+            }
+        }
+    }
+
+    public void resume() {
+        if (rendering) {
+            if (paused) {
+                Framebuffer.bind(framebuffer);
+                Framebuffer.viewport();
+                Framebuffer.drawBuffers(0,1,2,3);
+                glEnable(GL_BLEND); // Blending diffuse and normals
+                glBlendEquation(GL_FUNC_ADD);
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+                glBlendEquationi(2,GL_MAX); // Blending emissive
+                glBlendFunci(2,GL_ONE,GL_ONE);
+                scissorStack.resume();
+                paused = false;
+            }
         }
     }
 
@@ -186,11 +222,10 @@ public class RendererGUI implements Disposable {
                     } active_batch = TEXT_BATCH;
                     Framebuffer.drawBuffers(0,1,2);
                 } fonts.bindFontMetrics(font);
-                textBatch.flush();
-                enableScissor(r);
-                text.draw(textBatch,r,y_offset,size,glow,wrap,show_cursor);
-                textBatch.flush();
-                glDisable(GL_SCISSOR_TEST);
+                if (scissorStack.push(r)) {
+                    text.draw(textBatch,r,y_offset,size,glow,wrap,show_cursor);
+                    scissorStack.pop();
+                }
             }
         }
     }
@@ -718,49 +753,11 @@ public class RendererGUI implements Disposable {
 
 
 
-    public void uploadFont(BitmapFont font, int slot) throws Exception { fonts.uploadFont(font,slot); }
 
-    public void updateResolution(int width, int height) throws Exception {
-        if (rendering) throw new IllegalStateException("Illegal attempt to update resolution while rendering");
-        if (framebuffer.width() != width || framebuffer.height() != height) {
-            initializePixelBuffer(width, height);
-            initializeFramebuffer(width, height);
-            textBatch.updateResolution(width, height);
-            spriteBatch.updateResolution(width, height);
-        }
-    }
 
-    public void dispose() {
-        if (syncBuffer != null) MemoryUtil.memFree(syncBuffer);
-        if (readPixelBuffer != null) MemoryUtil.memFree(readPixelBuffer);
-        Disposable.dispose(pixelPackBuffer);
-        Disposable.dispose(spriteBatch,textBatch);
-        Disposable.dispose(framebuffer,fonts);
-    }
 
-    public FontsGUI fonts() { return fonts; }
-    public Framebuffer framebuffer() { return framebuffer; }
-    public Texture framebufferDiffuseTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_DIFFUSE); }
-    public Texture framebufferNormalsTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_NORMALS); }
-    public Texture framebufferEmissiveTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_EMISSIVE); }
 
-    public int pixelID() { return pixelID; }
-    public long drawCallCount() { return draw_calls_max;  }
-    public long shaderSwapCount() { return shader_swaps_max; }
-
-    protected void initializeFontCollection() throws Exception {
-        if (fonts == null) {
-            fonts = new FontsGUI(FONT_UNIFORM_BUFFER_BINDING_POINT);
-            fonts.uploadDefaultFonts();
-        }
-    }
-
-    protected void initializeRenderBatches(int width, int height) throws Exception {
-        if (textBatch == null) textBatch = new TextBatchGUI(fonts,TEXT_BATCH_CAPACITY,width,height);
-        if (spriteBatch == null) spriteBatch = new SpriteBatchGUI(SPRITE_BATCH_CAPACITY,width,height);
-    }
-
-    protected void initializeFramebuffer(int width, int height) throws Exception {
+    private void initializeFramebuffer(int width, int height) throws Exception {
         if (framebuffer != null) framebuffer.dispose();
         framebuffer = new Framebuffer(width,height);
         Framebuffer.bind(framebuffer);
@@ -795,49 +792,8 @@ public class RendererGUI implements Disposable {
         Framebuffer.checkStatus();
     }
 
-    protected void initializePixelBuffer(int width, int height) {
-        if (readPixelBuffer != null) MemoryUtil.memFree(readPixelBuffer);
-        if (syncBuffer != null) MemoryUtil.memFree(syncBuffer);
-        syncBuffer = MemoryUtil.memAllocInt(1);
-        readPixelBuffer = MemoryUtil.memAlloc(Integer.BYTES);
-        if (pixelPackBuffer != null) pixelPackBuffer.dispose();
-        pixelPackBuffer = new BufferObject(GL_PIXEL_PACK_BUFFER, GL_STREAM_READ);
-        pixelPackBuffer.bind().bufferData((long) width * height * Integer.BYTES);
-        BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER); // very important
-        syncStatus = GL_UNSIGNALED;
-        syncObject = 0L;
-        pixelID = 0;
-    }
 
-    protected void pixelReadOperation(int x, int y) {
-        if (syncStatus == GL_SIGNALED) {
-            syncStatus = GL_UNSIGNALED;
-            glDeleteSync(syncObject);
-            syncObject = 0L;
-            pixelPackBuffer.bind();
-            ByteBuffer pixel = glMapBufferRange(GL_PIXEL_PACK_BUFFER,0,Integer.BYTES,GL_MAP_READ_BIT, readPixelBuffer);
-            if (pixel != null) {
-                pixelID = (pixel.get(0)) | (pixel.get(1) << 8) | (pixel.get(2) << 16) | (pixel.get(3) << 24);
-                glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-            } Framebuffer.bindRead(framebuffer);
-            Framebuffer.readBuffer(FRAMEBUFFER_SLOT_PIXEL_ID); // bind uid buffer for read ops
-            glReadPixels(x, y, 1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,0);
-            syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-            BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER); // very important
-        } else { if (syncObject == 0L) {
-                Framebuffer.bindRead(framebuffer);
-                Framebuffer.readBuffer(FRAMEBUFFER_SLOT_PIXEL_ID);
-                pixelPackBuffer.bind();
-                glReadPixels(x, y, 1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,0);
-                syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-                BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER);
-            } else { glGetSynciv(syncObject,GL_SYNC_STATUS,null,syncBuffer);
-                syncStatus = syncBuffer.get(0);
-            }
-        }
-    }
-
-    public void flush() {
+    private void flush() {
         if (rendering) {
             if (active_batch == TEXT_BATCH) {
                 textBatch.flush();
@@ -847,31 +803,151 @@ public class RendererGUI implements Disposable {
         }
     }
 
-    public void disableScissor() {
-        glDisable(GL_SCISSOR_TEST);
-    }
 
-    public void enableScissor(Rectanglef quad) {
-        int x = floor(quad.minX);
-        int y = floor(quad.minY);
-        int w = ceil(quad.maxX) - x;
-        int h = ceil(quad.maxY) - y;
-        if (w > 0 && h > 0) {
-            glEnable(GL_SCISSOR_TEST);
-            glScissor(x,y,w,h);
+
+
+
+
+    private static final class PixelBuffer implements Disposable {
+        IntBuffer syncBuffer;
+        ByteBuffer readPixelBuffer;
+        BufferObject pixelPackBuffer;
+        long syncObject;
+        int syncStatus;
+        int pixelID;
+
+        PixelBuffer(int width, int height) {
+            syncBuffer = MemoryUtil.memAllocInt(1);
+            readPixelBuffer = MemoryUtil.memAlloc(Integer.BYTES);
+            pixelPackBuffer = new BufferObject(GL_PIXEL_PACK_BUFFER, GL_STREAM_READ);
+            pixelPackBuffer.bind().bufferData((long) width * height * Integer.BYTES);
+            BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER); // very important
+            syncStatus = GL_UNSIGNALED;
+            syncObject = 0L;
+            pixelID = 0;
+        }
+
+        void pixelReadOperation(Framebuffer framebuffer, int attachment, int x, int y) {
+            if (syncStatus == GL_SIGNALED) {
+                syncStatus = GL_UNSIGNALED;
+                glDeleteSync(syncObject);
+                syncObject = 0L;
+                pixelPackBuffer.bind();
+                ByteBuffer pixel = glMapBufferRange(GL_PIXEL_PACK_BUFFER,0,Integer.BYTES,GL_MAP_READ_BIT, readPixelBuffer);
+                if (pixel != null) {
+                    pixelID = (pixel.get(0)) | (pixel.get(1) << 8) | (pixel.get(2) << 16) | (pixel.get(3) << 24);
+                    glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+                } Framebuffer.bindRead(framebuffer);
+                Framebuffer.readBuffer(attachment); // bind uid buffer for read ops
+                glReadPixels(x, y, 1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,0);
+                syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+                BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER); // very important
+            } else { if (syncObject == 0L) {
+                Framebuffer.bindRead(framebuffer);
+                Framebuffer.readBuffer(attachment);
+                pixelPackBuffer.bind();
+                glReadPixels(x, y, 1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,0);
+                syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+                BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER);
+            } else { glGetSynciv(syncObject,GL_SYNC_STATUS,null,syncBuffer);
+                syncStatus = syncBuffer.get(0);}
+            }
+        }
+
+        public void dispose() {
+            if (syncBuffer != null) MemoryUtil.memFree(syncBuffer);
+            if (readPixelBuffer != null) MemoryUtil.memFree(readPixelBuffer);
+            Disposable.dispose(pixelPackBuffer);
         }
     }
 
-    public void enableScissor(float x1, float y1, float x2, float y2) {
-        int x = floor(x1);
-        int y = floor(y1);
-        int w = ceil(x2) - x;
-        int h = ceil(y2) - y;
-        if (w > 0 && h > 0) {
-            glEnable(GL_SCISSOR_TEST);
-            glScissor(x,y,w,h);
+
+
+
+
+    private static final class ScissorStack {
+        private final RectanglePool scissor_pool = new RectanglePool();
+        private final Stack<Rectanglei> scissor_stack = new Stack<>(8);
+        private final RendererGUI renderer;
+        ScissorStack(RendererGUI renderer) { this.renderer = renderer; }
+        boolean push(Rectanglef quad) {
+            return push(quad.minX,quad.minY,quad.maxX,quad.maxY);
+        }
+        boolean push(float x1, float y1, float x2, float y2) {
+            Rectanglei scissor = scissor_pool.obtain();
+            scissor.minX = floor(x1);
+            scissor.minY = floor(y1);
+            scissor.maxX = ceil(x2);
+            scissor.maxY = ceil(y2);
+            Rectanglei previous = scissor_stack.peak();
+            if (previous == null) {
+                Resolution resolution = GUI.resolution();
+                Rectanglei res_scissor = scissor_pool.obtain();
+                res_scissor.setMin(0,0);
+                res_scissor.setMax(resolution.width(),resolution.height());
+                scissor.intersection(res_scissor);
+                scissor_pool.free(res_scissor);
+            } else scissor.intersection(previous);
+            if (scissor.isValid()) {
+                int w = scissor.lengthX();
+                int h = scissor.lengthY();
+                renderer.flush();
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(scissor.minX,scissor.minY,w,h);
+                scissor_stack.push(scissor);
+                return true;
+            } else scissor_pool.free(scissor);
+            return false;
+        }
+
+        void pop() {
+            if (!scissor_stack.isEmpty()) { renderer.flush();
+                Rectanglei current = scissor_stack.pop();
+                Rectanglei scissor = scissor_stack.peak();
+                if (scissor == null) {
+                    glDisable(GL_SCISSOR_TEST);
+                } else { int w = scissor.lengthX();
+                    int h = scissor.lengthY();
+                    glScissor(scissor.minX,scissor.minY,w,h);
+                } scissor_pool.free(current);
+            }
+        }
+
+        void reset() {
+            while (!scissor_stack.isEmpty()) {
+                scissor_pool.free(scissor_stack.pop());
+            } glDisable(GL_SCISSOR_TEST);
+        }
+
+        void pause() {
+            if (!scissor_stack.isEmpty()) {
+                glDisable(GL_SCISSOR_TEST);
+            }
+        }
+
+        void resume() {
+            Rectanglei scissor = scissor_stack.peak();
+            if (scissor != null) {
+                int w = scissor.lengthX();
+                int h = scissor.lengthY();
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(scissor.minX,scissor.minY,w,h);
+            }
         }
     }
+
+    private static final class DelayedDrawCall {
+
+
+        //public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
+
+    }
+
+    private static final class RectanglePool extends Pool<Rectanglei> {
+        public RectanglePool() { super(4, 16); }
+        protected Rectanglei newObject() { return new Rectanglei(); }
+    }
+
 
 
 }

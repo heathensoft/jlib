@@ -5,6 +5,7 @@ import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
 import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 import org.lwjgl.system.MemoryUtil;
 
+import java.io.Flushable;
 import java.nio.FloatBuffer;
 
 /**
@@ -13,7 +14,7 @@ import java.nio.FloatBuffer;
  */
 
 
-abstract class BatchGUI implements Disposable  {
+abstract class BatchGUI implements Disposable {
     protected VertexAttributes vertexAttribArray;
     protected BufferObject vertexBuffer;
     protected FloatBuffer vertices;

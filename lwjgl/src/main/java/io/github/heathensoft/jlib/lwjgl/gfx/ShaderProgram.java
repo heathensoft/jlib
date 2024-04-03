@@ -5,6 +5,7 @@ import io.github.heathensoft.jlib.common.utils.IDPool;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import io.github.heathensoft.jlib.lwjgl.window.GLContext;
 import org.joml.*;
 import org.lwjgl.system.MemoryStack;
 import org.tinylog.Logger;
@@ -104,7 +105,7 @@ public class ShaderProgram {
         public void draw() { draw(0,0,1,1); }
         public void draw(float u1, float v1, float u2, float v2) { draw(0,0,1,1,u1,v1,u2,v2); }
         public void draw(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2) {
-            try (MemoryStack stack = MemoryStack.stackPush()){
+            try (MemoryStack stack = MemoryStack.stackPush()){  // todo:  Does not like this. Use MemoryUtil
                 FloatBuffer buffer = stack.mallocFloat(16);
                 buffer.put(x1).put(y1).put(u1).put(v1);
                 buffer.put(x2).put(y1).put(u2).put(v1);
@@ -262,7 +263,9 @@ public class ShaderProgram {
                 glUseProgram(GL_NONE);
             } Logger.debug("Deleting Shader Program: \"{}\"",name);
             deleteShadersOfProgram(program_handle);
+            GLContext.checkError();
             glDeleteProgram(program_handle);
+            GLContext.checkError();
         } Disposable.dispose(shader_pass);
         current_program = null;
         programs_by_id.clear();

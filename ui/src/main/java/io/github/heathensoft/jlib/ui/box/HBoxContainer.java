@@ -37,7 +37,8 @@ public class HBoxContainer extends BoxContainer {
                 float dy = desired_height - box.desired_height;
                 box.adjustDesiredHeight(dy);
             }
-        } current_width = desired_width;
+        }
+        current_width = desired_width;
         current_height = desired_height;
         built = true;
     }

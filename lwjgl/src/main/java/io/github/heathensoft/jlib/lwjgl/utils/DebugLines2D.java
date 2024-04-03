@@ -32,7 +32,7 @@ public class DebugLines2D {
     private static int draw_calls = 0;
     private static boolean rendering;
     private static boolean initialized;
-    private static ShaderProgramOld shaderProgram;
+    private static ShaderProgram shaderProgram;
     private static FloatBuffer vertices;
     private static BufferObject vbo;
     private static VertexAttributes vao;
@@ -48,8 +48,7 @@ public class DebugLines2D {
                 glEnableVertexAttribArray(0);
                 glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, true, VERTEX_SIZE * Float.BYTES, 2 * Float.BYTES);
                 glEnableVertexAttribArray(1);
-                shaderProgram = new ShaderProgramOld(vertex_shader(),fragment_shader());
-                shaderProgram.createUniform("u_combined");
+                shaderProgram = new ShaderProgram(vertex_shader(),fragment_shader());
                 initialized = true;
             } catch (Exception e) {
                 Logger.error(e,"failed to initialize debug lines");
@@ -62,8 +61,8 @@ public class DebugLines2D {
         if (!rendering) {
             initialize();
             draw_calls = 0;
-            shaderProgram.use();
-            shaderProgram.setUniform("u_combined",view_proj);
+            ShaderProgram.bindProgram(shaderProgram);
+            ShaderProgram.setUniform("u_combined",view_proj);
             rendering = true;
         }
     }
@@ -150,7 +149,7 @@ public class DebugLines2D {
     public static void dispose() {
         if (initialized) {
             if (vertices != null) MemoryUtil.memFree(vertices);
-            Disposable.dispose(shaderProgram,vao,vbo);
+            Disposable.dispose(vao,vbo);
         }
     }
     

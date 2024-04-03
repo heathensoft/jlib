@@ -3,7 +3,6 @@ package io.github.heathensoft.jlib.gui.gfx;
 import io.github.heathensoft.jlib.gui.text.TextUtils;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
 import io.github.heathensoft.jlib.common.utils.Color;
-import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import org.lwjgl.system.MemoryUtil;

@@ -132,16 +132,14 @@ public class ImageDisplay implements Interactable {
                             if (id == interactableID() && quad.containsRectangle(virtual_quad)) {
                                 renderer.drawElement(quad,0,id,0,true);
                             } if (virtual_quad.intersectsRectangle(quad)) {
-                                renderer.flush();
-                                renderer.enableScissor(
+                                if (renderer.pushScissor(
                                         Math.max(quad.minX,virtual_quad.minX),
                                         Math.max(quad.minY,virtual_quad.minY),
                                         Math.min(quad.maxX,virtual_quad.maxX),
                                         Math.min(quad.maxY,virtual_quad.maxY)
-                                );
-                                renderer.drawElement(texture,virtual_quad,color,id,glow);
-                                renderer.flush();
-                                renderer.disableScissor();
+                                )) {renderer.drawElement(texture,virtual_quad,color,id,glow);
+                                    renderer.popScissor();
+                                }
                             }
                         }
                     }

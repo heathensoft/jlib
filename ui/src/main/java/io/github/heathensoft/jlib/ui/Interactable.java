@@ -1,6 +1,7 @@
 package io.github.heathensoft.jlib.ui;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import org.tinylog.Logger;
 
 import static io.github.heathensoft.jlib.ui.GUI.*;
 
@@ -35,6 +36,12 @@ public interface Interactable extends Disposable {
         if (interactableID() != 0)
             throw new IllegalStateException("interactable id already obtained");
         return state.obtainID();
+    }
+
+    default int iObtainIDAndRegisterAsConsumer() {
+        if (interactableID() != 0)
+            throw new IllegalStateException("interactable id already obtained");
+        return state.obtainIDAAndRegisterAsConsumer(this);
     }
 
     default void iSetCursorIcon(int slot) { state.useCursorIcon(slot); }
@@ -129,6 +136,23 @@ public interface Interactable extends Disposable {
     default boolean iJustGrabbed() {
         if (interactableID() == 0) return false;
         return state.justGrabbed(interactableID());
+    }
+
+    default void iRegisterAsConsumer() {
+        state.registerAsConsumer(this);
+    }
+
+    default void iUnRegisterAsConsumer() {
+        state.unRegisterConsumer(this);
+    }
+
+    default Interactable iFindValidConsumer(int consumerID) {
+        if (interactableID() == 0 || consumerID == 0) return null;
+        return state.findValidConsumer(this,consumerID);
+    }
+
+    default boolean iIsValidDrop(Interactable drop) {
+        return false;
     }
 
     default void dispose() { if (iHasID()) iReturnID(); }

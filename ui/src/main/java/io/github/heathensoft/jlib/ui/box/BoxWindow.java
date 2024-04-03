@@ -5,7 +5,6 @@ import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
 import io.github.heathensoft.jlib.ui.GUI;
-import io.github.heathensoft.jlib.ui.GlobalVariables;
 import io.github.heathensoft.jlib.ui.Window;
 import io.github.heathensoft.jlib.ui.WindowAnchor;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
@@ -824,7 +823,7 @@ public final class BoxWindow extends Window {
 
         void displayValue(String value, Rectanglef box_bounds) {
             if (value != null && !value.isBlank() && box_bounds.isValid()) {
-                GlobalVariables global = GUI.variables;
+                GUI.GlobalVariables global = GUI.variables;
                 float area_width;
                 float area_height = global.boxWindow_fadDisplay_desiredHeight;
                 float padding = global.boxWindow_fadDisplay_padding;
@@ -858,7 +857,7 @@ public final class BoxWindow extends Window {
 
         void displayString(String string, Rectanglef box_bounds) {
             if (string != null && !string.isBlank() && box_bounds.isValid()) {
-                GlobalVariables global = GUI.variables;
+                GUI.GlobalVariables global = GUI.variables;
                 float padding = global.boxWindow_fadDisplay_padding;
                 float area_width;
                 float area_height = global.boxWindow_fadDisplay_desiredHeight;
@@ -893,7 +892,7 @@ public final class BoxWindow extends Window {
         void draw(RendererGUI renderer, float dt) {
             if (fadeOut_timer < 1f) {
                 float alpha = 1 - U.smooth(clamp(fadeOut_timer));
-                GlobalVariables global = GUI.variables;
+                GUI.GlobalVariables global = GUI.variables;
                 int padding = global.boxWindow_fadDisplay_padding;
                 int font = global.boxWindow_fadeDisplay_font;
                 Vector4f rgb = U.vec4(0,0,0,alpha * 0.75f);

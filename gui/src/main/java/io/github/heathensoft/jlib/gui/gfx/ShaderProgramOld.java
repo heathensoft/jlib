@@ -1,4 +1,4 @@
-package io.github.heathensoft.jlib.lwjgl.gfx;
+package io.github.heathensoft.jlib.gui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import org.joml.*;

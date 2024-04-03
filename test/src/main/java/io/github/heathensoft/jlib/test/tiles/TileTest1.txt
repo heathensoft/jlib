@@ -6,7 +6,7 @@ import io.github.heathensoft.jlib.common.noise.NoiseFunction;
 import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.tiles.neo.generation.BitmapOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.Framebuffer;
-import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
+//import io.github.heathensoft.jlib.gui.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.utils.DebugLines2D;
 import io.github.heathensoft.jlib.lwjgl.window.DefaultInput;

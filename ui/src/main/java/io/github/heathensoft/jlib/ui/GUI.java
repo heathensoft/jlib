@@ -8,6 +8,7 @@ import io.github.heathensoft.jlib.lwjgl.window.*;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import org.joml.Vector2f;
+import org.joml.Vector4f;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -20,17 +21,17 @@ import static org.lwjgl.opengl.GL11.*;
 public class GUI {
 
 
-    public static final String path_default_icons_atlas = "res/jlib/ui/atlas/default-icons.txt";
-    public static final String path_default_icons_png = "res/jlib/ui/atlas/default-icons.png";
-    public static final String path_pixel_icons_atlas = "res/jlib/ui/atlas/default-gadgets.txt";
-    public static final String path_pixel_icons_png = "res/jlib/ui/atlas/default-gadgets.png";
+    private static final String path_default_icons_atlas = "res/jlib/ui/atlas/default-icons.txt";
+    private static final String path_default_icons_png = "res/jlib/ui/atlas/default-icons.png";
+    private static final String path_pixel_icons_atlas = "res/jlib/ui/atlas/default-gadgets.txt";
+    private static final String path_pixel_icons_png = "res/jlib/ui/atlas/default-gadgets.png";
 
     public static GlobalVariables variables;
     public static TextureAtlas default_gadgets;
     public static TextureAtlas default_icons;
     public static WindowManager windows;
     public static RendererGUI renderer;
-    public static ShadersGUI shaders;
+    public static Shaders shaders;
     public static FontsGUI fonts;
     public static Keyboard keys;
     public static Mouse mouse;
@@ -41,7 +42,7 @@ public class GUI {
     public static void initialize(Resolution resolution) throws Exception {
         if (initialized) throw new IllegalStateException("GUI already initialized");
         variables = new GlobalVariables();
-        shaders = new ShadersGUI();
+        shaders = new Shaders();
         renderer = new RendererGUI(resolution.width(),resolution.height());
         default_icons = load_default_icons();
         default_gadgets = load_default_gadgets();
@@ -129,5 +130,40 @@ public class GUI {
         TextureAtlas default_icons = new TextureAtlas(atlas_info,atlas_diffuse);
         atlas_diffuse.dispose();
         return default_icons;
+    }
+
+    public static final class GlobalVariables {
+
+        public int boxWindow_fadeDisplay_font = 3;
+        public int boxWindow_fadDisplay_padding = 5;
+        public int boxWindow_fadDisplay_desiredHeight = 36;
+        public Vector4f boxWindow_fadeDisplay_textColor = new Vector4f(0.21f,0.94f,0.55f,1.0f);
+
+
+    }
+
+    public static final class Shaders {
+        public static final String path_vert_sprite_batch = "res/jlib/ui/glsl/ui_sprite.vert";
+        public static final String path_frag_sprite_batch = "res/jlib/ui/glsl/ui_sprite.frag";
+        public static final String path_vert_text_batch = "res/jlib/ui/glsl/ui_text.vert";
+        public static final String path_geom_text_batch = "res/jlib/ui/glsl/ui_text.geom";
+        public static final String path_frag_text_batch = "res/jlib/ui/glsl/ui_text.frag";
+        public final int text_program;
+        public final int sprite_program;
+        Shaders() throws Exception {
+            String v_source;
+            String g_source;
+            String f_source;
+            ShaderProgram program;
+            v_source = Resources.asString(path_vert_text_batch);
+            g_source = Resources.asString(path_geom_text_batch);
+            f_source = Resources.asString(path_frag_text_batch);
+            program = new ShaderProgram("ui_text_program",v_source,g_source,f_source);
+            text_program = program.glHandle();
+            v_source = Resources.asString(path_vert_sprite_batch);
+            f_source = Resources.asString(path_frag_sprite_batch);
+            program = new ShaderProgram("ui_sprite_program",v_source,f_source);
+            sprite_program = program.glHandle();
+        }
     }
 }

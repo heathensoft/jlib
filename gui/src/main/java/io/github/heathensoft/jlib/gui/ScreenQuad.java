@@ -3,7 +3,7 @@ package io.github.heathensoft.jlib.gui;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.BufferObject;
-import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgramOld;
+import io.github.heathensoft.jlib.gui.gfx.ShaderProgramOld;
 import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import io.github.heathensoft.jlib.lwjgl.gfx.VertexAttributes;
 import org.lwjgl.system.MemoryStack;
