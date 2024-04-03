@@ -16,7 +16,7 @@ import org.joml.primitives.Rectanglef;
  */
 
 
-public abstract class DefaultRoot extends RootContainer {
+public abstract class DefaultRoot extends BowWindowRoot {
 
 
     // Do test of Array VS. Map. lookup times. Make Texture Atlas store Array instead of map if num regions is low?
@@ -44,21 +44,18 @@ public abstract class DefaultRoot extends RootContainer {
     protected abstract Box createContent() throws Exception;
 
 
-    protected void onWindowInitContainer(BoxWindow boxWindow, BoxContainer parent) {
+    protected void initContainer(BoxWindow boxWindow, BoxContainer parent) {
 
     }
 
-    protected void onOpenContainer() {
+    protected void openContainer() {
 
     }
 
-    protected void onCloseContainer() {
+    protected void closeContainer() {
 
     }
 
-    protected void onWindowPrepare(BoxWindow window, float dt) {
-
-    }
 
     protected void renderContainer(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
         Rectanglef quad = bounds(U.rectf(),x,y);
@@ -133,7 +130,7 @@ public abstract class DefaultRoot extends RootContainer {
             this.iID = iObtainID();
         }
 
-        protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+        protected void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
 
 
             Rectanglef quad = bounds(U.rectf(),x,y);

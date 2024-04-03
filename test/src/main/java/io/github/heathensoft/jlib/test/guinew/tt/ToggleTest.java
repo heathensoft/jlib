@@ -46,7 +46,7 @@ public class ToggleTest extends DefaultRoot {
     }
 
 
-    protected void onWindowInitContainer(BoxWindow boxWindow, BoxContainer parent) {
+    protected void initContainer(BoxWindow boxWindow, BoxContainer parent) {
 
     }
 
@@ -61,10 +61,10 @@ public class ToggleTest extends DefaultRoot {
             this.iID = iObtainID();
         }
 
-        protected void onClose() { iYieldFocus(); }
+        protected void closeBox() { iYieldFocus(); }
 
 
-        protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+        protected void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
             Rectanglef bounds = bounds(U.rectf(),x,y);
             renderer.drawElement(bounds,color,iID);
             if (iClicked(Mouse.LEFT)) iFocus();
@@ -80,7 +80,7 @@ public class ToggleTest extends DefaultRoot {
             }
         }
 
-        protected void renderText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
+        protected void renderBoxText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
             Rectanglef bounds = bounds(U.rectf(),x,y);
             float text_size = 32;
             float padding = 4;
@@ -112,7 +112,7 @@ public class ToggleTest extends DefaultRoot {
         }
         public interface Click {  void onClick(); }
 
-        protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+        protected void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
             Rectanglef bounds = bounds(U.rectf(),x,y);
             int color;
             final int color_inactive = 0xFF444444;

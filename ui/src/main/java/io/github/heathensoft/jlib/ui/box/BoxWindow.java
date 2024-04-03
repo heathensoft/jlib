@@ -39,7 +39,7 @@ public final class BoxWindow extends Window {
     private static final int STATE_MAXIMIZED_Y = 0x0800;
 
     private final WindowAnchor anchor;
-    private final RootContainer content;
+    private final BowWindowRoot content;
     private final FadingDisplay fading_display;
     private final Map<String,Box> named_content;
     private final Rectanglef transform_initial = new Rectanglef();
@@ -47,19 +47,19 @@ public final class BoxWindow extends Window {
     private final Vector2f position = new Vector2f();
     private float transform_timer;
 
-    public BoxWindow(RootContainer content) {
+    public BoxWindow(BowWindowRoot content) {
         this(content,WindowAnchor.NONE);
     }
 
-    public BoxWindow(RootContainer content, String name) {
+    public BoxWindow(BowWindowRoot content, String name) {
         this(content,null,name);
     }
 
-    public BoxWindow(RootContainer content, WindowAnchor anchor) {
+    public BoxWindow(BowWindowRoot content, WindowAnchor anchor) {
         this(content,anchor,"untitled window");
     }
 
-    public BoxWindow(RootContainer content, WindowAnchor anchor, String name) {
+    public BoxWindow(BowWindowRoot content, WindowAnchor anchor, String name) {
         if (content == null) throw new RuntimeException("GUI: Null BoxWindow content");
         this.anchor = anchor == null ? WindowAnchor.NONE : anchor;
         this.fading_display = new FadingDisplay();
@@ -68,7 +68,7 @@ public final class BoxWindow extends Window {
         this.name = name;
     }
 
-    protected void prepare(float dt) { content.onWindowPrepare(this,dt); }
+    protected void prepare(float dt) { content.prepareBox(this,dt); }
 
     protected void render(RendererGUI renderer, float dt) {
         Rectanglef bounds = bounds(U.rectf());
@@ -220,23 +220,23 @@ public final class BoxWindow extends Window {
         if (height >= maximum_height) setStateIsMaximizedY();
         else clearStateIsMaximizedY();
 
-        content.render(this,renderer,(int)position.x,(int)position.y,dt,0);
-        content.renderText(this,renderer,(int)position.x,(int)position.y,dt);
+        content.renderBox(this,renderer,(int)position.x,(int)position.y,dt,0);
+        content.renderBoxText(this,renderer,(int)position.x,(int)position.y,dt);
         fading_display.draw(renderer,dt);
         if (!GUI.state.anyInteractablePressed()) { clearStateCurrentlyDragging(); }
     }
 
     protected void onInit(String name)  {
         anchorContent(content);
-        content.onInit(this,null);
+        content.initBox(this,null);
     }
 
-    protected void onOpen() { content.onOpen(); }
+    protected void onOpen() { content.openBox(); }
 
     protected void onClose() {
         if (isAutoRestoringOnClose()) {
             anchorContent(content);
-        } content.onClose();
+        } content.closeBox();
     }
 
     protected void onTermination() {
@@ -610,7 +610,7 @@ public final class BoxWindow extends Window {
 
     public Box namedContent(String key) { return named_content.get(key); }
 
-    public RootContainer content() { return content; }
+    public BowWindowRoot content() { return content; }
 
     public WindowAnchor anchor() { return anchor; }
 
@@ -729,7 +729,7 @@ public final class BoxWindow extends Window {
         } transform_target.translate(dx,dy);
     }
 
-    private void anchorContent(RootContainer content) {
+    private void anchorContent(BowWindowRoot content) {
         if (content.isBuilt()) content.restoreToDesiredSize();
         else content.build();
         Resolution resolution = GUI.resolution();

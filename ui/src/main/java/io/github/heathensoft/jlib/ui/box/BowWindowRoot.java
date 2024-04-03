@@ -10,40 +10,23 @@ import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import org.joml.Vector2f;
 
 /**
- * This is the Root Container of the Box Window. It determines the max width / height and
- * border padding for the window.
+ * This is the Root Container of the Box Window. It determines the max width / height and border padding for the window.
+ *
  *
  * @author Frederik Dahl
  * 18/02/2024
  */
 
 
-public abstract class RootContainer extends BoxContainer {
+public abstract class BowWindowRoot extends BoxContainer {
     
     protected float max_width = Float.MAX_VALUE;
     protected float max_height = Float.MAX_VALUE;
     protected float border_padding;
     protected int drag_zone;
 
-    /** Called just before initializing the contents */
-    protected abstract void onWindowInitContainer(BoxWindow boxWindow, BoxContainer parent);
-
-    /** Called just before calling open on the contents */
-    protected abstract void onOpenContainer();
-
-    /** Called just before calling close on the contents */
-    protected abstract void onCloseContainer();
-
-    /** Called on Root Containers only (ends here) */
-    protected abstract void onWindowPrepare(BoxWindow window, float dt);
-
-    /** If you want window interaction, you can call processRootInteraction() within this */
-    protected abstract void renderContainer(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id);
-
     public float maxWidth() { return max_width; }
-    
     public float maxHeight() { return max_height; }
-    
     public float borderPadding() { return border_padding; }
 
     public void setMaxHeight(float height) {
@@ -91,8 +74,7 @@ public abstract class RootContainer extends BoxContainer {
                 float wiggle = max_width - current_width;
                 if (wiggle > 0) {
                     dx = Math.min(wiggle,dx);
-                    root.resizeHorizontal(dx);
-                }
+                    root.resizeHorizontal(dx);}
             } else if (dx < 0) root.resizeHorizontal(dx);
             current_width = root.current_width;
             current_width += (border_padding * 2);
@@ -106,8 +88,7 @@ public abstract class RootContainer extends BoxContainer {
                 float wiggle = max_height - current_height;
                 if (wiggle > 0) {
                     dy = Math.min(wiggle,dy);
-                    root.resizeVertical(dy);
-                }
+                    root.resizeVertical(dy);}
             } else if (dy < 0) root.resizeVertical(dy);
             current_height = root.current_height;
             current_height += (border_padding * 2);
@@ -228,15 +209,10 @@ public abstract class RootContainer extends BoxContainer {
     }
     
     protected final void adjustDesiredWidth(float dx) { throw new RuntimeException("Illegal call for RootContainer"); }
-    
     protected final void adjustDesiredHeight(float dy) { throw new RuntimeException("Illegal call for RootContainer"); }
-    
     protected final float unlockedDesiredWidth() { throw new RuntimeException("Illegal call for RootContainer"); }
-    
     protected final float unlockedDesiredHeight() { throw new RuntimeException("Illegal call for RootContainer"); }
-    
     protected final float innerSpacingSumHorizontal() { throw new RuntimeException("Illegal call for RootContainer"); }
-    
     protected final float innerSpacingSumVertical() { throw new RuntimeException("Illegal call for RootContainer"); }
     
     public String toString() {

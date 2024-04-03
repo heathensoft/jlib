@@ -19,17 +19,20 @@ public abstract class BoxContainer extends Box {
     protected List<Box> contents = new LinkedList<>();
     protected float inner_spacing;
 
+    /** Called just before preparing the contents */
+    protected void prepareContainer(BoxWindow window, float dt) { }
+
     /** Called just before rendering the contents */
     protected void renderContainer(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) { }
 
     /** Called just before initializing the contents */
-    protected void onWindowInitContainer(BoxWindow boxWindow, BoxContainer parent) { }
+    protected void initContainer(BoxWindow boxWindow, BoxContainer parent) { }
 
     /** Called just before calling open on the contents */
-    protected void onOpenContainer() { }
+    protected void openContainer() { }
 
     /** Called just before calling close on the contents */
-    protected void onCloseContainer() { }
+    protected void closeContainer() { }
 
     protected boolean getBoundsOf(Box target, Rectanglef dst, float x, float y) {
         if (super.getBoundsOf(target,dst,x,y)) { return true;
@@ -39,7 +42,7 @@ public abstract class BoxContainer extends Box {
             } } else if (this instanceof VBoxContainer container) {for (Box box : contents) {
                 if (box.getBoundsOf(target,dst,x,y)) return true;
                 y -= (box.current_height + inner_spacing);
-            } } else if (this instanceof RootContainer container) {
+            } } else if (this instanceof BowWindowRoot container) {
                 x += container.border_padding;
                 y -= container.border_padding;
                 Box box = container.contents.get(0);
@@ -54,71 +57,81 @@ public abstract class BoxContainer extends Box {
         } return false;
     }
 
-    protected final void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+    protected final void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
         renderContainer(window, renderer, x, y, dt, parent_id);
         if (iHasID()) { parent_id = interactableID(); }
         if (this instanceof HBoxContainer container) {for (Box box : contents) {
                 if (box.current_width > 0 && box.current_height > 0) {
-                    box.render(window, renderer, x, y, dt, parent_id);
+                    box.renderBox(window, renderer, x, y, dt, parent_id);
                 } x += (box.current_width + inner_spacing);
             }
         } else if (this instanceof VBoxContainer container) {for (Box box : contents) {
                 if (box.current_width > 0 && box.current_height > 0) {
-                    box.render(window, renderer, x, y, dt, parent_id);
+                    box.renderBox(window, renderer, x, y, dt, parent_id);
                 } y -= (box.current_height + inner_spacing);
             }
-        } else if (this instanceof RootContainer container) {
+        } else if (this instanceof BowWindowRoot container) {
             x += container.border_padding;
             y -= container.border_padding;
-            container.contents.get(0).render(window, renderer, x, y, dt, parent_id);
+            container.contents.get(0).renderBox(window, renderer, x, y, dt, parent_id);
         } else if (this instanceof TBoxContainer container) {
-            container.current_box.render(window, renderer, x, y, dt, parent_id);
+            container.current_box.renderBox(window, renderer, x, y, dt, parent_id);
         }
     }
 
 
-    protected final void renderText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
+    protected final void renderBoxText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
         if (this instanceof HBoxContainer container) {
             for (Box box : contents) {
                 if (box.current_width > 0 && box.current_height > 0) {
-                    box.renderText(window, renderer, x, y, dt);
+                    box.renderBoxText(window, renderer, x, y, dt);
                 } x += (box.current_width + inner_spacing);
             }
         } else if (this instanceof VBoxContainer container) {
             for (Box box : contents) {
                 if (box.current_width > 0 && box.current_height > 0) {
-                    box.renderText(window, renderer, x, y, dt);
+                    box.renderBoxText(window, renderer, x, y, dt);
                 } y -= (box.current_height + inner_spacing);
             }
-        } else if (this instanceof RootContainer container) {
+        } else if (this instanceof BowWindowRoot container) {
             x += container.border_padding;
             y -= container.border_padding;
-            container.contents.get(0).renderText(window, renderer, x, y, dt);
+            container.contents.get(0).renderBoxText(window, renderer, x, y, dt);
         } else if (this instanceof TBoxContainer container) {
-            container.current_box.renderText(window, renderer, x, y, dt);
+            container.current_box.renderBoxText(window, renderer, x, y, dt);
         }
     }
 
-    protected final void onInit(BoxWindow window, BoxContainer parent) {
-        onWindowInitContainer(window, parent);
+    protected final void initBox(BoxWindow window, BoxContainer parent) {
+        initContainer(window, parent);
         for (Box box : contents) {
-            box.onInit(window,this);
+            box.initBox(window,this);
         }
     }
 
-    protected final void onOpen() {
-        onOpenContainer();
+    protected final void openBox() {
+        openContainer();
         for (Box box : contents) {
-            box.onOpen();
+            box.openBox();
         }
     }
 
-    protected final void onClose() {
-        onCloseContainer();
+    protected final void closeBox() {
+        closeContainer();
         for (Box box : contents) {
-            box.onClose();
+            box.closeBox();
         }
     }
+
+    protected void prepareBox(BoxWindow window, float dt) {
+        prepareContainer(window, dt);
+        if (this instanceof TBoxContainer container) {
+            container.currentBox().prepareBox(window, dt);
+        } else for (Box box : contents) {
+            box.prepareBox(window, dt);
+        }
+    }
+
 
     public boolean isEmpty() { return contents.isEmpty(); }
     
@@ -139,7 +152,7 @@ public abstract class BoxContainer extends Box {
         if (box == null) throw new IllegalStateException("Cannot add null Box to BoxContainer");
         if (built) throw new IllegalStateException("Cannot add Box to built BoxContainer");
         if (box.built) throw new IllegalStateException("Cannot add built Box to BoxContainer");
-        if (box instanceof RootContainer) throw new IllegalStateException("Cannot add root container as child");
+        if (box instanceof BowWindowRoot) throw new IllegalStateException("Cannot add root container as child");
         if (contents.contains(box)) throw new IllegalStateException("Cannot add same Box twice");
         contents.add(box);
     }

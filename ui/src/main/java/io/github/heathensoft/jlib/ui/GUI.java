@@ -64,7 +64,6 @@ public class GUI {
     }
 
 
-
     /**
      * Draw GUI to screen using a simple passthrough shader.
      * This should be called during the applications render phase.
@@ -72,7 +71,7 @@ public class GUI {
      * It renders the content of the GUI renderer's framebuffer directly onto the screen.
      * @param color_buffer The GUI Renderers color buffer. One of 0,1,2. Where 0 is diffuse color.
      */
-    public static void render_to_screen_default(int color_buffer) {
+    public static void render_gui_to_screen(int color_buffer) {
         color_buffer = U.clamp(color_buffer,0,2);
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);

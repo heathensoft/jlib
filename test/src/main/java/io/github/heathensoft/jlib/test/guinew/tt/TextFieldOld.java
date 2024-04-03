@@ -60,17 +60,17 @@ public class TextFieldOld extends Box implements TextProcessor {
     }
 
 
-    protected void onInit(BoxWindow window, BoxContainer parent) {
+    protected void initBox(BoxWindow window, BoxContainer parent) {
         this.parent_window = window;
     }
 
-    protected void onClose() {
+    protected void closeBox() {
         if (isActiveTextProcessor()) deactivateTextProcessor();
         scroll_bar.iYieldFocus();
         iYieldFocus();
     }
 
-    protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+    protected void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
 
         if (iHovered()) {
             if (editing_enabled) {
@@ -152,6 +152,7 @@ public class TextFieldOld extends Box implements TextProcessor {
             else if(cursor_y1 > window_y1) scrollDown(cursor_y1 - window_y1);
         }
         Rectanglef bounds = bounds(U.rectf(),x,y);
+        renderer.drawElement(bounds,0x00000000,iID);
         bounds.minX = bounds.maxX - sb_width;
         renderScrollBar(renderer,bounds);
 
@@ -169,7 +170,7 @@ public class TextFieldOld extends Box implements TextProcessor {
 
 
 
-    protected void renderText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
+    protected void renderBoxText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
         if (!text.isBlank()) {
             boolean show_cursor = editing_enabled && iHasFocus();
             Rectanglef bounds = bounds(U.rectf(),x,y);

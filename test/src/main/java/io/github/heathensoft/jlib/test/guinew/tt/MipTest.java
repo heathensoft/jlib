@@ -51,7 +51,7 @@ public class MipTest extends DefaultRoot {
             this.desired_width = width;
             this.picture = sprite;
         }
-        protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+        protected void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
             Rectanglef quad = bounds(U.rectf(),x,y);
             Vector4f uv = picture.uvCoordinates(U.vec4());
             float box_width = quad.lengthX();

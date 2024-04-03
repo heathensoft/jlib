@@ -23,10 +23,10 @@ public class TBoxContainer extends BoxContainer {
         int previous_index = index;
         index = U.clamp(index,0,contents.size() - 1);
         if (index != previous_index) {
-            current_box.onClose();
+            current_box.closeBox();
             current_index = index;
             current_box = contents.get(current_index);
-            current_box.onOpen();
+            current_box.openBox();
         }
     }
 
@@ -34,9 +34,9 @@ public class TBoxContainer extends BoxContainer {
         if (contents.size() > 1) {
             if (++current_index == contents.size()) {
                 current_index = 0;
-            } current_box.onClose();
+            } current_box.closeBox();
             current_box = contents.get(current_index);
-            current_box.onOpen();
+            current_box.openBox();
         }
 
     }
@@ -45,9 +45,9 @@ public class TBoxContainer extends BoxContainer {
         if (contents.size() > 1) {
             if (current_index == 0) {
                 current_index = contents.size();
-            } current_box.onClose();
+            } current_box.closeBox();
             current_box = contents.get(--current_index);
-            current_box.onOpen();
+            current_box.openBox();
         }
     }
 
