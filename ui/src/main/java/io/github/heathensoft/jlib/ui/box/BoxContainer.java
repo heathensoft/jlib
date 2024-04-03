@@ -26,10 +26,10 @@ public abstract class BoxContainer extends Box {
     protected void onWindowInitContainer(BoxWindow boxWindow, BoxContainer parent) { }
 
     /** Called just before calling open on the contents */
-    protected void onWindowOpenContainer(BoxWindow boxWindow) { }
+    protected void onOpenContainer() { }
 
     /** Called just before calling close on the contents */
-    protected void onWindowCloseContainer(BoxWindow boxWindow) { }
+    protected void onCloseContainer() { }
 
     protected boolean getBoundsOf(Box target, Rectanglef dst, float x, float y) {
         if (super.getBoundsOf(target,dst,x,y)) { return true;
@@ -99,24 +99,24 @@ public abstract class BoxContainer extends Box {
         }
     }
 
-    protected final void onWindowInit(BoxWindow window, BoxContainer parent) {
+    protected final void onInit(BoxWindow window, BoxContainer parent) {
         onWindowInitContainer(window, parent);
         for (Box box : contents) {
-            box.onWindowInit(window,this);
+            box.onInit(window,this);
         }
     }
 
-    protected final void onWindowOpen(BoxWindow window) {
-        onWindowOpenContainer(window);
+    protected final void onOpen() {
+        onOpenContainer();
         for (Box box : contents) {
-            box.onWindowOpen(window);
+            box.onOpen();
         }
     }
 
-    protected final void onWindowClose(BoxWindow window) {
-        onWindowCloseContainer(window);
+    protected final void onClose() {
+        onCloseContainer();
         for (Box box : contents) {
-            box.onWindowClose(window);
+            box.onClose();
         }
     }
 

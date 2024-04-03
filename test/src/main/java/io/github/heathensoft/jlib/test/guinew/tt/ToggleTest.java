@@ -2,9 +2,13 @@ package io.github.heathensoft.jlib.test.guinew.tt;
 
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
+import io.github.heathensoft.jlib.lwjgl.window.TextProcessor;
 import io.github.heathensoft.jlib.ui.box.*;
+import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
+import io.github.heathensoft.jlib.ui.text.InputField;
 import org.joml.primitives.Rectanglef;
+
 
 /**
  * @author Frederik Dahl
@@ -28,6 +32,8 @@ public class ToggleTest extends DefaultRoot {
         );
 
 
+
+
         HBoxContainer hBox = new HBoxContainer();
         hBox.addBoxes(button_prev,button_next);
         hBox.setInnerSpacing(3);
@@ -44,17 +50,54 @@ public class ToggleTest extends DefaultRoot {
 
     }
 
-    private static final class BoxTest extends Box {
+    private static final class BoxTest extends Box implements TextProcessor {
         private final int color;
+        private final InputField inputField;
         public BoxTest(float width, float height, int color) {
             this.color = color;
             this.desired_width = width;
             this.desired_height = height;
+            this.inputField = new InputField(System.out::println);
+            this.iID = iObtainID();
         }
+
+        protected void onClose() { iYieldFocus(); }
+
 
         protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
             Rectanglef bounds = bounds(U.rectf(),x,y);
-            renderer.drawElement(bounds,color,parent_id);
+            renderer.drawElement(bounds,color,iID);
+            if (iClicked(Mouse.LEFT)) iFocus();
+            if (iHasFocus()) {
+                if (!isActiveTextProcessor()) {
+                    inputField.resetCursorTimer();
+                    activateTextProcessor();
+                }
+            } else {
+                if (isActiveTextProcessor()) {
+                    deactivateTextProcessor();
+                }
+            }
+        }
+
+        protected void renderText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
+            Rectanglef bounds = bounds(U.rectf(),x,y);
+            float text_size = 32;
+            float padding = 4;
+            bounds.minX += padding;
+            bounds.maxX -= padding;
+            bounds.maxY -= padding;
+            bounds.minY = bounds.maxY - text_size;
+            renderer.fonts().bindFontMetrics(FontsGUI.SLOT_MONO);
+            inputField.draw(renderer,bounds,0xFFFFFFFF,0,iHasFocus());
+        }
+
+        public void keyPress(int key, int mods) {
+            inputField.keyPress(key, mods);
+        }
+
+        public void charPress(byte character) {
+            inputField.charPress(character);
         }
     }
 

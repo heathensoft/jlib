@@ -12,6 +12,7 @@ import io.github.heathensoft.jlib.common.utils.U;
 
 public class TBoxContainer extends BoxContainer {
 
+
     protected Box current_box;
     protected int current_index;
 
@@ -19,21 +20,35 @@ public class TBoxContainer extends BoxContainer {
     public Box currentBox() { return current_box; }
 
     public void setCurrentBox(int index) {
-        current_index = U.clamp(index,0,contents.size() - 1);
-        current_box = contents.get(current_index);
+        int previous_index = index;
+        index = U.clamp(index,0,contents.size() - 1);
+        if (index != previous_index) {
+            current_box.onClose();
+            current_index = index;
+            current_box = contents.get(current_index);
+            current_box.onOpen();
+        }
     }
 
     public void toggleNext() {
-        if (++current_index == contents.size()) {
-            current_index = 0;
-        } current_box = contents.get(current_index);
+        if (contents.size() > 1) {
+            if (++current_index == contents.size()) {
+                current_index = 0;
+            } current_box.onClose();
+            current_box = contents.get(current_index);
+            current_box.onOpen();
+        }
+
     }
 
     public void togglePrevious() {
-        if (current_index == 0) {
-            current_index = contents.size();
-        } current_box = contents.get(--current_index);
-
+        if (contents.size() > 1) {
+            if (current_index == 0) {
+                current_index = contents.size();
+            } current_box.onClose();
+            current_box = contents.get(--current_index);
+            current_box.onOpen();
+        }
     }
 
     protected void build() {

@@ -1,6 +1,5 @@
 package io.github.heathensoft.jlib.test.guinew.tt;
 
-import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.*;
 import io.github.heathensoft.jlib.ui.GUI;
@@ -9,7 +8,6 @@ import io.github.heathensoft.jlib.ui.box.Box;
 import io.github.heathensoft.jlib.ui.box.BoxContainer;
 import io.github.heathensoft.jlib.ui.box.BoxWindow;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
-import io.github.heathensoft.jlib.ui.gfx.ImageDisplay;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.ui.text.Paragraph;
 import io.github.heathensoft.jlib.ui.text.Text;
@@ -40,12 +38,9 @@ public class TextFieldOld extends Box implements TextProcessor {
     private float tf_text_height;
     private final Vector2f text_cursor_position;
     private final Interactable.Instance scroll_bar;
-    private ImageDisplay boxBackground;
     private BoxWindow parent_window;
 
-    public void setBoxBackground(ImageDisplay boxBackground) {
-        this.boxBackground = boxBackground;
-    }
+
 
     public TextFieldOld(float tf_width, float tf_height, float tf_padding, float sb_width, float text_size) {
         tf_width = Math.max(16,tf_width);
@@ -65,11 +60,11 @@ public class TextFieldOld extends Box implements TextProcessor {
     }
 
 
-    protected void onWindowInit(BoxWindow window, BoxContainer parent) {
+    protected void onInit(BoxWindow window, BoxContainer parent) {
         this.parent_window = window;
     }
 
-    protected void onWindowClose(BoxWindow window) {
+    protected void onClose() {
         if (isActiveTextProcessor()) deactivateTextProcessor();
         scroll_bar.iYieldFocus();
         iYieldFocus();
@@ -157,8 +152,6 @@ public class TextFieldOld extends Box implements TextProcessor {
             else if(cursor_y1 > window_y1) scrollDown(cursor_y1 - window_y1);
         }
         Rectanglef bounds = bounds(U.rectf(),x,y);
-        if (boxBackground == null) renderer.drawElement(bounds,0xFF212121, iID);
-        else boxBackground.render(window,renderer,bounds,0,0,dt);
         bounds.minX = bounds.maxX - sb_width;
         renderScrollBar(renderer,bounds);
 
@@ -374,7 +367,6 @@ public class TextFieldOld extends Box implements TextProcessor {
     public void dispose() {
         super.dispose();
         scroll_bar.dispose();
-        Disposable.dispose(boxBackground);
     }
 
 

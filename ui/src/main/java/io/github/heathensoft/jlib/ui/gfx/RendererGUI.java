@@ -114,6 +114,7 @@ public class RendererGUI implements Disposable {
     public void dispose() { Disposable.dispose(pixelBuffer,spriteBatch,textBatch,framebuffer,fonts); }
     public FontsGUI fonts() { return fonts; }
     public Framebuffer framebuffer() { return framebuffer; }
+    public TextBatchGUI textBatch() { return textBatch; }
     public Texture framebufferDiffuseTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_DIFFUSE); }
     public Texture framebufferNormalsTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_NORMALS); }
     public Texture framebufferEmissiveTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_EMISSIVE); }

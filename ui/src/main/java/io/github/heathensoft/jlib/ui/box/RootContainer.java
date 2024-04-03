@@ -29,10 +29,10 @@ public abstract class RootContainer extends BoxContainer {
     protected abstract void onWindowInitContainer(BoxWindow boxWindow, BoxContainer parent);
 
     /** Called just before calling open on the contents */
-    protected abstract void onWindowOpenContainer(BoxWindow boxWindow);
+    protected abstract void onOpenContainer();
 
     /** Called just before calling close on the contents */
-    protected abstract void onWindowCloseContainer(BoxWindow boxWindow);
+    protected abstract void onCloseContainer();
 
     /** Called on Root Containers only (ends here) */
     protected abstract void onWindowPrepare(BoxWindow window, float dt);
@@ -137,13 +137,10 @@ public abstract class RootContainer extends BoxContainer {
                 else window.maximize();
             }
             else if (iPressed(Mouse.LEFT)) {
-
                 if (iJustPressed()) {
                     GUI.windows.focusRequest(window);
                 }
-
                 if (border_padding >= 1) {
-
                     boolean grabbed = iGrabbed(Mouse.LEFT);
                     final int TOP_RIGHT     = TOP       | RIGHT;
                     final int BOTTOM_RIGHT  = BOTTOM    | RIGHT;

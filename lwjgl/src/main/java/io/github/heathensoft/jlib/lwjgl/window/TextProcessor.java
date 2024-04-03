@@ -15,14 +15,16 @@ public interface TextProcessor {
      * @param key "non-printable-key"
      */
     void keyPress(int key, int mods);
-    /**
-     * @param key "non-printable-key"
-     */
-    void keyRelease(int key, int mods);
+
     /**
      * @param character ascii  [00 - 127]
      */
     void charPress(byte character);
+
+    /**
+     * @param key "non-printable-key"
+     */
+    default void keyRelease(int key, int mods) { }
 
     default void onTextProcessorActivated() { }
 

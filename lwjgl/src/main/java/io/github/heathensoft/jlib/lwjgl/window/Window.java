@@ -679,7 +679,8 @@ public class Window extends AbstractWindow {
 
     @Override
     public String getClipboard() {
-        return glfwGetClipboardString(window);
+        String string = glfwGetClipboardString(window);
+        return string == null ? "" : string;
     }
 
     @Override

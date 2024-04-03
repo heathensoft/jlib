@@ -115,7 +115,8 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
         if (string != null) {
             if (string.length() > character_capacity) {
                 string = string.substring(0,character_capacity);
-            } this.words = stringToWords(string,type);
+            }
+            this.words = stringToWords(string,type);
             this.cursor_character_index = Math.max(0,length());
             this.valid_field_value = onFieldEdit(toString());
             this.last_input_time = System.currentTimeMillis();

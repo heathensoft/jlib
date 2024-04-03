@@ -48,11 +48,11 @@ public abstract class DefaultRoot extends RootContainer {
 
     }
 
-    protected void onWindowOpenContainer(BoxWindow boxWindow) {
+    protected void onOpenContainer() {
 
     }
 
-    protected void onWindowCloseContainer(BoxWindow boxWindow) {
+    protected void onCloseContainer() {
 
     }
 

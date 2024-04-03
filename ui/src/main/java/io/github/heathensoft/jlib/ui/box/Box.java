@@ -29,11 +29,11 @@ public class Box implements Interactable {
         desired_height = height;
     }
 
-    protected void onWindowInit(BoxWindow window, BoxContainer parent) { }
+    protected void onInit(BoxWindow window, BoxContainer parent) { }
 
-    protected void onWindowOpen(BoxWindow window) { }
+    protected void onOpen() { }
 
-    protected void onWindowClose(BoxWindow window) { }
+    protected void onClose() { }
 
     protected void render(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) { }
 

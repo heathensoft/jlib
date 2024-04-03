@@ -75,12 +75,25 @@ public class FontsGUI implements Disposable {
     private final float[] font_sizePixels;
 
     private final Vector4f[][] font_colors;
-    private final Vector4f[] default_colors;
     private Paragraph.Type last_pType = null;
     private Word.Type last_wType = null;
     private float last_alpha = 1.0f;
     private float last_color_float_bits = 0.0f;
 
+    private final static Vector4f[] default_colors = initialize_default_colors();
+
+    private static Vector4f[] initialize_default_colors() {
+        Vector4f[] colors = new Vector4f[Paragraph.Type.values().length];
+        colors[Paragraph.Type.DEFAULT.id] = Color.hex_to_rgb("A9B7C6FF");
+        colors[Paragraph.Type.COMMENT.id] = Color.hex_to_rgb("808080FF");
+        colors[Paragraph.Type.DEBUG.id]   = Color.hex_to_rgb("6A8759FF");
+        colors[Paragraph.Type.WARNING.id] = Color.hex_to_rgb("FF0000FF");
+        return colors;
+    }
+
+    public static Vector4f defaultColor(Paragraph.Type type) {
+        return default_colors[type.id];
+    }
 
 
     public FontsGUI(int bindingPoint) {
@@ -99,7 +112,6 @@ public class FontsGUI implements Disposable {
         this.uniformBuffer = new BufferObject(GL_UNIFORM_BUFFER,GL_STATIC_DRAW).bind();
         this.uniformBuffer.bufferData(FONTS_UNIFORM_BUFFER_SIZE);
         this.uniformBuffer.bindBufferBase(uniformsBindingPoint);
-        this.default_colors = initialize_default_colors();
         this.font_colors = initialize_font_colors(colorDefault());
     }
 
@@ -277,14 +289,7 @@ public class FontsGUI implements Disposable {
         }
     }
 
-    private Vector4f[] initialize_default_colors() {
-        Vector4f[] colors = new Vector4f[Paragraph.Type.values().length];
-        colors[Paragraph.Type.DEFAULT.id] = Color.hex_to_rgb("A9B7C6FF");
-        colors[Paragraph.Type.COMMENT.id] = Color.hex_to_rgb("808080FF");
-        colors[Paragraph.Type.DEBUG.id]   = Color.hex_to_rgb("6A8759FF");
-        colors[Paragraph.Type.WARNING.id] = Color.hex_to_rgb("FF0000FF");
-        return colors;
-    }
+
 
     private Vector4f[][] initialize_font_colors(Vector4f color) {
         Vector4f[][] colors = new Vector4f[FONT_SLOTS][Word.Type.values().length];
@@ -513,21 +518,14 @@ public class FontsGUI implements Disposable {
     public static int bits_set_char(int bits, int c) {
         return bits | (c & 0x7F);
     }
-
-    public static int bits_invert_color(int bits) {
-        return bits | 0x80;
-    }
-
+    public static int bits_invert_color(int bits) { return bits | 0x80; }
     public static int bits_set_size(int bits, float size) { return bits | ((round(clamp(size,1,256)) - 1) & 0xFF) << 8; }
-
     public static int bits_set_glow(int bits, float glow) {
         return bits | (round(clamp(glow) * 255.0f) & 0xFF) << 16;
     }
-
     public static int bits_set_font(int bits, int font) {
         return bits | (font & 0x03) << 24;
     }
-
     public static int bits_font(int font) {
         return (font & 0x03) << 24;
     }

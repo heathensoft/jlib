@@ -228,15 +228,15 @@ public final class BoxWindow extends Window {
 
     protected void onInit(String name)  {
         anchorContent(content);
-        content.onWindowInit(this,null);
+        content.onInit(this,null);
     }
 
-    protected void onOpen() { content.onWindowOpen(this); }
+    protected void onOpen() { content.onOpen(); }
 
     protected void onClose() {
         if (isAutoRestoringOnClose()) {
             anchorContent(content);
-        } content.onWindowClose(this);
+        } content.onClose();
     }
 
     protected void onTermination() {
