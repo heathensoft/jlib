@@ -74,26 +74,6 @@ public class FontsGUI implements Disposable {
     private final float[] font_avgAdvance;
     private final float[] font_sizePixels;
 
-    private final Vector4f[][] font_colors;
-    private Paragraph.Type last_pType = null;
-    private Word.Type last_wType = null;
-    private float last_alpha = 1.0f;
-    private float last_color_float_bits = 0.0f;
-
-    private final static Vector4f[] default_colors = initialize_default_colors();
-
-    private static Vector4f[] initialize_default_colors() {
-        Vector4f[] colors = new Vector4f[Paragraph.Type.values().length];
-        colors[Paragraph.Type.DEFAULT.id] = Color.hex_to_rgb("A9B7C6FF");
-        colors[Paragraph.Type.COMMENT.id] = Color.hex_to_rgb("808080FF");
-        colors[Paragraph.Type.DEBUG.id]   = Color.hex_to_rgb("6A8759FF");
-        colors[Paragraph.Type.WARNING.id] = Color.hex_to_rgb("FF0000FF");
-        return colors;
-    }
-
-    public static Vector4f defaultColor(Paragraph.Type type) {
-        return default_colors[type.id];
-    }
 
 
     public FontsGUI(int bindingPoint) {
@@ -112,7 +92,6 @@ public class FontsGUI implements Disposable {
         this.uniformBuffer = new BufferObject(GL_UNIFORM_BUFFER,GL_STATIC_DRAW).bind();
         this.uniformBuffer.bufferData(FONTS_UNIFORM_BUFFER_SIZE);
         this.uniformBuffer.bindBufferBase(uniformsBindingPoint);
-        this.font_colors = initialize_font_colors(colorDefault());
     }
 
 
@@ -271,8 +250,6 @@ public class FontsGUI implements Disposable {
         if (font >= 0 && font < numFontsLoaded && font_loaded[font]) {
             if (this.currentFont != font) {
                 this.currentFont = font;
-                this.last_pType = null;
-                this.last_wType = null;
             }
         } else Logger.warn("Font slot: " + font + "not loaded");
     }
@@ -287,80 +264,6 @@ public class FontsGUI implements Disposable {
                 if (font_loaded[i]) font_texture[i].bindToSlot(i);
             }
         }
-    }
-
-
-
-    private Vector4f[][] initialize_font_colors(Vector4f color) {
-        Vector4f[][] colors = new Vector4f[FONT_SLOTS][Word.Type.values().length];
-        for (int font = 0; font < colors.length; font++) {
-            for (int type = 0; type < colors[font].length; type++)
-                colors[font][type] = new Vector4f(color);
-        } return colors;
-    }
-
-    public void setColor(Word.Type type,Vector4f color) {
-        font_colors[currentFont][type.id].set(color);
-        last_wType = null;
-    }
-
-    public void setDefaultColor(Paragraph.Type type, Vector4f color) {
-        default_colors[type.id].set(color);
-        last_pType = null;
-    }
-
-    public Vector4f colorDefault() {
-        return default_colors[Paragraph.Type.DEFAULT.id];
-    }
-
-    public Vector4f colorRegular() {
-        return font_colors[currentFont][Word.Type.REGULAR.id];
-    }
-
-    public Vector4f colorRGB(Paragraph paragraph, Word word) {
-        return colorRGB(paragraph.type(),word.type());
-    }
-
-    public Vector4f colorRGB(Paragraph.Type pType, Word.Type wType) {
-        if (pType == Paragraph.Type.DEFAULT) {
-            return font_colors[currentFont][wType.id];
-        } else if (wType == Word.Type.REGULAR) {
-            return default_colors[pType.id];
-        } else return font_colors[currentFont][wType.id];
-    }
-
-    public float colorRegularFloatBits() {
-        return Color.rgb_to_floatBits(colorRegular());
-    }
-
-    public float colorDefaultFloatBits() {
-        return Color.rgb_to_floatBits(colorDefault());
-    }
-
-    public float colorFloatBits(Paragraph paragraph, Word word) {
-        return colorFloatBits(paragraph.type(),word.type());
-    }
-
-    public float colorFloatBits(Paragraph paragraph, Word word, float alpha) {
-        return colorFloatBits(paragraph.type(),word.type(),alpha);
-    }
-
-    public float colorFloatBits(Paragraph.Type pType, Word.Type wType) {
-        return colorFloatBits(pType,wType,1.0f);
-    }
-
-    public float colorFloatBits(Paragraph.Type pType, Word.Type wType, float alpha) {
-        if (last_pType == pType && last_wType == wType && U.floatEquals(last_alpha,alpha,1e-4)) {
-            return last_color_float_bits;
-        } last_pType = pType;
-        last_wType = wType;
-        last_alpha = alpha;
-        Vector4f rgb = colorRGB(pType,wType);
-        if (alpha < 1.0f) {
-            rgb = U.vec4(rgb);
-            rgb.w *= alpha;
-        } last_color_float_bits = Color.rgb_to_floatBits(rgb);
-        return last_color_float_bits;
     }
 
     public Texture texture() {
@@ -388,6 +291,10 @@ public class FontsGUI implements Disposable {
         return desiredFontSize(advanceSum(line),desired_width);
     }
 
+    public float desiredFontSize(Paragraph line, float desired_width) {
+        return desiredFontSize(advanceSum(line),desired_width);
+    }
+
     public float desiredFontSize(float sum_advance, float desired_width) {
         if (desired_width > 0 && sum_advance > 0) {
             float size_pixels = sizePixels(); // 32
@@ -396,16 +303,28 @@ public class FontsGUI implements Disposable {
         } return 0;
     }
 
+    public float advanceSum(Paragraph line) {
+        if (line == null || line.isBlank()) return 0;
+        float width = 0;
+        if (isMonospaced()) {
+            width = advance('x') * line.length();
+        } else { for (Word word : line) {
+                int l = word.length();
+                for (int i = 0; i < l; i++) {
+                    width += advance((char)word.get(i));
+                } width += advance(' ');
+            } width -= advance(' ');
+        } return width;
+    }
+
     public float advanceSum(String line) {
         if (line == null || line.isBlank()) return 0;
         float num_characters = line.length();
         float width = 0;
         if (isMonospaced()) {
             width = advance('x') * num_characters;
-        } else {
-            for (int i = 0; i < num_characters; i++) {
-                width += advance(line.charAt(i));
-            }
+        } else for (int i = 0; i < num_characters; i++) {
+            width += advance(line.charAt(i));
         } return width;
     }
 
@@ -413,8 +332,25 @@ public class FontsGUI implements Disposable {
         return advanceSum(line) * relativeScale(size);
     }
 
+    public float advanceSumSized(Paragraph line, float size) { return advanceSum(line) + relativeScale(size); }
+
     public float advance(char c) {
         int index = Math.max((c & 0x7F) - 32,0);
+        return font_advance[currentFont][index % FONTS_NUM_CHARACTERS];
+    }
+
+    public float advance(byte c) {
+        int index = Math.max((c & 0x7F) - 32,0);
+        return font_advance[currentFont][index % FONTS_NUM_CHARACTERS];
+    }
+
+    public float advanceUnchecked(byte c) {
+        int index = Math.max(c - 32,0);
+        return font_advance[currentFont][index % FONTS_NUM_CHARACTERS];
+    }
+
+    public float advanceUnchecked(char c) {
+        int index = Math.max(c - 32,0);
         return font_advance[currentFont][index % FONTS_NUM_CHARACTERS];
     }
 

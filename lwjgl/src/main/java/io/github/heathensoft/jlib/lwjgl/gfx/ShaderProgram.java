@@ -41,6 +41,9 @@ public class ShaderProgram {
     public static final String UNIFORM_SAMPLER_1D = "u_sampler1D";
     public static final String UNIFORM_SAMPLER_2D = "u_sampler2D";
     public static final String UNIFORM_RESOLUTION = "u_resolution";
+    public static final String UNIFORM_EMISSIVE = "u_emissive";
+    public static final String UNIFORM_DIFFUSE = "u_diffuse";
+    public static final String UNIFORM_NORMALS = "u_normals";
     public static final String UNIFORM_CURSOR = "u_cursor";
     public static final String UNIFORM_TIME = "u_time";
     public static final String UNIFORM_LOD = "u_lod";
@@ -105,7 +108,7 @@ public class ShaderProgram {
         public void draw() { draw(0,0,1,1); }
         public void draw(float u1, float v1, float u2, float v2) { draw(0,0,1,1,u1,v1,u2,v2); }
         public void draw(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2) {
-            try (MemoryStack stack = MemoryStack.stackPush()){  // todo:  Does not like this. Use MemoryUtil
+            try (MemoryStack stack = MemoryStack.stackPush()){
                 FloatBuffer buffer = stack.mallocFloat(16);
                 buffer.put(x1).put(y1).put(u1).put(v1);
                 buffer.put(x2).put(y1).put(u2).put(v1);
@@ -228,11 +231,13 @@ public class ShaderProgram {
     }
 
     public static void texturePass(Texture texture) {
-        texturePass(texture, U.vec4(0,0,1,1));
+        texturePass(texture, U.popSetVec4(0,0,1,1));
+        U.pushVec4();
     }
 
     public static void texturePass(Texture texture, Vector4f uv) {
-        texturePass(texture, U.vec2(1,1),U.vec4(0,0,1,1),uv);
+        texturePass(texture, U.popSetVec2(1,1),U.popSetVec4(0,0,1,1),uv);
+        U.pushVec4(); U.pushVec2();
     }
 
     public static void texturePass(Texture texture, Vector2f resolution, Vector4f pos, Vector4f uv) {

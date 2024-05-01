@@ -39,7 +39,7 @@ public final class BoxWindow extends Window {
     private static final int STATE_MAXIMIZED_Y = 0x0800;
 
     private final WindowAnchor anchor;
-    private final BowWindowRoot content;
+    private final RootContainer content;
     private final FadingDisplay fading_display;
     private final Map<String,Box> named_content;
     private final Rectanglef transform_initial = new Rectanglef();
@@ -47,19 +47,19 @@ public final class BoxWindow extends Window {
     private final Vector2f position = new Vector2f();
     private float transform_timer;
 
-    public BoxWindow(BowWindowRoot content) {
+    public BoxWindow(RootContainer content) {
         this(content,WindowAnchor.NONE);
     }
 
-    public BoxWindow(BowWindowRoot content, String name) {
+    public BoxWindow(RootContainer content, String name) {
         this(content,null,name);
     }
 
-    public BoxWindow(BowWindowRoot content, WindowAnchor anchor) {
+    public BoxWindow(RootContainer content, WindowAnchor anchor) {
         this(content,anchor,"untitled window");
     }
 
-    public BoxWindow(BowWindowRoot content, WindowAnchor anchor, String name) {
+    public BoxWindow(RootContainer content, WindowAnchor anchor, String name) {
         if (content == null) throw new RuntimeException("GUI: Null BoxWindow content");
         this.anchor = anchor == null ? WindowAnchor.NONE : anchor;
         this.fading_display = new FadingDisplay();
@@ -71,7 +71,7 @@ public final class BoxWindow extends Window {
     protected void prepare(float dt) { content.prepareBox(this,dt); }
 
     protected void render(RendererGUI renderer, float dt) {
-        Rectanglef bounds = bounds(U.rectf());
+        Rectanglef bounds = bounds(U.popRect());
         Resolution resolution = GUI.resolution();
         final float screen_width = resolution.width();
         final float screen_height = resolution.height();
@@ -193,7 +193,7 @@ public final class BoxWindow extends Window {
             }
         }
         // Transform ***********************************************************
-        Rectanglef transform = U.rectf();
+        Rectanglef transform = U.popRect();
         if (isTransforming()) {
             transform_timer += (dt * 5f);
             float t = U.smooth(U.clamp(transform_timer));
@@ -210,6 +210,7 @@ public final class BoxWindow extends Window {
             content.resizeHorizontal(resize_x);
             content.resizeVertical(resize_y);
         }
+        U.pushRect(2);
         // Update whether window is maximized ***********************************
         int maximum_width = round(maximumWidth());
         int width = round(content.currentWidth());
@@ -222,13 +223,14 @@ public final class BoxWindow extends Window {
 
         content.renderBox(this,renderer,(int)position.x,(int)position.y,dt,0);
         content.renderBoxText(this,renderer,(int)position.x,(int)position.y,dt);
+        content.windowResizeEvents(this,(int)position.x,(int)position.y);
         fading_display.draw(renderer,dt);
         if (!GUI.state.anyInteractablePressed()) { clearStateCurrentlyDragging(); }
     }
 
     protected void onInit(String name)  {
         anchorContent(content);
-        content.initBox(this,null);
+        content.initializeBox(this,null);
     }
 
     protected void onOpen() { content.openBox(); }
@@ -325,6 +327,7 @@ public final class BoxWindow extends Window {
             transform_timer = 0;
             transform_target.set(transform_initial);
             bounds(transform_initial);
+            // In the case where the window is maximized and restored at the same time.
             if (round(transform_initial.lengthX()) == round(transform_target.lengthX())) {
                 if (round(transform_initial.lengthY()) == round(transform_target.lengthY())) {
                     Resolution resolution = GUI.resolution();
@@ -389,6 +392,14 @@ public final class BoxWindow extends Window {
         }
     }
 
+    public void maximizeInstantX() {
+        if (!isCurrentlyMaximizingX()) {
+            clearStateCurrentlyRestoringX();
+            setStateCurrentlyMaximizingX();
+            transform_timer = 1.0f;
+        }
+    }
+
     public void maximizeX() {
         if (!isCurrentlyMaximizingX()) {
             clearStateCurrentlyRestoringX();
@@ -396,6 +407,14 @@ public final class BoxWindow extends Window {
             transform_timer = 0;
             transform_initial.minX = position.x;
             transform_initial.maxX = position.x + content.currentWidth();
+        }
+    }
+
+    public void maximizeInstantY() {
+        if (!isCurrentlyMaximizingY()) {
+            clearStateCurrentlyRestoringY();
+            setStateCurrentlyMaximizingY();
+            transform_timer = 1.0f;
         }
     }
 
@@ -426,13 +445,14 @@ public final class BoxWindow extends Window {
                 clearStateCurrentlyRestoringY();
                 clearStateCurrentlyMaximizingX();
                 clearStateCurrentlyMaximizingY();
-                Vector2f origin_translation = U.vec2(
+                Vector2f origin_translation = U.popSetVec2(
                         transform_initial.minX,
                         transform_initial.maxY);
                 origin_translation.sub(
                         transform_target.minX,
                         transform_target.maxY);
                 transform_target.translate(origin_translation);
+                U.pushVec2();
                 translate(drag_vector);
             }
         }
@@ -610,7 +630,7 @@ public final class BoxWindow extends Window {
 
     public Box namedContent(String key) { return named_content.get(key); }
 
-    public BowWindowRoot content() { return content; }
+    public RootContainer content() { return content; }
 
     public WindowAnchor anchor() { return anchor; }
 
@@ -729,7 +749,7 @@ public final class BoxWindow extends Window {
         } transform_target.translate(dx,dy);
     }
 
-    private void anchorContent(BowWindowRoot content) {
+    private void anchorContent(RootContainer content) {
         if (content.isBuilt()) content.restoreToDesiredSize();
         else content.build();
         Resolution resolution = GUI.resolution();
@@ -825,8 +845,8 @@ public final class BoxWindow extends Window {
             if (value != null && !value.isBlank() && box_bounds.isValid()) {
                 GUI.GlobalVariables global = GUI.variables;
                 float area_width;
-                float area_height = global.boxWindow_fadDisplay_desiredHeight;
-                float padding = global.boxWindow_fadDisplay_padding;
+                float area_height = global.boxwindow_fadedisplay_desired_height;
+                float padding = global.boxwindow_fadedisplay_padding;
                 float bounds_w = box_bounds.lengthX();
                 float bounds_h = box_bounds.lengthY();
                 if (bounds_h < area_height) {
@@ -834,9 +854,9 @@ public final class BoxWindow extends Window {
                 } float text_size = area_height - (2 * padding);
                 if (text_size > 1f) {
                     FontsGUI fonts = GUI.fonts;
-                    fonts.bindFontMetrics(global.boxWindow_fadeDisplay_font);
+                    fonts.bindFontMetrics(global.boxwindow_fadedisplay_font);
                     area_width = fonts.advanceSumSized(value,text_size);
-                    area_width += (global.boxWindow_fadDisplay_padding * 2);
+                    area_width += (global.boxwindow_fadedisplay_padding * 2);
                     if (bounds_w < area_width) {
                         area_height *= (bounds_w / area_width);
                         area_width = bounds_w;
@@ -858,9 +878,9 @@ public final class BoxWindow extends Window {
         void displayString(String string, Rectanglef box_bounds) {
             if (string != null && !string.isBlank() && box_bounds.isValid()) {
                 GUI.GlobalVariables global = GUI.variables;
-                float padding = global.boxWindow_fadDisplay_padding;
+                float padding = global.boxwindow_fadedisplay_padding;
                 float area_width;
-                float area_height = global.boxWindow_fadDisplay_desiredHeight;
+                float area_height = global.boxwindow_fadedisplay_desired_height;
                 float bounds_w = box_bounds.lengthX();
                 float bounds_h = box_bounds.lengthY();
                 if (bounds_h < area_height) {
@@ -868,7 +888,7 @@ public final class BoxWindow extends Window {
                 } float text_size = area_height - (2 * padding);
                 if (text_size > 1f) {
                     FontsGUI fonts = GUI.fonts;
-                    fonts.bindFontMetrics(global.boxWindow_fadeDisplay_font);
+                    fonts.bindFontMetrics(global.boxwindow_fadedisplay_font);
                     area_width = fonts.advanceSumSized(string,text_size);
                     area_width += (padding * 2);
                     if (bounds_w < area_width) {
@@ -893,40 +913,42 @@ public final class BoxWindow extends Window {
             if (fadeOut_timer < 1f) {
                 float alpha = 1 - U.smooth(clamp(fadeOut_timer));
                 GUI.GlobalVariables global = GUI.variables;
-                int padding = global.boxWindow_fadDisplay_padding;
-                int font = global.boxWindow_fadeDisplay_font;
-                Vector4f rgb = U.vec4(0,0,0,alpha * 0.75f);
+                int padding = global.boxwindow_fadedisplay_padding;
+                int font = global.boxwindow_fadedisplay_font;
+                Vector4f rgb = U.popSetVec4(0,0,0,alpha * 0.75f);
                 int bg_color = Color.rgb_to_intBits(rgb);
-                rgb.set(GUI.variables.boxWindow_fadeDisplay_textColor);
+                rgb.set(GUI.variables.boxwindow_fadedisplay_text_color);
                 rgb.w *= alpha;
                 int text_color = Color.rgb_to_intBits(rgb);
+                U.pushVec4();
                 if (string == null) {
                     if (value != null) { // value only
-                        renderer.drawScrollBar(value_bounds,bg_color,0);
+                        renderer.drawElement(value_bounds,bg_color,RendererGUI.SKIP_ID);
                         TextAlignment alignment = TextAlignment.CENTERED;
                         renderer.drawStringDynamicVerticalCentered(value,alignment, value_bounds,font,text_color,padding,0);
                     }
                 } else {
                     if (value == null) { // text only
-                        renderer.drawScrollBar(string_bounds,bg_color,0);
+                        renderer.drawElement(string_bounds,bg_color,RendererGUI.SKIP_ID);
                         TextAlignment alignment = TextAlignment.LEFT;
                         renderer.drawStringDynamicVerticalCentered(string,alignment, string_bounds,font,text_color,padding,0);
                     } else {
                         if (string_bounds.intersectsRectangle(value_bounds)) { // Combine
                             TextAlignment alignment = TextAlignment.CENTERED;
                             String combined_string = string + " " +  value;
-                            Rectanglef combined_rect = U.rectf();
+                            Rectanglef combined_rect = U.popRect();
                             combined_rect.minX = string_bounds.minX;
                             combined_rect.maxX = value_bounds.maxX;
                             combined_rect.maxY = value_bounds.maxY;
                             combined_rect.minY = Math.max(value_bounds.minY,string_bounds.minY);
-                            renderer.drawScrollBar(combined_rect,bg_color,0);
+                            renderer.drawElement(combined_rect,bg_color,RendererGUI.SKIP_ID);
                             renderer.drawStringDynamicVerticalCentered(combined_string,alignment,combined_rect,font,text_color,padding,0);
+                            U.pushRect();
                         } else { // both
-                            renderer.drawScrollBar(value_bounds,bg_color,0);
+                            renderer.drawElement(value_bounds,bg_color,RendererGUI.SKIP_ID);
                             TextAlignment alignment = TextAlignment.CENTERED;
                             renderer.drawStringDynamicVerticalCentered(value,alignment, value_bounds,font,text_color,padding,0);
-                            renderer.drawScrollBar(string_bounds,bg_color,0);
+                            renderer.drawElement(string_bounds,bg_color,RendererGUI.SKIP_ID);
                             alignment = TextAlignment.LEFT;
                             renderer.drawStringDynamicVerticalCentered(string,alignment, string_bounds,font,text_color,padding,0);
                         }

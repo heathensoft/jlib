@@ -30,7 +30,7 @@ public class WindowDragZone extends UInteractable implements OnGrab, OnRelease {
     public void executeOnGrab(Vector2f origin, Vector2f vector, int button) {
         if (button == Mouse.LEFT) {
             if (dragging) {
-                Vector2f position = U.vec2();
+                Vector2f position = new Vector2f();
                 position.set(start).add(vector);
                 window.setPosition(position);
             } else {

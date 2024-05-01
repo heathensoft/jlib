@@ -98,8 +98,9 @@ public class Camera2D {
     }
     
     public void unProject(Vector2f ndc) {
-        Vector3f v3 = U.vec3(ndc.x,ndc.y,0);
+        Vector3f v3 = U.popSetVec3(ndc.x,ndc.y,0);
         v3.mulProject(INV);
         ndc.set(v3.x,v3.y);
+        U.pushVec3();
     }
 }

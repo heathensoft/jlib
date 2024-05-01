@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.test.guinew.tt;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.lwjgl.window.TextProcessor;
+import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.box.*;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
@@ -65,7 +66,7 @@ public class ToggleTest extends DefaultRoot {
 
 
         protected void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-            Rectanglef bounds = bounds(U.rectf(),x,y);
+            Rectanglef bounds =  bounds(U.popRect(),x,y);
             renderer.drawElement(bounds,color,iID);
             if (iClicked(Mouse.LEFT)) iFocus();
             if (iHasFocus()) {
@@ -77,11 +78,11 @@ public class ToggleTest extends DefaultRoot {
                 if (isActiveTextProcessor()) {
                     deactivateTextProcessor();
                 }
-            }
+            } U.pushRect();
         }
 
         protected void renderBoxText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
-            Rectanglef bounds = bounds(U.rectf(),x,y);
+            Rectanglef bounds = bounds(U.popRect(),x,y);
             float text_size = 32;
             float padding = 4;
             bounds.minX += padding;
@@ -90,6 +91,7 @@ public class ToggleTest extends DefaultRoot {
             bounds.minY = bounds.maxY - text_size;
             renderer.fonts().bindFontMetrics(FontsGUI.SLOT_MONO);
             inputField.draw(renderer,bounds,0xFFFFFFFF,0,iHasFocus());
+            U.pushRect();
         }
 
         public void keyPress(int key, int mods) {
@@ -113,17 +115,33 @@ public class ToggleTest extends DefaultRoot {
         public interface Click {  void onClick(); }
 
         protected void renderBox(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-            Rectanglef bounds = bounds(U.rectf(),x,y);
+            Rectanglef bounds =  bounds(U.popRect(),x,y);
             int color;
             final int color_inactive = 0xFF444444;
-            final int color_pressed = 0xFFAAAAAA;
+            //final int color_pressed = 0xFFAAAAAA;
+            final int color_pressed = 0xFF444444;
+
+            boolean pressed = false;
+
             if (iClicked(Mouse.LEFT)) {
                 click.onClick();
+                pressed = true;
                 color = color_pressed;
             } else if (iPressed(Mouse.LEFT)) {
+                pressed = true;
                 color = color_pressed;
             } else color = color_inactive;
-            renderer.drawElement(bounds,color,iID);
+
+            renderer.drawGadgetButton(bounds,5,color,iID,0,pressed);
+
+            if (iHovered()) {
+                if (iHoveredDuration() >0.5) {
+                    GUI.tooltips.display("Toggle Next Window",GUI.mousePosition(U.popVec2()));
+                    U.pushVec2();
+                }
+
+            }
+            U.pushRect();
         }
 
 

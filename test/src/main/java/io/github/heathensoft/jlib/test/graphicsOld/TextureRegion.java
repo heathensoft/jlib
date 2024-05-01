@@ -130,7 +130,7 @@ public class TextureRegion {
      * @return the sub-region coordinates
      */
     public Vector4f subRegionUVs(int index) {
-        Vector4f v4 = U.vec4();
+        Vector4f v4 = new Vector4f();
         subRegionUVs(index, v4);
         return v4;
     }
@@ -153,7 +153,7 @@ public class TextureRegion {
      * @return the offset from index 0 to index argument
      */
     public Vector2f uvOffset(int index) {
-        Vector2f v2 = U.vec2();
+        Vector2f v2 = new Vector2f();
         final int i = index % e;
         final int col = i % c;
         final int row = i / c;

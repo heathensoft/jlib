@@ -179,7 +179,17 @@ public class TextureAtlas implements Disposable {
 
     public Map<String,TextureRegion> textureRegions() { return texture_regions; }
 
-    public TextureRegion getRegion(String name) { return texture_regions.get(name); }
+    public TextureRegion getRegion(String name) {
+        TextureRegion region = texture_regions.get(name);
+        if (region == null) {
+            Logger.warn("Texture Atlas: \"{}\" no such texture region: \"{}\"",atlas_name,name);
+            region = new TextureRegion(atlas_width,atlas_height);
+        } return region;
+    }
+
+    public Sprite createSprite(int texture_index, String name) {
+        return new Sprite(texture(texture_index),getRegion(name));
+    }
 
     public void setName(String name) { this.atlas_name = name; }
 

@@ -248,7 +248,7 @@ public class RendererGUI implements Disposable {
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id) { drawOutline(quad,thickness,abgr,id,0f,false); }
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, boolean invisible_id) { drawOutline(quad, thickness, abgr, id,0,invisible_id); }
     public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, float glow, boolean invisible_id) {
-        Rectanglef outline = U.rectf().set(quad);
+        Rectanglef outline = U.popRect().set(quad);
         outline.minY = quad.maxY - thickness;
         drawElement(outline, abgr, id, glow);
         outline.minY = quad.minY;
@@ -260,6 +260,7 @@ public class RendererGUI implements Disposable {
         outline.maxX = quad.maxX;
         outline.minX = quad.maxX - thickness;
         drawElement(outline,abgr,id,glow);
+        U.pushRect();
     }
 
     public void drawElement(Rectanglef quad, int abgr) { drawElement(quad, abgr, 0); }

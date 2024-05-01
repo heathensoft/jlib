@@ -16,6 +16,7 @@ out VS_OUT {
     flat uint pixel_id;
     flat bool draw_alpha;
     flat bool draw_elipse;
+    flat bool pixel_aa;
 } vs_out;
 
 const vec2[4] elipse_coords = {
@@ -33,7 +34,8 @@ void main() {
     uint i_data = floatBitsToUint(a_data);
     vs_out.texture_slot_diffuse = i_data & 0x0F;
     vs_out.texture_slot_normals = (i_data >> 4) & 0x0F;
-    vs_out.glow = float((i_data >> 8) & 0x3F) / 63.0;
+    vs_out.glow = float((i_data >> 8) & 0x1F) / 31.0;
+    vs_out.pixel_aa = ((i_data >> 13) & 0x01) == uint(1);
     vs_out.draw_elipse = ((i_data >> 14) & 0x01) == uint(1);
     vs_out.draw_alpha = ((i_data >> 15) & 0x01) == uint(1);
     vs_out.pixel_id = (i_data >> 16) & 0xFFFF;

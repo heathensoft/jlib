@@ -1,28 +1,33 @@
 
 layout (location=0) out vec4 f_color;
-in vec2 pos;
+in vec2 uv;
+
+const int MODE_ALPHA_SLIDER = 0;
+const int MODE_HSV_WINDOW = 1;
+const int MODE_HUE_SLIDER = 2;
 
 uniform float u_hue;
-uniform int u_draw_slider;
+uniform int u_mode;
 
 vec3 hsv_to_rgb(float h, float s, float v);
 
 void main() {
-
-    float h = 0.0;
-    float s = 1.0;
-    float v = 1.0;
-
-    if(u_draw_slider == 0) {
-        h = mod(u_hue,360.0);
-        s = pos.x;
-        v = 1.0 - pos.y;
-    } else {
-        h = pos.x * 360.0;
-    }
-
-    vec3 col = hsv_to_rgb(h,s,v);
-    f_color = vec4(col,1.0);
+    float alpha = 1.0f;
+    vec3 color = vec3(1);
+    if(u_mode == MODE_ALPHA_SLIDER) {
+        alpha = 1.0 - uv.x;
+    } else{
+        float h = 0.0;
+        float s = 1.0;
+        float v = 1.0;
+        if(u_mode == MODE_HSV_WINDOW) {
+            h = mod(u_hue,360.0);
+            s = uv.x;
+            v = 1.0 - uv.y;
+        } else if(u_mode == MODE_HUE_SLIDER) {
+            h = uv.x * 360.0;
+        } color = hsv_to_rgb(h,s,v);
+    } f_color = vec4(color,alpha);
 }
 
 vec3 hsv_to_rgb(float h, float s, float v) {

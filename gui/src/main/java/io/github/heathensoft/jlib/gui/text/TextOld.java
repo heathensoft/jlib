@@ -82,7 +82,7 @@ public class TextOld implements RenderableText, Iterable<Paragraph> {
         float line_height = line_gap + ascent + descent;
         int shared_bits = (fonts.currentFont() << 29);
         shared_bits |= (((round(font_size) - 1) & 0xFF) << 21);
-        Vector4f rgb = U.vec4();
+        Vector4f rgb = new Vector4f();
         float color_alpha;
         float color_float_bits;
         float y = bounds.maxY;

@@ -3,6 +3,7 @@ package io.github.heathensoft.jlib.lwjgl.window;
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.io.OS;
 import io.github.heathensoft.jlib.common.io.Settings;
+import org.joml.Vector2f;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.Callback;
@@ -793,6 +794,7 @@ public class Window extends AbstractWindow {
             current_processor.on_mouse_enter(enter);
         }
     };
+
     
     private final GLFWCursorPosCallback cursor_hover_callback = new GLFWCursorPosCallback() {
         @Override

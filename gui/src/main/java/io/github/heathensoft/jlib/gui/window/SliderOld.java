@@ -53,7 +53,7 @@ public class SliderOld extends Box {
         float slider_circle_radius = slider_rect_height / 2f;
         float slider_rect_x = x + slider_circle_radius;
         float slider_rect_y = y - slider_circle_radius;
-        Rectanglef rect = U.rectf();
+        Rectanglef rect = U.popRect();
         TextureAtlas default_icons = GUI.default_icons;
         Texture icons_diffuse_texture = default_icons.texture(0);
         TextureRegion circle_region = default_icons.getRegion(GUI.icon_default_circle);
@@ -61,7 +61,7 @@ public class SliderOld extends Box {
         int color_slider_background = 0xFF333333;
         int color_slider_active = 0xFF33AA33;
         if (iPressed(Mouse.LEFT)) { context.focus();
-            Vector2f mouse = context.mouse_position(U.vec2());
+            Vector2f mouse = context.mouse_position(new Vector2f());
             float max = slider_rect_x + slider_rect_width;
             float mouse_x = U.clamp(mouse.x, slider_rect_x,max);
             current_value = U.remap(mouse_x, slider_rect_x,max,0,1);
@@ -106,21 +106,21 @@ public class SliderOld extends Box {
             rect.minX = slider_rect_x - slider_circle_radius;
             rect.maxX = slider_rect_x + slider_circle_radius;
             renderer.drawElement(icons_diffuse_texture,circle_region,rect,color_slider_default,id);
-        }
+        } U.pushRect();
     }
 
     public void render2(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
         float w = currentSize.width() - 2;
         float h = currentSize.height() - 2;
         if (iPressed(Mouse.LEFT)) { context.focus();
-            Vector2f mouse = context.mouse_position(U.vec2());
+            Vector2f mouse = context.mouse_position(new Vector2f());
             float min = x + (h/2f) + 1;
             float max = x + w -(h/2f) - 1;
             float mouse_x = U.clamp(mouse.x,min,max);
             current_value = U.remap(mouse_x,min,max,0,1);
         }
 
-        Rectanglef quad = U.rectf(x,y - currentSize.height(),x + currentSize.width(),y);
+        Rectanglef quad = U.popSetRect(x,y - currentSize.height(),x + currentSize.width(),y);
         float slider_pos = x + 1 + current_value * (w - h);
 
 
@@ -176,7 +176,7 @@ public class SliderOld extends Box {
 
         }
 
-
+        U.pushRect();
 
     }
 

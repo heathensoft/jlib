@@ -42,8 +42,9 @@ public class InputBox extends Box {
     }
 
     public void render(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-        Rectanglef quad = bounds(U.rectf(),x,y);
+        Rectanglef quad = bounds(U.popRect(),x,y);
         renderer.drawElement(quad, 0x66000000,id);
+        U.pushRect();
         if (iHovered()) GUI.state.useCursorIcon(CursorObjects.CURSOR_TEXT_INPUT);
         if (iJustPressed(Mouse.LEFT)) {
             if (!commandLine.isActiveInputProcessor()) {
@@ -61,8 +62,9 @@ public class InputBox extends Box {
     }
 
     public void renderText(RendererGUI renderer, float x, float y) {
-        Rectanglef quad = bounds(U.rectf(),x,y);
+        Rectanglef quad = bounds(U.popRect(),x,y);
         renderer.drawParagraphDynamicSize(commandLine,quad,font, padding,1.0f,centered);
+        U.pushRect();
     }
 
     public CommandLine commandLine() {

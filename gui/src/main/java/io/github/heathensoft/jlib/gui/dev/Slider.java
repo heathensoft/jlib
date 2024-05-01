@@ -54,15 +54,16 @@ public class Slider extends Box {
         float slider_circle_radius = slider_height / 2f;
         float slider_rect_x = x + slider_circle_radius;
         float slider_rect_y = y - (bounds_height / 2f) + (slider_height / 2f);
-        Rectanglef rect = U.rectf();
+        Rectanglef rect = U.popRect();
         TextureAtlas default_icons = GUI.default_icons;
         Texture icons_diffuse_texture = default_icons.texture(0);
         TextureRegion circle_region = default_icons.getRegion(GUI.icon_default_circle);
         if (iPressed(Mouse.LEFT)) { context.focus();
-            Vector2f mouse = context.mouse_position(U.vec2());
+            Vector2f mouse = context.mouse_position(U.popVec2());
             float max = slider_rect_x + slider_width;
             float mouse_x = U.clamp(mouse.x, slider_rect_x,max);
             current_value = U.remap(mouse_x, slider_rect_x,max,0,1);
+            U.pushVec2();
         }
 
         if (iPressed(Mouse.LEFT) || (iHovered() &! iAnyInteractablePressed())) { // Hot
@@ -85,11 +86,12 @@ public class Slider extends Box {
                 if (iPressed(Mouse.LEFT)) { t = iPressedDuration();
                 } if (iHovered()) { t = max(t,iHoveredDuration());
                 } t = quadraticEraseOut(clamp(t * 4.0f));
+
                 int color_slider_active = Color.rgb_to_intBits(Color.lerp(
                         GUI.color_slider_inactive,
                         GUI.color_slider_active,
-                        t, U.vec4()
-                ));
+                        t, U.popVec4()
+                )); U.pushVec4();
 
                 if (current_value >= 1) {
                     rect.minX = x;
@@ -163,6 +165,7 @@ public class Slider extends Box {
                 renderer.drawElement(icons_diffuse_texture,circle_region,rect,color_slider_inactive,id);
             }
         }
+        U.pushRect();
     }
 
     public float value() { return current_value; }

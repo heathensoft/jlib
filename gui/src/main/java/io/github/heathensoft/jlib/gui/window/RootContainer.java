@@ -68,12 +68,13 @@ public class RootContainer extends BoxContainer {
         final int BOTTOM = 8;
         final int LEFT = 16;
 
-        Vector2f mouse_position = context.mouse_position(U.vec2());
+        Vector2f mouse_position = context.mouse_position(U.popVec2());
         final float mouse_x = mouse_position.x;
         final float mouse_y = mouse_position.y;
         final float width = currentSize.width();
         final float height = currentSize.height();
         Anchor anchor = context.anchor;
+        U.pushVec2();
 
         if (iClickedNotGrabbed(Mouse.LEFT)) {
             if (context.isMaximized()) {
@@ -121,8 +122,9 @@ public class RootContainer extends BoxContainer {
 
                 switch (drag_area) {
                     case CENTER -> {
-                        Vector2f drag_vector = context.mouse_drag_vector(U.vec2(),Mouse.LEFT);
+                        Vector2f drag_vector = context.mouse_drag_vector(U.popVec2(),Mouse.LEFT);
                         if (grabbed) context.move(drag_vector);
+                        U.pushVec2();
                     } case TOP -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                         if (grabbed) context.dragTop();
                     } case TOP_RIGHT -> { GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);

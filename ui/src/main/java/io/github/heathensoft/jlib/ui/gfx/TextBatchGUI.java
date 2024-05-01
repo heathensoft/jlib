@@ -4,7 +4,9 @@ package io.github.heathensoft.jlib.ui.gfx;
 import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.ui.GUI;
+import io.github.heathensoft.jlib.ui.text.Paragraph;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
+import io.github.heathensoft.jlib.ui.text.Word;
 import org.lwjgl.system.MemoryUtil;
 
 import static io.github.heathensoft.jlib.ui.gfx.FontsGUI.*;
@@ -68,9 +70,9 @@ public class TextBatchGUI extends BatchGUI {
                 info_bits = bits_set_size(info_bits,size);
                 info_bits = bits_set_glow(info_bits,glow);
                 for (int i = 0; i < num_characters; i++) {
-                    char c = (char)(string.charAt(i) & 0x7F);
-                    pushVertex(x,y,color,info_bits | c);
-                    x += fonts.advance(c) * scale;
+                    byte c = (byte) (string.charAt(i) & 0x7F);
+                    if (c != 32) pushVertex(x,y,color,info_bits | c);
+                    x += fonts.advanceUnchecked(c) * scale;
                 }
             } else { // ATP The line fits inside the rect without scale adjustments.
                 float ascent = scale * fonts.ascent();
@@ -83,21 +85,21 @@ public class TextBatchGUI extends BatchGUI {
                 switch (alignment) {
                     case LEFT -> {
                         for (int i = 0; i < num_characters; i++) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            pushVertex(x,y,color,info_bits | c);
-                            x += fonts.advance(c) * scale;
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            if (c != 32) pushVertex(x,y,color,info_bits | c);
+                            x += fonts.advanceUnchecked(c) * scale;
                         }
                     } case RIGHT -> { x += width;
                         for (int i = (num_characters - 1); i >= 0; i--) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            x -= fonts.advance(c) * scale;
-                            pushVertex(x,y,color,info_bits | c);
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            x -= fonts.advanceUnchecked(c) * scale;
+                            if (c != 32) pushVertex(x,y,color,info_bits | c);
                         }
                     } case CENTERED -> { x += center_offset_x(desired_width,width);
                         for (int i = 0; i < num_characters; i++) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            pushVertex(x,y,color,info_bits | c);
-                            x += fonts.advance(c) * scale;
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            if (c != 32) pushVertex(x,y,color,info_bits | c);
+                            x += fonts.advanceUnchecked(c) * scale;
                         }
                     }
                 }
@@ -126,9 +128,9 @@ public class TextBatchGUI extends BatchGUI {
                 info_bits = bits_set_glow(info_bits,glow);
 
                 for (int i = 0; i < num_characters; i++) {
-                    char c = (char)(string.charAt(i) & 0x7F);
-                    pushVertex(x,y,color,info_bits | c);
-                    x += fonts.advance(c) * scale;
+                    byte c = (byte) (string.charAt(i) & 0x7F);
+                    if (c != 32) pushVertex(x,y,color,info_bits | c);
+                    x += fonts.advanceUnchecked(c) * scale;
                 }
             } else { // ATP The line fits inside the rect without scale adjustments.
 
@@ -138,21 +140,21 @@ public class TextBatchGUI extends BatchGUI {
                 switch (alignment) {
                     case LEFT -> {
                         for (int i = 0; i < num_characters; i++) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            pushVertex(x,y,color,info_bits | c);
-                            x += fonts.advance(c) * scale;
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            if (c != 32) pushVertex(x,y,color,info_bits | c);
+                            x += fonts.advanceUnchecked(c) * scale;
                         }
                     } case RIGHT -> { x += width;
                         for (int i = (num_characters - 1); i >= 0; i--) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            x -= fonts.advance(c) * scale;
-                            pushVertex(x,y,color,info_bits | c);
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            x -= fonts.advanceUnchecked(c) * scale;
+                            if (c != 32) pushVertex(x,y,color,info_bits | c);
                         }
                     } case CENTERED -> { x += center_offset_x(desired_width,width);
                         for (int i = 0; i < num_characters; i++) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            pushVertex(x,y,color,info_bits | c);
-                            x += fonts.advance(c) * scale;
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            if (c != 32) pushVertex(x,y,color,info_bits | c);
+                            x += fonts.advanceUnchecked(c) * scale;
                         }
                     }
                 }
@@ -176,59 +178,59 @@ public class TextBatchGUI extends BatchGUI {
             if (desired_width > width) {
                 // Will be out of bounds. Must check each character
                 switch (alignment) {
-                    case LEFT -> { float pointer_x = x;
+                    case LEFT, CENTERED -> { float pointer_x = x;
                         float bounds = (x + width) + 0.5f;
                         for (int i = 0; i < num_characters; i++) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            float next_x = pointer_x + fonts.advance(c) * scale;
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            float next_x = pointer_x + fonts.advanceUnchecked(c) * scale;
                             if (next_x > bounds) return;
-                            pushVertex(pointer_x,y,color,info_bits | c);
+                            if (c != 32) pushVertex(pointer_x,y,color,info_bits | c);
                             pointer_x = next_x;
                         }
                     }
                     case RIGHT -> { float pointer_x = x + width;
                         float bounds = x - 0.5f;
                         for (int i = (num_characters - 1); i >= 0; i--) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            float next_x = pointer_x - fonts.advance(c) * scale;
+                            byte c = (byte) (string.charAt(i) & 0x7F);
+                            float next_x = pointer_x - fonts.advanceUnchecked(c) * scale;
                             if (next_x < bounds) return;
-                            pushVertex(next_x,y,color,info_bits | c);
+                            if (c != 32) pushVertex(next_x,y,color,info_bits | c);
                             pointer_x = next_x;
                         }
                     }
-                    case CENTERED -> { float pointer_x = x + center_offset_x(desired_width,width);
-                        float bounds = x + width + 0.5f;
-                        for (int i = 0; i < num_characters; i++) {
-                            char c = (char)(string.charAt(i) & 0x7F);
-                            float next_x = pointer_x + fonts.advance(c) * scale;
-                            if (pointer_x >= x) {
-                                if (next_x > bounds) return;
-                                pushVertex(pointer_x,y,color,info_bits | c);
-                            } pointer_x = next_x;
-                        }
-                    }
+                    //case CENTERED -> { float pointer_x = x + center_offset_x(desired_width,width);
+                    //    float bounds = x + width + 0.5f;
+                    //    for (int i = 0; i < num_characters; i++) {
+                    //        byte c = (byte) (string.charAt(i) & 0x7F);
+                    //        float next_x = pointer_x + fonts.advanceUnchecked(c) * scale;
+                    //        if (pointer_x >= x) {
+                    //            if (next_x > bounds) return;
+                    //            if (c != 32) pushVertex(pointer_x,y,color,info_bits | c);
+                    //        } pointer_x = next_x;
+                    //    }
+                    //}
                 }
             } else switch (alignment) {
                 // ATP The line fits inside the rect. No need to check bounds
                 case LEFT -> {
                     for (int i = 0; i < num_characters; i++) {
-                        char c = (char)(string.charAt(i) & 0x7F);
-                        pushVertex(x,y,color,info_bits | c);
-                        x += fonts.advance(c) * scale;
+                        byte c = (byte) (string.charAt(i) & 0x7F);
+                        if (c != 32) pushVertex(x,y,color,info_bits | c);
+                        x += fonts.advanceUnchecked(c) * scale;
                     }
                 }
                 case RIGHT -> { x += width;
                     for (int i = (num_characters - 1); i >= 0; i--) {
-                        char c = (char)(string.charAt(i) & 0x7F);
-                        x -= fonts.advance(c) * scale;
-                        pushVertex(x,y,color,info_bits | c);
+                        byte c = (byte) (string.charAt(i) & 0x7F);
+                        x -= fonts.advanceUnchecked(c) * scale;
+                        if (c != 32) pushVertex(x,y,color,info_bits | c);
                     }
                 }
                 case CENTERED -> { x += center_offset_x(desired_width,width);
                     for (int i = 0; i < num_characters; i++) {
-                        char c = (char)(string.charAt(i) & 0x7F);
-                        pushVertex(x,y,color,info_bits | c);
-                        x += fonts.advance(c) * scale;
+                        byte c = (byte) (string.charAt(i) & 0x7F);
+                        if (c != 32) pushVertex(x,y,color,info_bits | c);
+                        x += fonts.advanceUnchecked(c) * scale;
                     }
                 }
             }

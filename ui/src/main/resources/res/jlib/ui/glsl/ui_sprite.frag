@@ -3,7 +3,7 @@
 #define TEXTURE_SLOTS 15
 
 layout (location=0) out vec4 f_diffuse;
-layout (location=1) out vec4 f_normals;
+layout (location=1) out vec3 f_normals;
 layout (location=2) out float f_emissive;
 layout (location=3) out uint f_pixel_id;
 
@@ -17,6 +17,7 @@ in VS_OUT {
     flat uint pixel_id;
     flat bool draw_alpha;
     flat bool draw_elipse;
+    flat bool pixel_aa;
 } fs_in;
 
 uniform sampler2D[TEXTURE_SLOTS] u_diffuse_textures;
@@ -24,12 +25,6 @@ uniform sampler2D[TEXTURE_SLOTS] u_normals_textures;
 const float ALPHA_THRESHOLD = 0.005f;
 const vec3 FLAT_NORMAL = vec3(0.5, 0.5, 1.0);
 const float ELIPSE_ALPHA_THRESHOLD = 0.97; // Soft Edges
-
-/*
-vec2 texture_size = vec2(textureSize(u_textures[texture_slot], 0).xy);
-vec2 pix = uv * texture_size;
-pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.5;
-*/
 
 float _lengthSq(vec2 v) { return v.x * v.x + v.y * v.y; }
 float _lerp(float a, float b, float t) { return a * (1-t) + b * t; }
@@ -48,12 +43,24 @@ void main() {
 
     if(fs_in.texture_slot_diffuse != NO_TEXTUE) {
         uint slot = fs_in.texture_slot_diffuse;
-        vec4 t_sample = texture(u_diffuse_textures[slot],fs_in.uv);
+        vec4 t_sample;
+        if(fs_in.pixel_aa) {
+            vec2 texture_size = vec2(textureSize(u_diffuse_textures[slot],0).xy);
+            vec2 pix = fs_in.uv * texture_size;
+            pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.5;
+            t_sample = texture(u_diffuse_textures[slot],pix / texture_size);
+        } else t_sample = texture(u_diffuse_textures[slot],fs_in.uv);
         diffuse *= t_sample;
     }
     if(fs_in.texture_slot_normals != NO_TEXTUE) {
         uint slot = fs_in.texture_slot_normals;
-        normals = texture(u_normals_textures[slot],fs_in.uv).rgb;
+        if(fs_in.pixel_aa) {
+            vec2 texture_size = vec2(textureSize(u_normals_textures[slot],0).xy);
+            vec2 pix = fs_in.uv * texture_size;
+            pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.5;
+            normals = texture(u_normals_textures[slot],pix / texture_size).rgb;
+        } else normals = texture(u_normals_textures[slot],fs_in.uv).rgb;
+
     }
     if(fs_in.draw_elipse) {
         float l2 = _lengthSq(fs_in.elipse_coord);
@@ -70,8 +77,8 @@ void main() {
     }
 
     f_diffuse = diffuse;
-    f_normals = vec4(normals,diffuse.a);
-    f_emissive = glow * diffuse.a;
+    f_emissive = glow * diffuse.a; // maybe no. Depends on blending
+    f_normals = normals;
     f_pixel_id = id;
 }
 

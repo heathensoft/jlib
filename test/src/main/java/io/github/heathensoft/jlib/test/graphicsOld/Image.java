@@ -85,19 +85,20 @@ public class Image implements Disposable {
                         int r = (data.get(i) & 0xFF);
                         int g = (data.get(i + 1) & 0xFF);
                         int b = (data.get(i + 2) & 0xFF);
-                        Vector3f color = U.vec3();
+                        Vector3f color = U.popVec3();
                         color.set(r * n,g * n,b * n);
-                        Vector3f normal = U.vec3();
+                        Vector3f normal = U.popVec3();
                         normal.x = (color.x - 0.5f) * 2f;
                         normal.y = (color.y - 0.5f) * 2f;
                         normal.z = (color.z - 0.5f) * 2f;
                         float angle = flatSurface.angle(normal);
                         if (angle > maxAngle) {
                             float rotation = maxAngle - angle;
-                            Vector3f cross = U.vec3();
+                            Vector3f cross = U.popVec3();
                             flatSurface.cross(normal,cross);
                             normal.rotateAxis(rotation,cross.x,cross.y,cross.z);
                             normal.normalize();
+                            U.pushVec3();
                             color.x = normal.x * 0.5f + 0.5f;
                             color.y = normal.y * 0.5f + 0.5f;
                             color.z = normal.z * 0.5f + 0.5f;
@@ -107,7 +108,7 @@ public class Image implements Disposable {
                             data.put(i, (byte) r);
                             data.put(i + 1, (byte) g);
                             data.put(i + 2, (byte) b);
-                        }
+                        } U.pushVec3(2);
                     }
                 }
                 toPNG(path);

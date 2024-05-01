@@ -1,9 +1,15 @@
 package io.github.heathensoft.jlib.ui;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.utils.Color;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
+import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
+import io.github.heathensoft.jlib.ui.text.TextAlignment;
+import org.joml.Vector2f;
+import org.joml.primitives.Rectanglef;
 import org.tinylog.Logger;
 
 import java.util.*;
@@ -25,12 +31,14 @@ public class WindowManager implements Disposable {
     private final LinkedList<Window> windows_to_close;
     private final LinkedList<Window> windows_to_terminate;
     private final LinkedList<Window> tmp_list;
+    private final Tooltips tool_tips;
 
     private boolean updating_internals;
     private boolean preparing_windows;
     private boolean rendering_windows;
 
     WindowManager() {
+        tool_tips = new Tooltips();
         tmp_list = new LinkedList<>();
         windows_by_name = new HashMap<>();
         windows_by_group = new HashMap<>();
@@ -126,18 +134,13 @@ public class WindowManager implements Disposable {
         assert_not_rendering_windows();
         assert_not_preparing_windows();
         assert_not_updating_internals();
-
-        try {
-            rendering_windows = true;
+        try { rendering_windows = true;
             Resolution resolution = Engine.get().window().appResolution();
             while (!tmp_list.isEmpty()) {
                 Window window = tmp_list.removeFirst();
                 window.render(renderer,dt);
-            }
-        } finally {
-            rendering_windows = false;
-        }
-
+            } tool_tips.draw(renderer);
+        } finally { rendering_windows = false; }
     }
 
     public <T extends Window> Optional<T> getByName(String key, Class<T> clazz) {
@@ -423,6 +426,8 @@ public class WindowManager implements Disposable {
         updating_internals = false;
     }
 
+    protected Tooltips helpText() { return tool_tips; }
+
     private void assert_window_registered(Window window) {
         if (!window.isRegistered()) throw new IllegalStateException("GUI: Unregistered Window");
     }
@@ -441,6 +446,48 @@ public class WindowManager implements Disposable {
 
     private void assert_not_rendering_windows() {
         if (rendering_windows) throw new IllegalStateException("GUI: Illegal call while manager is busy rendering windows");
+    }
+
+    public static final class Tooltips {
+        private int color;
+        private int font;
+        private int padding;
+        private boolean display;
+        private String string;
+        private final Rectanglef bounds = new Rectanglef();
+        private void draw(RendererGUI renderer) {
+            if (display) { display = false;
+                renderer.drawElement(bounds,0x99000000);
+                renderer.drawStringFixedSize(string,TextAlignment.LEFT,bounds,font,color,padding);
+            }
+        }
+
+        public void display(String string, Vector2f mouse_position) { display(string,mouse_position, Color.rgb_to_intBits(GUI.variables.tooltips_default_text_color)); }
+        public void display(String string, Vector2f mouse_position, int color) {
+            if (!string.isBlank()) {
+                this.color = color;
+                this.string = string;
+                this.font = GUI.variables.tooltips_font;
+                this.padding = GUI.variables.tooltips_padding;
+                int font_size = GUI.variables.tooltips_fontsize;
+                FontsGUI fonts = GUI.fonts;
+                fonts.bindFontMetrics(font);
+                Resolution resolution = GUI.resolution();
+                float help_window_height = font_size + 2 * padding;
+                float help_window_width = fonts.advanceSumSized(string,font_size) + 2 * padding;
+                float mouse_x = U.clamp(mouse_position.x,0,resolution.width());
+                float mouse_y = U.clamp(mouse_position.y,0,resolution.height());
+                bounds.minY = mouse_y + 16;
+                bounds.maxY = bounds.minY + help_window_height;
+                bounds.minX = mouse_x;
+                bounds.maxX = bounds.minX + help_window_width;
+                if (bounds.maxY > resolution.height()) {
+                    bounds.translate(0,-(help_window_height + 32));
+                } if (bounds.maxX > resolution.width()) {
+                    bounds.translate(resolution.width() - bounds.maxX,0);
+                } display = true;
+            }
+        }
     }
 
 }

@@ -1,10 +1,13 @@
 package io.github.heathensoft.jlib.ui.text;
 
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.ui.gfx.TextBatchGUI;
+import io.github.heathensoft.jlib.ui.gfx.TextColors;
 import org.joml.Vector2f;
+import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 
 import java.util.*;
@@ -67,6 +70,200 @@ public class Text implements Iterable<Paragraph> {
         set(list);
     }
 
+    public void draw(TextBatchGUI batch, Rectanglef bounds, Vector4f rgb, float y_offset, float size, float glow, boolean wrap, boolean show_cursor) {
+        FontsGUI fonts = batch.fonts();
+        float width = bounds.lengthX();
+        float scale = fonts.relativeScale(size);
+        float space = fonts.advance(' ') * scale;
+        float ascent = fonts.ascent() * scale;
+        float descent = fonts.descent() * scale;
+        float line_gap = fonts.lineGap() * scale;
+        float line_height = ascent + descent;
+        float y = bounds.maxY + y_offset, x;
+        float color_float = Color.rgb_to_floatBits(rgb);
+        float color_alpha;
+
+        int bits = FontsGUI.bits_font(fonts.currentFont());
+        bits = FontsGUI.bits_set_size(bits,size);
+        bits = FontsGUI.bits_set_glow(bits,glow);
+
+        if (show_cursor) {
+            int char_index, line_index = 0;
+            for (Paragraph line : lines) {
+                if (y <= bounds.minY) return;
+                char_index = 0;
+                x = bounds.minX;
+                y -= ascent;
+                if (wrap) {
+                    {
+                        if ((y - descent) < bounds.minY ) {
+                            float hidden_height = bounds.minY - (y - descent);
+                            float lerp_factor = hidden_height / line_height;
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                        } else if ((y + ascent > bounds.maxY)) {
+                            float hidden_height = (y + ascent) - bounds.maxY;
+                            float lerp_factor = hidden_height / line_height;
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                        } else color_alpha = 1.0f;
+                    }
+                    if (line.isBlank() && line_index == cursor_line_index) {
+                        if ((y - descent) < bounds.maxY) {
+                            batch.pushVertex(x,y,color_float,bits); }
+                    } else for (Word word : line) {
+                        float word_width = word.width() * scale;
+                        if ((x + word_width) > bounds.maxX && x > bounds.minX) {
+                            if (y < bounds.minY) return;
+                            x = bounds.minX; y -= size;
+                            {
+                                if ((y - descent) < bounds.minY ) {
+                                    float hidden_height = bounds.minY - (y - descent);
+                                    float lerp_factor = hidden_height / line_height;
+                                    color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                                } else if ((y + ascent > bounds.maxY)) {
+                                    float hidden_height = (y + ascent) - bounds.maxY;
+                                    float lerp_factor = hidden_height / line_height;
+                                    color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                                } else color_alpha = 1.0f;
+                            }
+                        } int word_length = word.length();
+                        if ((y - descent) < bounds.maxY) {
+                            float color = color_alpha == 1.0f ? color_float : TextColors.floatBits(line,word,color_alpha);
+                            for (int i = 0; i < word_length; i++) {
+                                if (x >= bounds.maxX) break;
+                                char c = (char) (word.get(i) & 0x7F);
+                                if (line_index == cursor_line_index && char_index == cursor_char_index) {
+                                    batch.pushVertex(x,y,color,bits);
+                                    batch.pushVertex(x,y,color,FontsGUI.bits_invert_color(bits | c));
+                                } else batch.pushVertex(x,y,color,bits | c);
+                                x += (fonts.advanceUnchecked(c) * scale);
+                                char_index++;
+                            } if (line_index == cursor_line_index && char_index == cursor_char_index)
+                                batch.pushVertex(x,y,color,bits);
+                        } else for (int i = 0; i < word_length; i++) {
+                            if (x >= bounds.maxX) break;
+                            char c = (char) (word.get(i) & 0x7F);
+                            x += (fonts.advanceUnchecked(c) * scale);
+                            char_index++;
+                        } char_index++;
+                        x += space;
+                    }
+                } else {
+                    {
+                        if ((y - descent) < bounds.minY ) {
+                            float hidden_height = bounds.minY - (y - descent);
+                            float lerp_factor = hidden_height / line_height;
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                        } else if ((y + ascent > bounds.maxY)) {
+                            float hidden_height = (y + ascent) - bounds.maxY;
+                            float lerp_factor = hidden_height / line_height;
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                        } else color_alpha = 1.0f;
+                    }
+                    if (line.isBlank() && line_index == cursor_line_index) {
+                        if ((y - descent) < bounds.maxY) {
+                            batch.pushVertex(x,y,color_float,bits);
+                        }
+                    } else {
+                        if ((y - descent) < bounds.maxY) {
+                            next_line:
+                            for (Word word : line) {
+                                float color = color_alpha == 1.0f ? color_float : TextColors.floatBits(line,word,color_alpha);
+                                int word_length = word.length();
+                                for (int i = 0; i < word_length; i++) {
+                                    if (x >= bounds.maxX) break next_line;
+                                    char c = (char) (word.get(i) & 0x7F);
+                                    if (line_index == cursor_line_index && char_index == cursor_char_index) {
+                                        batch.pushVertex(x,y,color,bits);
+                                        batch.pushVertex(x,y,color,FontsGUI.bits_invert_color(bits | c));
+                                    } else batch.pushVertex(x,y,color,bits | c);
+                                    x += (fonts.advanceUnchecked(c) * scale);
+                                    char_index++;
+                                } if (line_index == cursor_line_index && char_index == cursor_char_index) {
+                                    batch.pushVertex(x,y,color,bits);
+                                } char_index++;
+                                x += space;
+                            }
+                        }
+                    }
+                } line_index++;
+                y -= (descent + line_gap);
+            }
+        } else {
+            for (Paragraph line : lines) {
+                if (y <= bounds.minY) return;
+                x = bounds.minX; y -= ascent;
+                if (wrap) {
+                    {
+                        if ((y - descent) < bounds.minY ) {
+                            float hidden_height = bounds.minY - (y - descent);
+                            float lerp_factor = hidden_height / line_height;
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                        } else if ((y + ascent > bounds.maxY)) {
+                            float hidden_height = (y + ascent) - bounds.maxY;
+                            float lerp_factor = hidden_height / line_height;
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                        } else color_alpha = 1.0f;
+                    }
+                    for (Word word : line) {
+                        int word_length = word.length();
+                        float word_width = word.width() * scale;
+                        if ((x + word_width) > bounds.maxX && x > bounds.minX) {
+                            if (y < bounds.minY) return;
+                            x = bounds.minX; y -= size;
+                            {
+                                if ((y - descent) < bounds.minY ) {
+                                    float hidden_height = bounds.minY - (y - descent);
+                                    float lerp_factor = hidden_height / line_height;
+                                    color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                                } else if ((y + ascent > bounds.maxY)) {
+                                    float hidden_height = (y + ascent) - bounds.maxY;
+                                    float lerp_factor = hidden_height / line_height;
+                                    color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                                } else color_alpha = 1.0f;
+                            }
+                        } if ((y - descent) < bounds.maxY) {
+                            float color = color_alpha == 1.0f ? color_float : TextColors.floatBits(line,word,color_alpha);
+                            for (int i = 0; i < word_length; i++) {
+                                if (x >= bounds.maxX) break;
+                                char c = (char) (word.get(i) & 0x7F);
+                                batch.pushVertex(x,y,color,bits | c );
+                                x += (fonts.advanceUnchecked(c) * scale); }
+                        } else for (int i = 0; i < word_length; i++) {
+                            if (x >= bounds.maxX) break;
+                            char c = (char) (word.get(i) & 0x7F);
+                            x += (fonts.advanceUnchecked(c) * scale);
+                        } x += space;
+                    }
+                } else {
+                    if ((y - descent) < bounds.maxY) {
+                        {
+                            if ((y - descent) < bounds.minY ) {
+                                float hidden_height = bounds.minY - (y - descent);
+                                float lerp_factor = hidden_height / line_height;
+                                color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                            } else if ((y + ascent > bounds.maxY)) {
+                                float hidden_height = (y + ascent) - bounds.maxY;
+                                float lerp_factor = hidden_height / line_height;
+                                color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
+                            } else color_alpha = 1.0f;
+                        }
+                        next_line:
+                        for (Word word : line) {
+                            float color = color_alpha == 1.0f ? color_float : TextColors.floatBits(line,word,color_alpha);
+                            int word_length = word.length();
+                            for (int i = 0; i < word_length; i++) {
+                                if (x >= bounds.maxX) break next_line;
+                                char c = (char) (word.get(i) & 0x7F);
+                                batch.pushVertex(x,y,color,bits | c);
+                                x += (fonts.advanceUnchecked(c) * scale);
+                            } x += space;
+                        }
+                    }
+                } y -= (descent + line_gap);
+            }
+        }
+    }
+
     public void draw(TextBatchGUI batch, Rectanglef bounds, float y_offset, float size, float glow, boolean wrap, boolean show_cursor) {
         FontsGUI fonts = batch.fonts();
         float width = bounds.lengthX();
@@ -99,13 +296,13 @@ public class Text implements Iterable<Paragraph> {
                         } else if ((y + ascent > bounds.maxY)) {
                             float hidden_height = (y + ascent) - bounds.maxY;
                             float lerp_factor = hidden_height / line_height;
-                            color_alpha = 1 - U.lerp(0,0.4f,lerp_factor);
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
                         } else color_alpha = 1.0f;
                     }
                     if (line.isBlank() && line_index == cursor_line_index) {
                         if ((y - descent) < bounds.maxY) {
-                            float color_float_bits = fonts.colorRegularFloatBits();
-                            batch.pushVertex(x,y,color_float_bits,bits); }
+                            float color = TextColors.floatBits(Paragraph.Type.DEFAULT);
+                            batch.pushVertex(x,y,color,bits); }
                     } else for (Word word : line) {
                         float word_width = word.width() * scale;
                         if ((x + word_width) > bounds.maxX && x > bounds.minX) {
@@ -119,27 +316,27 @@ public class Text implements Iterable<Paragraph> {
                                 } else if ((y + ascent > bounds.maxY)) {
                                     float hidden_height = (y + ascent) - bounds.maxY;
                                     float lerp_factor = hidden_height / line_height;
-                                    color_alpha = 1 - U.lerp(0,0.4f,lerp_factor);
+                                    color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
                                 } else color_alpha = 1.0f;
                             }
                         } int word_length = word.length();
                         if ((y - descent) < bounds.maxY) {
-                            float color_float_bits = fonts.colorFloatBits(line,word,color_alpha);
+                            float color = TextColors.floatBits(line,word,color_alpha);
                             for (int i = 0; i < word_length; i++) {
                                 if (x >= bounds.maxX) break;
                                 char c = (char) (word.get(i) & 0x7F);
                                 if (line_index == cursor_line_index && char_index == cursor_char_index) {
-                                    batch.pushVertex(x,y,color_float_bits,bits);
-                                    batch.pushVertex(x,y,color_float_bits,FontsGUI.bits_invert_color(bits | c));
-                                } else batch.pushVertex(x,y,color_float_bits,bits | c);
-                                x += (fonts.advance(c) * scale);
+                                    batch.pushVertex(x,y,color,bits);
+                                    batch.pushVertex(x,y,color,FontsGUI.bits_invert_color(bits | c));
+                                } else batch.pushVertex(x,y,color,bits | c);
+                                x += (fonts.advanceUnchecked(c) * scale);
                                 char_index++;
                             } if (line_index == cursor_line_index && char_index == cursor_char_index)
-                                batch.pushVertex(x,y,color_float_bits,bits);
+                                batch.pushVertex(x,y,color,bits);
                         } else for (int i = 0; i < word_length; i++) {
                             if (x >= bounds.maxX) break;
                             char c = (char) (word.get(i) & 0x7F);
-                            x += (fonts.advance(c) * scale);
+                            x += (fonts.advanceUnchecked(c) * scale);
                             char_index++;
                         } char_index++;
                         x += space;
@@ -153,31 +350,31 @@ public class Text implements Iterable<Paragraph> {
                         } else if ((y + ascent > bounds.maxY)) {
                             float hidden_height = (y + ascent) - bounds.maxY;
                             float lerp_factor = hidden_height / line_height;
-                            color_alpha = 1 - U.lerp(0,0.4f,lerp_factor);
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
                         } else color_alpha = 1.0f;
                     }
                     if (line.isBlank() && line_index == cursor_line_index) {
                         if ((y - descent) < bounds.maxY) {
-                            float color_float_bits = fonts.colorRegularFloatBits();
-                            batch.pushVertex(x,y,color_float_bits,bits);
+                            float color = TextColors.floatBits(Paragraph.Type.DEFAULT);
+                            batch.pushVertex(x,y,color,bits);
                         }
                     } else {
                         if ((y - descent) < bounds.maxY) {
                             next_line:
                             for (Word word : line) {
-                                float color_float_bits = fonts.colorFloatBits(line,word,color_alpha);
+                                float color = TextColors.floatBits(line,word,color_alpha);
                                 int word_length = word.length();
                                 for (int i = 0; i < word_length; i++) {
                                     if (x >= bounds.maxX) break next_line;
                                     char c = (char) (word.get(i) & 0x7F);
                                     if (line_index == cursor_line_index && char_index == cursor_char_index) {
-                                        batch.pushVertex(x,y,color_float_bits,bits);
-                                        batch.pushVertex(x,y,color_float_bits,FontsGUI.bits_invert_color(bits | c));
-                                    } else batch.pushVertex(x,y,color_float_bits,bits | c);
-                                    x += (fonts.advance(c) * scale);
+                                        batch.pushVertex(x,y,color,bits);
+                                        batch.pushVertex(x,y,color,FontsGUI.bits_invert_color(bits | c));
+                                    } else batch.pushVertex(x,y,color,bits | c);
+                                    x += (fonts.advanceUnchecked(c) * scale);
                                     char_index++;
                                 } if (line_index == cursor_line_index && char_index == cursor_char_index) {
-                                    batch.pushVertex(x,y,color_float_bits,bits);
+                                    batch.pushVertex(x,y,color,bits);
                                 } char_index++;
                                 x += space;
                             }
@@ -199,7 +396,7 @@ public class Text implements Iterable<Paragraph> {
                         } else if ((y + ascent > bounds.maxY)) {
                             float hidden_height = (y + ascent) - bounds.maxY;
                             float lerp_factor = hidden_height / line_height;
-                            color_alpha = 1 - U.lerp(0,0.4f,lerp_factor);
+                            color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
                         } else color_alpha = 1.0f;
                     }
                     for (Word word : line) {
@@ -216,20 +413,20 @@ public class Text implements Iterable<Paragraph> {
                                 } else if ((y + ascent > bounds.maxY)) {
                                     float hidden_height = (y + ascent) - bounds.maxY;
                                     float lerp_factor = hidden_height / line_height;
-                                    color_alpha = 1 - U.lerp(0,0.4f,lerp_factor);
+                                    color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
                                 } else color_alpha = 1.0f;
                             }
                         } if ((y - descent) < bounds.maxY) {
-                            float color_float_bits = fonts.colorFloatBits(line,word,color_alpha);
+                            float color = TextColors.floatBits(line,word,color_alpha);
                             for (int i = 0; i < word_length; i++) {
                                 if (x >= bounds.maxX) break;
                                 char c = (char) (word.get(i) & 0x7F);
-                                batch.pushVertex(x,y,color_float_bits,bits | c );
-                                x += (fonts.advance(c) * scale); }
+                                batch.pushVertex(x,y,color,bits | c );
+                                x += (fonts.advanceUnchecked(c) * scale); }
                         } else for (int i = 0; i < word_length; i++) {
                             if (x >= bounds.maxX) break;
                             char c = (char) (word.get(i) & 0x7F);
-                            x += (fonts.advance(c) * scale);
+                            x += (fonts.advanceUnchecked(c) * scale);
                         } x += space;
                     }
                 } else {
@@ -242,18 +439,18 @@ public class Text implements Iterable<Paragraph> {
                             } else if ((y + ascent > bounds.maxY)) {
                                 float hidden_height = (y + ascent) - bounds.maxY;
                                 float lerp_factor = hidden_height / line_height;
-                                color_alpha = 1 - U.lerp(0,0.4f,lerp_factor);
+                                color_alpha = 1 - U.lerp(0,0.5f,lerp_factor);
                             } else color_alpha = 1.0f;
                         }
                         next_line:
                         for (Word word : line) {
-                            float color_float_bits = fonts.colorFloatBits(line,word,color_alpha);
+                            float color = TextColors.floatBits(line,word,color_alpha);
                             int word_length = word.length();
                             for (int i = 0; i < word_length; i++) {
                                 if (x >= bounds.maxX) break next_line;
                                 char c = (char) (word.get(i) & 0x7F);
-                                batch.pushVertex(x,y,color_float_bits,bits | c);
-                                x += (fonts.advance(c) * scale);
+                                batch.pushVertex(x,y,color,bits | c);
+                                x += (fonts.advanceUnchecked(c) * scale);
                             } x += space;
                         }
                     }
@@ -522,6 +719,18 @@ public class Text implements Iterable<Paragraph> {
                 if (current_line.insert(character,cursor_char_index)) {
                     cursor_char_index++;
                     cursor_desired_char_index = cursor_char_index;
+                }
+            }
+        }
+    }
+
+    public void addMultiple(List<Paragraph> list) {
+        if (!list.isEmpty()) {
+            if (insert_bottom) {
+                for (Paragraph paragraph : list) add(paragraph);
+            } else { int num_lines = list.size();
+                for (int i = num_lines - 1; i >= 0; i--) {
+                    add(list.get(i));
                 }
             }
         }

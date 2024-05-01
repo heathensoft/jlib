@@ -12,6 +12,10 @@ Move reusable vectors etc. from MathLib to U
 ************************************************************************************************************************
 IDEAS
 
+masterwork items. ca. 1 of 20 (crafting crt) + 1 enchant slot + value
+
+world map. placing a world map tile (like a tower, trees etc.) will determine the growing biomes algo for the tile.
+And also for neighboring tiles.
 
 
 ************************************************************************************************************************
@@ -30,6 +34,15 @@ Add default blur, sharpen, bloom etc. shaders / passes:  Shader.bloomPass(textur
 ************************************************************************************************************************
 GUI:
 
+File-cache: ctrl-f
+
+Glow. Right now the glow shader data is really the threshold not the strength as i'd like it to be
+
+Draw borders when rendering containers instead of boxes
+Actually don¨t. use a wrapper bow for border. BorderBox
+
+[Complete]
+I'm currently rendering space chars for strings. fix this.
 
 Colored paragraph. Not necessary. Just have draw calls with color.
 

@@ -118,7 +118,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_y = transform_initial.maxY;
-                float mouse_y = mouse_position(U.vec2()).y;
+                float mouse_y = mouse_position(new Vector2f()).y;
                 mouse_y = U.clamp(mouse_y,0,res.height());
                 float dy = mouse_y - origin_y;
                 float y = origin_y + dy;
@@ -152,7 +152,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_x = transform_initial.maxX;
-                float mouse_x = mouse_position(U.vec2()).x;
+                float mouse_x = mouse_position(new Vector2f()).x;
                 mouse_x = U.clamp(mouse_x,0,res.width());
                 float dx = mouse_x - origin_x;
                 float x = origin_x + dx;
@@ -186,7 +186,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_y = transform_initial.minY;
-                float mouse_y = mouse_position(U.vec2()).y;
+                float mouse_y = mouse_position(new Vector2f()).y;
                 mouse_y = U.clamp(mouse_y,0,res.height());
                 float dy = mouse_y - origin_y;
                 float y = origin_y + dy;
@@ -220,7 +220,7 @@ public class WindowGUI implements Disposable {
                 maximizingY = false;
                 Resolution res = screen_resolution();
                 float origin_x = transform_initial.minX;
-                float mouse_x = mouse_position(U.vec2()).x;
+                float mouse_x = mouse_position(new Vector2f()).x;
                 mouse_x = U.clamp(mouse_x,0,res.width());
                 float dx = mouse_x - origin_x;
                 float x = origin_x + dx;
@@ -252,13 +252,14 @@ public class WindowGUI implements Disposable {
                 restoringY = false;
                 maximizingX = false;
                 maximizingY = false;
-                Vector2f origin_translation = U.vec2(
+                Vector2f origin_translation = U.popSetVec2(
                         transform_initial.minX,
                         transform_initial.maxY);
                 origin_translation.sub(
                         transform_target.minX,
                         transform_target.maxY);
                 transform_target.translate(origin_translation);
+                U.pushVec2();
                 translate(drag_vector);
             }
         }
@@ -289,7 +290,7 @@ public class WindowGUI implements Disposable {
     }
 
     public void render(RendererGUI renderer, float dt) {
-        Rectanglef bounds = bounds(U.rectf());
+        Rectanglef bounds = bounds(U.popRect());
         Resolution resolution = screen_resolution();
         final float screen_width = resolution.width();
         final float screen_height = resolution.height();
@@ -424,7 +425,7 @@ public class WindowGUI implements Disposable {
             }
         }
 
-        Rectanglef transform = U.rectf();
+        Rectanglef transform = U.popRect();
 
         if (isTransforming()) {
             transform_timer += (dt * 5f);
@@ -442,6 +443,8 @@ public class WindowGUI implements Disposable {
             content.resizeHorizontal(resize_x);
             content.resizeVertical(resize_y);
         }
+
+        pushRect(2);
 
         content.render(this,renderer, (int)position.x, (int)position.y,dt,0);
         content.renderText(renderer, (int)position.x, (int)position.y);

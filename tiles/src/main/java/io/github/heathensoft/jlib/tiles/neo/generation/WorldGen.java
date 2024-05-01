@@ -13,6 +13,7 @@ import io.github.heathensoft.jlib.common.utils.Rand;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import io.github.heathensoft.jlib.common.utils.Color;
+import org.joml.Vector4f;
 
 
 import java.util.ArrayList;
@@ -762,7 +763,7 @@ public class WorldGen {
             case MID -> v = .50f;
             case HIGH -> v = .75f;
         }
-        return Color.rgb_to_intBits(Color.hsv_to_rgb(U.vec4().set(h,s,v,1.0f)));
+        return Color.rgb_to_intBits(Color.hsv_to_rgb(new Vector4f().set(h,s,v,1.0f)));
     }
 
     private int get_region_color(int region_data) {

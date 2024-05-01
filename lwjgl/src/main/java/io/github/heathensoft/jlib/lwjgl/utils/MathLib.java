@@ -85,8 +85,8 @@ public class MathLib {
     public static final class RayCast {
         
         public void mouse(Matrix4f projectionINV, Matrix4f viewINV, Vector3f position, float ndcX, float ndcY, Rayf dest) {
-            Vector4f v4 = U.vec4();
-            Vector3f v3 = U.vec3();
+            Vector4f v4 = U.popVec4();
+            Vector3f v3 = U.popVec3();
             v4.set(ndcX,ndcY,-1.0f,1.0f);
             v4.mul(projectionINV);
             v4.z = -1.0f;
@@ -99,6 +99,8 @@ public class MathLib {
             dest.dX = v3.x;
             dest.dY = v3.y;
             dest.dZ = v3.z;
+            U.pushVec3();
+            U.pushVec4();
         }
         
         public Rayf mouse(Matrix4f projectionINV, Matrix4f viewINV, Vector3f position, float ndcX, float ndcY) {
@@ -254,13 +256,14 @@ public class MathLib {
         }
     
         public void viewPerspective(Vector3f lightPosition, Vector3f lightDirection, Matrix4f dest) {
-            Vector3f center = U.vec3();
+            Vector3f center = U.popVec3();
             center.set(lightPosition).add(lightDirection);
             dest.identity().lookAt(lightPosition, center, UP_VECTOR);
+            U.pushVec3();
         }
         
         public void viewOrtho(Matrix4f cameraCombinedINV, Vector3f lightDirection, Matrix4f dest) {
-            Vector3f frustumCenter = U.vec3();
+            Vector3f frustumCenter = U.popVec3();
             frustumCenter.zero();
             int i = 0;
             for (int x = 0; x < 2; x++) {
@@ -273,13 +276,15 @@ public class MathLib {
                 }
             }
             frustumCenter.div(8);
-            Vector3f eye = U.vec3();
+            Vector3f eye = U.popVec3();
             eye.set(frustumCenter).sub(lightDirection);
             dest.identity().lookAt(eye,frustumCenter,UP_VECTOR);
+            U.pushVec3(2);
         }
     
         public void viewOrtho(Matrix4f cameraProjection, Matrix4f cameraView, Vector3f lightDirection, Matrix4f dest) {
-            viewOrtho(U.mat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest);
+            viewOrtho(U.popMat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest);
+            U.pushMat4();
         }
     
         /**
@@ -290,7 +295,7 @@ public class MathLib {
          */
     
         public void projectionOrtho(Matrix4f lightView, Matrix4f dest) {
-            Vector4f corner = U.vec4();
+            Vector4f corner = U.popVec4();
             float minX = Float.MAX_VALUE;
             float minY = Float.MAX_VALUE;
             float minZ = Float.MAX_VALUE;
@@ -307,6 +312,7 @@ public class MathLib {
                 maxY = Math.max(corner.y, maxY);
                 maxZ = Math.max(corner.z, maxZ);
             } dest.setOrtho(minX,maxX,minY,maxY,minZ,maxZ);
+            U.pushVec4();
         }
     
         private void combined(Matrix4f lightProjection, Matrix4f lightView, Matrix4f dest, boolean useBiasMatrix) {
@@ -319,21 +325,24 @@ public class MathLib {
         }
     
         public void combinedPerspective(Matrix4f lightProjection, Vector3f lightPosition, Vector3f lightDirection, Matrix4f dest, boolean useBiasMatrix) {
-            Matrix4f lightView = U.mat4();
+            Matrix4f lightView = U.popMat4();
             viewPerspective(lightPosition,lightDirection,lightView);
             combinedPerspective(lightProjection,lightView,dest,useBiasMatrix);
+            U.pushMat4();
         }
     
         public void combinedOrtho(Matrix4f cameraCombinedINV, Vector3f lightDirection, Matrix4f dest, boolean useBiasMatrix) {
-            Matrix4f lightView = U.mat4();
-            Matrix4f lightProjection = U.mat4();
+            Matrix4f lightView = U.popMat4();
+            Matrix4f lightProjection = U.popMat4();
             viewOrtho(cameraCombinedINV,lightDirection,lightView);
             projectionOrtho(lightView,lightProjection);
             combined(lightProjection,lightView,dest,useBiasMatrix);
+            U.pushMat4(2);
         }
     
         public void combinedOrtho(Matrix4f cameraProjection, Matrix4f cameraView, Vector3f lightDirection, Matrix4f dest, boolean useBiasMatrix) {
-            combinedOrtho(U.mat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest, useBiasMatrix);
+            combinedOrtho(U.popMat4().set(cameraProjection).mul(cameraView).invert(),lightDirection,dest, useBiasMatrix);
+            U.pushMat4();
         }
     
         /**
@@ -353,8 +362,8 @@ public class MathLib {
          * @param dest the destination frustumIntersection object
          */
         public void psc(Vector3f dir, Vector3f pos, float fov, float aspect, float near, float far, float border, FrustumIntersection dest) {
-            Matrix4f projection = U.mat4();
-            Matrix4f view = U.mat4();
+            Matrix4f projection = U.popMat4();
+            Matrix4f view = U.popMat4();
             Vector3f up = UP_VECTOR;
             final float offset = border / org.joml.Math.sin(fov/2.0f);
             final float eX = pos.x - dir.x * offset;
@@ -366,6 +375,7 @@ public class MathLib {
             projection.perspective(fov,aspect,near,far + offset);
             view.identity().lookAt(eX,eY,eZ,cX,cY,cZ,up.x,up.y,up.z);
             dest.set(projection.mul(view));
+            U.pushMat4(2);
         }
         
     }

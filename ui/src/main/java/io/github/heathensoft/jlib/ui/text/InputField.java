@@ -174,7 +174,7 @@ public class InputField {
                 string = string.substring(0, capacity);
             } cursor_pointer = string.length();
             if (!builder.isEmpty()) {
-                builder.delete(0, builder.length()-1);
+                builder.delete(0, builder.length());
             } builder.append(string);
             value = builder.toString();
             valid_value = validate.test(value);

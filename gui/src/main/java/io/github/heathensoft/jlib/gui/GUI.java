@@ -87,7 +87,7 @@ public class GUI {
         state.update(renderer.pixelID(),dt);
         renderer.begin(mouse.position());
         //windows.renderAll(renderer,dt);
-        Rectanglef rect = U.rectf();
+        Rectanglef rect = U.popRect();
         float x0 = 50;
         float y0 = 80;
         String string = "Test String 1234567890\n\n Size...";
@@ -108,7 +108,7 @@ public class GUI {
         //    renderer.drawElement(diffuse,region,rect,Color.rgb_to_intBits(color_slider_active),0,false);
         //}
 
-
+        U.pushRect();
         renderer.end();
     }
 

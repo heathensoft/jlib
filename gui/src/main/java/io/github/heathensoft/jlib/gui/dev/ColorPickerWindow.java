@@ -75,9 +75,10 @@ public class ColorPickerWindow extends WindowGUI {
         }
 
         public void renderBackground(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
-            Rectanglef quad = bounds(U.rectf(),x,y);
+            Rectanglef quad = bounds(U.popRect(),x,y);
             int abgr = Color.rgb_to_intBits(colorPicker.getRgb());
             renderer.drawElement(quad,abgr,id,0,true);
+            U.pushRect();
         }
     }
 
@@ -96,22 +97,25 @@ public class ColorPickerWindow extends WindowGUI {
             if (iPressed(Mouse.LEFT)) {
                 context.focus();
                 HexInputField inputField = window.inputField();
-                Vector2f mouse = context.mouse_position(U.vec2());
+                Vector2f mouse = context.mouse_position(U.popVec2());
                 float mouse_x = U.clamp(mouse.x,x,x+w);
+                U.pushVec2();
                 float picker_position = U.remap(mouse_x,x,x+w,0,1);
                 colorPicker.selectHue(picker_position);
                 inputField.set(Color.rgb_to_hex(colorPicker.getRgb()));
             }
             Texture slider_texture = colorPicker.hue_slider_texture();
-            Rectanglef quad = U.rectf(x,y-h,x+w,y);
-            Vector4f region = U.vec4(0,0,1,1);
+            Rectanglef quad = U.popSetRect(x,y-h,x+w,y);
+            Vector4f region = U.popSetVec4(0,0,1,1);
             renderer.drawElement(slider_texture,region,quad,id);
+            U.pushVec4();
 
             float slider_position = U.remap(colorPicker.sliderPosition(),0,1,x,x+w);
             float slider_width = 2f;
             float slider_x = slider_position - slider_width / 2f;
             quad.minX = slider_x; quad.maxX = slider_x + slider_width;
             renderer.drawElement(quad,0xFF000000,id);
+            U.pushRect();
         }
     }
 
@@ -129,24 +133,27 @@ public class ColorPickerWindow extends WindowGUI {
             if (iPressed(Mouse.LEFT)) {
                 context.focus();
                 HexInputField inputField = window.inputField();
-                Vector2f mouse = context.mouse_position(U.vec2());
+                Vector2f mouse = context.mouse_position(U.popVec2());
                 float mouse_x = U.clamp(mouse.x,x,x+w);
                 float mouse_y = U.clamp(mouse.y,y-h,y);
                 float picker_x = U.remap(mouse_x,x,x+w,0,1);
                 float picker_y = U.remap(mouse_y,y-h,y,0,1);
                 colorPicker.pick(mouse.set(picker_x,picker_y));
+                U.pushVec2();
                 inputField.set(Color.rgb_to_hex(colorPicker.getRgb()));
             }
             Texture hsv_window_texture = colorPicker.hsv_window_texture();
-            Rectanglef quad = U.rectf(x,y-h,x+w,y);
-            Vector4f region = U.vec4(0,0,1,1);
+            Rectanglef quad = U.popSetRect(x,y-h,x+w,y);
+            Vector4f region = U.popSetVec4(0,0,1,1);
             renderer.drawElement(hsv_window_texture,region,quad,id);
+            U.pushVec4();
 
             float picker_position_x = U.remap(colorPicker.pickerPositionX(),0,1,x,x+w);
             float picker_position_y = U.remap(colorPicker.pickerPositionY(),0,1,y-h,y);
             quad.minX = picker_position_x - 2; quad.maxX = picker_position_x + 2;
             quad.minY = picker_position_y - 2; quad.maxY = picker_position_y + 2;
             renderer.drawElement(quad,0xFF000000,id);
+            U.pushRect();
         }
     }
 
@@ -160,15 +167,19 @@ public class ColorPickerWindow extends WindowGUI {
             return TextUtils.is_hexadecimal(value) && (value.length() == 6 || value.length() == 8);
         }
         protected void onKeyEnter(String value, boolean isValid) {
-            if (isValid) { colorPicker.setRGB(Color.hex_to_rgb(value,U.vec4())); }
+            if (isValid) {
+                colorPicker.setRGB(Color.hex_to_rgb(value,U.popVec4()));
+                U.pushVec4();
+            }
         }
 
         protected void onKeyDown() {
             float value = colorPicker.pickerPositionY();
             float saturation = colorPicker.pickerPositionX();
             if (value > 0) { value = Math.max(0,value - 0.05f);
-                colorPicker.pick(U.vec2(saturation,value));
+                colorPicker.pick(U.popSetVec2(saturation,value));
                 set(Color.rgb_to_hex(colorPicker.getRgb()));
+                U.pushVec2();
             }
         }
 
@@ -176,8 +187,9 @@ public class ColorPickerWindow extends WindowGUI {
             float value = colorPicker.pickerPositionY();
             float saturation = colorPicker.pickerPositionX();
             if (value < 1) { value = Math.min(1,value + 0.05f);
-                colorPicker.pick(U.vec2(saturation,value));
+                colorPicker.pick(U.popSetVec2(saturation,value));
                 set(Color.rgb_to_hex(colorPicker.getRgb()));
+                U.pushVec2();
             }
         }
     }

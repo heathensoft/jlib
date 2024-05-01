@@ -50,8 +50,9 @@ public class BackGround { // use background for item containers. if you know the
             float v1 = bg_position_pixels.y / texture_height;
             float u2 = u1 + (quad.lengthX() / texture_width) * (1f/bg_texture_scale.x);
             float v2 = v1 + (quad.lengthY() / texture_height) * (1f/bg_texture_scale.y);
-            Vector4f region = U.vec4(u1,v1,u2,v2);
+            Vector4f region = U.popSetVec4(u1,v1,u2,v2);
             renderer.drawElement(bg_texture,region,quad,color,id);
+            U.pushVec4();
         }
     }
 

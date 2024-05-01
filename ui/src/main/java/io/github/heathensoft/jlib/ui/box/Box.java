@@ -29,7 +29,7 @@ public class Box implements Interactable {
         desired_height = height;
     }
 
-    protected void initBox(BoxWindow window, BoxContainer parent) { }
+    protected void initializeBox(BoxWindow window, BoxContainer parent) { }
 
     protected void openBox() { }
 
@@ -52,7 +52,7 @@ public class Box implements Interactable {
         if (built) throw new IllegalStateException("Box: cannot lock built box");
         locked_vertical = true;
     }
-    
+
     public float currentWidth() { return current_width; }
     
     public float currentHeight() { return current_height; }
@@ -78,6 +78,8 @@ public class Box implements Interactable {
     public boolean isRestoredY() { return U.floatEquals(current_height,desired_height,0.5f); }
 
     public boolean isRestored() { return isRestoredX() && isRestoredY(); }
+
+    public Rectanglef boundsLocal(Rectanglef dst) { return bounds(dst,0,current_height); }
 
     public Rectanglef bounds(Rectanglef dst, float x, float y) {
         dst.minX = x;

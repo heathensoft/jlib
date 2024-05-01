@@ -89,9 +89,10 @@ public class CommandLine extends Paragraph implements TextProcessor, ColoredLine
             int glow_mask = ((round(glow() * 127.0f) & 0x7F) << 13);
             int character_index = 0;
 
-            Vector4f color_vec4 = U.vec4(color());
+            Vector4f color_vec4 = U.popSetVec4(color());
             color_vec4.w *= alpha;
             float color = Color.rgb_to_floatBits(color_vec4);
+            U.pushVec4();
 
             for (Word word : words) {
                 byte[] bytes = word.get();

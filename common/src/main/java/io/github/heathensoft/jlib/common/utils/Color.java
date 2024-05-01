@@ -22,6 +22,19 @@ public class Color {
     public static final int WHITE_BITS = 0xFFFFFFFF;
     public static final int BLACK_BITS = 0xFF000000;
 
+    public static Vector4f invertHSV(Vector4f dst) {
+        dst.x = (dst.x + 180) % 360;
+        dst.y = 1 - dst.y;
+        dst.z = 1 - dst.z;
+        return dst;
+    }
+
+    public static Vector4f invertRGB(Vector4f dst) {
+        dst.x = 1 - dst.x;
+        dst.y = 1 - dst.y;
+        dst.z = 1 - dst.z;
+        return dst;
+    }
 
     public static int rgb_to_intBits(Vector4f rgb) {
         int r = (int)(rgb.x * 255) & 0xFF;
@@ -121,6 +134,7 @@ public class Color {
 
     public static Vector4f hex_to_hsl(String hex, Vector4f dst) { return intBits_to_hsl(hex_to_intBits(hex),dst); }
 
+    public static Vector4f intBits_to_rgb(int abgr) { return intBits_to_rgb(abgr,new Vector4f()); }
     public static Vector4f intBits_to_rgb(int abgr, Vector4f dst) {
         dst.x = rBits(abgr) / 255f;
         dst.y = gBits(abgr) / 255f;
@@ -182,9 +196,19 @@ public class Color {
         } return dst;
     }
 
-    public static String hsv_to_hex(Vector4f hsv) { return rgb_to_hex(hsv_to_rgb(U.vec4().set(hsv))); }
+    public static String hsv_to_hex(Vector4f hsv) {
+        Vector4f tmp = U.popSetVec4(hsv);
+        String hex = rgb_to_hex(hsv_to_rgb(tmp));
+        U.pushVec4();
+        return hex;
+    }
 
-    public static int hsv_to_intBits(Vector4f hsv) { return rgb_to_intBits(hsv_to_rgb(U.vec4().set(hsv))); }
+    public static int hsv_to_intBits(Vector4f hsv) {
+        Vector4f tmp = U.popSetVec4(hsv);
+        int intBits = rgb_to_intBits(hsv_to_rgb(tmp));
+        U.pushVec4();
+        return intBits;
+    }
 
     public static float hsv_to_floatBits(Vector4f hsv) { return intBits_to_floatBits(hsv_to_intBits(hsv)); }
 
@@ -245,19 +269,25 @@ public class Color {
     }
 
     public static float lab_distance(Vector4f lab1, Vector4f lab2) {
-        Vector3f v1 = U.vec3(lab1.x,lab1.y,lab1.z);
-        Vector3f v2 = U.vec3(lab2.x,lab2.y,lab2.z);
-        return v1.distance(v2);
+        Vector3f v1 = U.popSetVec3(lab1.x,lab1.y,lab1.z);
+        Vector3f v2 = U.popSetVec3(lab2.x,lab2.y,lab2.z);
+        float distance = v1.distance(v2);
+        U.pushVec3(2);
+        return distance;
     }
 
-    public static Vector4f lerp(Vector4f a, Vector4f b, float t) { return lerp(a,b,t, U.vec4()); }
+    public static Vector4f lerp(Vector4f a, Vector4f b, float t) { // Creates new object
+        return lerp(a,b,t, new Vector4f());
+    }
 
     public static Vector4f lerp(Vector4f a, Vector4f b, float t, Vector4f dst) {
         if (t <= 0) return dst.set(a);
         else if (t >= 1) return dst.set(b);
-        Vector4f hsv1 = Color.rgb_to_hsv(Color.sRGB_to_linear(U.vec4(a)));
-        Vector4f hsv2 = Color.rgb_to_hsv(Color.sRGB_to_linear(U.vec4(b)));
-        return Color.linear_to_sRGB(hsv_to_rgb(lerp_hsv(hsv1,hsv2,t,dst)));
+        Vector4f hsv1 = Color.rgb_to_hsv(Color.sRGB_to_linear(U.popSetVec4(a)));
+        Vector4f hsv2 = Color.rgb_to_hsv(Color.sRGB_to_linear(U.popSetVec4(b)));
+        Color.linear_to_sRGB(hsv_to_rgb(lerp_hsv(hsv1,hsv2,t,dst)));
+        U.pushVec4(2);
+        return dst;
     }
 
     public static Vector4f lerp_hsv(Vector4f hsv1, Vector4f hsv2, float t,  Vector4f dst) {

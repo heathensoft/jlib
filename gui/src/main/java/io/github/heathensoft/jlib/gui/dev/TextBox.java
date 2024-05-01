@@ -33,19 +33,21 @@ public class TextBox extends Box {
 
     public void render(WindowGUI context, RendererGUI renderer, float x, float y, float dt, int parent_id) {
         int id = use_parent_id ? parent_id : 0;
-        Rectanglef bounds = bounds(U.rectf(),x,y);
+        Rectanglef bounds = bounds(U.popRect(),x,y);
         renderer.drawElement(bounds, Color.rgb_to_intBits(background_color),id);
+        U.pushRect();
     }
 
     public void renderText(RendererGUI renderer, float x, float y) {
         if (text != null && !text.isBlank()) {
-            Rectanglef bounds = bounds(U.rectf(),x,y);
+            Rectanglef bounds = bounds(U.popRect(),x,y);
             if (padding > 0) {
                 bounds.minX += padding;
                 bounds.minY += padding;
                 bounds.maxX -= padding;
                 bounds.maxY -= padding;
             } renderer.drawText(text,bounds);
+            U.pushRect();
         }
     }
 

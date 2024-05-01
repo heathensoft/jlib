@@ -2,6 +2,7 @@ package io.github.heathensoft.jlib.lwjgl.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.U;
+import io.github.heathensoft.jlib.lwjgl.window.Engine;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
@@ -11,6 +12,8 @@ import static io.github.heathensoft.jlib.common.utils.U.ROT_270;
 import static org.lwjgl.opengl.GL11.*;
 
 /**
+ * Basic 2D Sprite with diffuse Texture.
+ * Can extend later to accommodate for other channels: Normals, Depth, Emissive (combined)
  * @author Frederik Dahl
  * 29/03/2024
  */
@@ -24,21 +27,21 @@ public class Sprite {
     private float rotation;
 
     public Sprite(Texture texture, int x, int y, int w, int h) {
-        if (texture == null) throw new RuntimeException("Sprite Null Texture");
+        if (texture == null || texture.hasBeenDisposed()) texture = Engine.get().textureError();
         this.region = new TextureRegion(x,y,w,h,texture.width(),texture.height());
         this.scale = new Vector2f(1,1);
         this.texture = texture;
     }
 
     public Sprite(Texture texture, TextureRegion region) {
-        if (texture == null) throw new RuntimeException("Sprite Null Texture");
+        if (texture == null || texture.hasBeenDisposed()) texture = Engine.get().textureError();
         this.scale = new Vector2f(1,1);
         this.region = region.copy();
         this.texture = texture;
     }
 
     public Sprite(Texture texture) {
-        if (texture == null) throw new RuntimeException("Sprite Null Texture");
+        if (texture == null || texture.hasBeenDisposed()) texture = Engine.get().textureError();
         this.region = new TextureRegion(texture.width(),texture.height());
         this.scale = new Vector2f(1,1);
         this.texture = texture;
@@ -64,15 +67,16 @@ public class Sprite {
             } else if (rotation == ROT_270) { w = height(); h = width();
             } else { w = width(); h = height();
                 final float cx = w / 2f; final float cy = h / 2f;
-                Vector2f p0 = U.rotate2D(U.vec2(-cx,-cy),rotation);
-                Vector2f p1 = U.rotate2D(U.vec2( cx,-cy),rotation);
-                Vector2f p2 = U.rotate2D(U.vec2(-cx, cy),rotation);
-                Vector2f p3 = U.rotate2D(U.vec2( cx, cy),rotation);
+                Vector2f p0 = U.rotate2D(U.popSetVec2(-cx,-cy),rotation);
+                Vector2f p1 = U.rotate2D(U.popSetVec2( cx,-cy),rotation);
+                Vector2f p2 = U.rotate2D(U.popSetVec2(-cx, cy),rotation);
+                Vector2f p3 = U.rotate2D(U.popSetVec2( cx, cy),rotation);
                 dst.minX = Math.min(p0.x,Math.min(p1.x,Math.min(p2.x,p3.x)));
                 dst.minY = Math.min(p0.y,Math.min(p1.y,Math.min(p2.y,p3.y)));
                 dst.maxX = Math.max(p0.x,Math.max(p1.x,Math.max(p2.x,p3.x)));
                 dst.maxY = Math.max(p0.y,Math.max(p1.y,Math.max(p2.y,p3.y)));
                 if (!centered) dst.translate(-dst.minX,-dst.minY);
+                U.pushVec2(4);
                 return dst;
             } if (centered) {
                 final float cx = w / 2f;
@@ -114,8 +118,9 @@ public class Sprite {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
         Framebuffer.viewport();
-        Vector4f uv = region.getUVs(U.vec4());
+        Vector4f uv = region.getUVs(U.popVec4());
         ShaderProgram.texturePass(this.texture,uv);
+        U.pushVec4();
         Disposable.dispose(framebuffer);
         return texture;
     }
@@ -195,4 +200,5 @@ public class Sprite {
         scale.x = Math.max(scale.x,minX);
         scale.y = Math.max(scale.y,minY);
     }
+
 }

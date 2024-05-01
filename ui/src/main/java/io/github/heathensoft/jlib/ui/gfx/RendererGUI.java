@@ -1,12 +1,16 @@
 package io.github.heathensoft.jlib.ui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
+import io.github.heathensoft.jlib.common.Executor;
 import io.github.heathensoft.jlib.common.storage.generic.Pool;
 import io.github.heathensoft.jlib.common.storage.generic.Stack;
 import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
+import io.github.heathensoft.jlib.lwjgl.window.Engine;
+import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
+import io.github.heathensoft.jlib.lwjgl.window.Window;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.text.Text;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
@@ -14,14 +18,18 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 import org.joml.primitives.Rectanglei;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.Flushable;
 import java.nio.ByteBuffer;
+import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.LinkedList;
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
 import static java.lang.Math.max;
+import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glReadPixels;
 import static org.lwjgl.opengl.GL15.GL_STREAM_READ;
@@ -80,45 +88,53 @@ public class RendererGUI implements Disposable {
     private int draw_calls;
     private int active_batch;
     private int frame_count;
+    private int pixel_id;
     private boolean rendering;
+    private boolean rendering_delayed;
     private boolean paused;
 
+    private Framebuffer[] bloomBuffers;
     private Framebuffer framebuffer;
-    private PixelBuffer pixelBuffer;
     private final FontsGUI fonts;
     private final SpriteBatchGUI spriteBatch;
     private final TextBatchGUI textBatch;
     private final ScissorStack scissorStack;
+    private final LinkedList<Executor> delayed_calls;
 
     public RendererGUI(int width, int height) throws Exception {
         initializeFramebuffer(width, height);
+        initializeBloomBuffers(width, height);
         fonts = new FontsGUI(FONT_UNIFORM_BUFFER_BINDING_POINT);
         textBatch = new TextBatchGUI(fonts,TEXT_BATCH_CAPACITY,width,height);
         spriteBatch = new SpriteBatchGUI(SPRITE_BATCH_CAPACITY,width,height);
         scissorStack = new ScissorStack(this);
-        pixelBuffer = new PixelBuffer(width, height);
+        delayed_calls = new LinkedList<>();
         fonts.uploadDefaultFonts();
     }
 
     public void updateResolution(int width, int height) throws Exception {
         if (rendering) throw new IllegalStateException("Illegal attempt to update resolution while rendering");
         if (framebuffer.width() != width || framebuffer.height() != height) {
-            Disposable.dispose(pixelBuffer);
-            pixelBuffer = new PixelBuffer(width, height);
             initializeFramebuffer(width, height);
+            initializeBloomBuffers(width, height);
             textBatch.updateResolution(width, height);
             spriteBatch.updateResolution(width, height);
         }
     }
 
-    public void dispose() { Disposable.dispose(pixelBuffer,spriteBatch,textBatch,framebuffer,fonts); }
+    public void dispose() {
+        Disposable.dispose(spriteBatch,textBatch,framebuffer,fonts);
+        Disposable.dispose(bloomBuffers);
+    }
     public FontsGUI fonts() { return fonts; }
     public Framebuffer framebuffer() { return framebuffer; }
     public TextBatchGUI textBatch() { return textBatch; }
+    public SpriteBatchGUI spriteBatch() { return spriteBatch; }
+    public Texture bloomTexture() { return bloomBuffers[0].texture(0); } // TODO: Temp **************************
     public Texture framebufferDiffuseTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_DIFFUSE); }
     public Texture framebufferNormalsTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_NORMALS); }
     public Texture framebufferEmissiveTexture() { return framebuffer.texture(FRAMEBUFFER_SLOT_EMISSIVE); }
-    public int pixelID() { return pixelBuffer.pixelID; }
+    public int pixelID() { return pixel_id; }
     public long drawCallCount() { return draw_calls_max;  }
     public long shaderSwapCount() { return shader_swaps_max; }
     public void uploadFont(BitmapFont font, int slot) throws Exception { fonts.uploadFont(font,slot); }
@@ -142,10 +158,11 @@ public class RendererGUI implements Disposable {
             int mouse_screen_y = round(mouse.y * framebuffer.height());
             Framebuffer.bind(framebuffer);
             Framebuffer.viewport();
-            pixelBuffer.pixelReadOperation(
-                    framebuffer,FRAMEBUFFER_SLOT_PIXEL_ID,
-                    mouse_screen_x,mouse_screen_y);
-            Framebuffer.drawBuffers(0,1,2,3);
+            try (MemoryStack stack = MemoryStack.stackPush()){
+                IntBuffer buffer = stack.callocInt(1);
+                glReadPixels(mouse_screen_x,mouse_screen_y,1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,buffer);
+                pixel_id = buffer.get(0);
+            } Framebuffer.drawBuffers(0,1,2,3);
             Framebuffer.clear();
             glEnable(GL_BLEND); // Blending diffuse and normals
             glBlendEquation(GL_FUNC_ADD);
@@ -159,19 +176,54 @@ public class RendererGUI implements Disposable {
 
     public void end() {
         if (rendering) {
-            frame_count++;
+            while (!delayed_calls.isEmpty()) {
+                delayed_calls.removeLast().execute();
+            } frame_count++;
             spriteBatch.flush();
             textBatch.flush();
+            scissorStack.reset();
             draw_calls = spriteBatch.resetDrawCalls();
             draw_calls += textBatch.resetDrawCalls();
             draw_calls_max = max(draw_calls, draw_calls_max);
             shader_swaps_max = max(shader_swaps, shader_swaps_max);
             active_batch = NULL_BATCH;
-            scissorStack.reset();
+
+
+            int bloom_iterations = U.clamp(GUI.variables.bloom_ping_pong_iterations,0,100);
+            if (GUI.variables.bloom_enabled && bloom_iterations > 0) {
+                // Clear and Fill the initial ping pong texture (index 0)
+                Framebuffer.bind(bloomBuffers[0]);
+                Framebuffer.drawBuffer(0);
+                Framebuffer.viewport();
+                Framebuffer.clear();
+                ShaderProgram.bindProgram(GUI.shaders.bloom_threshold);
+                Texture diffuse = framebuffer().texture(FRAMEBUFFER_SLOT_DIFFUSE);
+                Texture emissive = framebuffer().texture(FRAMEBUFFER_SLOT_EMISSIVE);
+                ShaderProgram.setUniform(ShaderProgram.UNIFORM_DIFFUSE,diffuse.bindTooAnySlot());
+                ShaderProgram.setUniform(ShaderProgram.UNIFORM_EMISSIVE,emissive.bindTooAnySlot());
+                ShaderProgram.setUniform("u_threshold",U.clamp(GUI.variables.bloom_threshold,0,2));
+                ShaderProgram.shaderPass().draw();
+
+                ShaderProgram.bindProgram(GUI.shaders.bloom_ping_pong);
+                for (int i = 0; i < bloom_iterations; i++) {
+                    for (int j = 0; j < 2; j++) {
+                        Framebuffer.bind(bloomBuffers[(j+1) % 2]);
+                        Texture source = bloomBuffers[j].texture(0);
+                        ShaderProgram.setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,source.bindTooAnySlot());
+                        ShaderProgram.setUniform("u_horizontal",(j+1) % 2);
+                        ShaderProgram.shaderPass().drawRepeat();
+                    }
+                }
+
+            }
+
+
             rendering = false;
             paused = false;
         }
     }
+
+
 
     public void pause() {
         if (rendering) {
@@ -202,6 +254,11 @@ public class RendererGUI implements Disposable {
         }
     }
 
+    /** Use this when rendering items grabbed from and to containers*/
+    public void drawDelayed(Executor function) { delayed_calls.addFirst(function); }
+    public void drawTooltip(String string, Vector2f mouse_position) { GUI.tooltips.display(string, mouse_position); }
+    public void drawTooltip(String string, Vector2f mouse_position, int color) { GUI.tooltips.display(string, mouse_position, color); }
+
 
     public void drawText(Text text, Rectanglef bounds, int font, float size) { drawText(text,bounds,font,size,false); }
     public void drawText(Text text, Rectanglef bounds, int font, float size, boolean show_cursor) { drawText(text,bounds,font,0,size,show_cursor); }
@@ -210,7 +267,7 @@ public class RendererGUI implements Disposable {
     public void drawText(Text text, Rectanglef bounds, float y_offset, int font, float padding, float size, boolean wrap, boolean show_cursor) { drawText(text,bounds,y_offset,font,padding,size,0,wrap,show_cursor); }
     public void drawText(Text text, Rectanglef bounds, float y_offset, int font, float padding, float size, float glow, boolean wrap, boolean show_cursor) {
         if (rendering && !paused && size > 1f && !text.isBlank()) {
-            Rectanglef r = U.rectf(
+            Rectanglef r = U.popSetRect(
                     bounds.minX + padding,
                     bounds.minY + padding,
                     bounds.maxX - padding,
@@ -227,7 +284,35 @@ public class RendererGUI implements Disposable {
                     text.draw(textBatch,r,y_offset,size,glow,wrap,show_cursor);
                     scissorStack.pop();
                 }
-            }
+            } U.pushRect();
+        }
+    }
+
+    public void drawText(Text text, Rectanglef bounds, Vector4f rgb, int font, float size) { drawText(text, bounds, rgb, font, size,false); }
+    public void drawText(Text text, Rectanglef bounds, Vector4f rgb, int font, float size, boolean show_cursor) { drawText(text, bounds, rgb, font, 0, size, show_cursor); }
+    public void drawText(Text text, Rectanglef bounds, Vector4f rgb, int font, float padding, float size, boolean show_cursor) { drawText(text, bounds, rgb, font, padding, size, false, show_cursor); }
+    public void drawText(Text text, Rectanglef bounds, Vector4f rgb, int font, float padding, float size, boolean wrap, boolean show_cursor) { drawText(text, bounds, rgb, 0.0f, font, padding, size, wrap, show_cursor); }
+    public void drawText(Text text, Rectanglef bounds, Vector4f rgb, float y_offset, int font, float padding, float size, boolean wrap, boolean show_cursor) { drawText(text, bounds, rgb, y_offset, font, padding, size, 0.0f, wrap, show_cursor); }
+    public void drawText(Text text, Rectanglef bounds, Vector4f rgb, float y_offset, int font, float padding, float size, float glow, boolean wrap, boolean show_cursor) {
+        if (rendering && !paused && size > 1f && !text.isBlank()) {
+            Rectanglef r = popSetRect(
+                    bounds.minX + padding,
+                    bounds.minY + padding,
+                    bounds.maxX - padding,
+                    bounds.maxY - padding
+            ); if (r.isValid()) {
+                if (active_batch != TEXT_BATCH) {
+                    if (active_batch == SPRITE_BATCH) {
+                        spriteBatch.flush();
+                        shader_swaps++;
+                    } active_batch = TEXT_BATCH;
+                    Framebuffer.drawBuffers(0,1,2);
+                } fonts.bindFontMetrics(font);
+                if (scissorStack.push(r)) {
+                    text.draw(textBatch,r,rgb,y_offset,size,glow,wrap,show_cursor);
+                    scissorStack.pop();
+                }
+            } U.pushRect();
         }
     }
 
@@ -309,6 +394,79 @@ public class RendererGUI implements Disposable {
         }
     }
 
+    public void drawSprite(Sprite sprite, Vector2f center) { drawSprite(sprite, center, 0xFFFFFFFF); }
+    public void drawSprite(Sprite sprite, Vector2f center, int abgr) { drawSprite(sprite, center, abgr, 0); }
+    public void drawSprite(Sprite sprite, Vector2f center, int abgr, int id) { drawSprite(sprite, center, 1f, abgr, id); }
+    public void drawSprite(Sprite sprite, Vector2f center, float scale, int abgr, int id) { drawSprite(sprite, center, scale, abgr, id, 0f); }
+    public void drawSprite(Sprite sprite, Vector2f center, float scale, int abgr, int id, float glow) { drawSprite(sprite, center, scale, abgr, id, glow,true); }
+    public void drawSprite(Sprite sprite, Vector2f center, float scale, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering &! paused) {
+            float wh = (sprite.width()  * scale) / 2f;
+            float hh = (sprite.height() * scale) / 2f;
+            Rectanglef quad = U.popRect();
+            quad.minX = center.x - wh;
+            quad.maxX = center.x + wh;
+            quad.minY = center.y - hh;
+            quad.maxY = center.y + hh;
+            if (quad.isValid()) {
+                Vector4f uv = sprite.uvCoordinates(U.popVec4());
+                if (active_batch != SPRITE_BATCH) {
+                    if (active_batch == TEXT_BATCH) {
+                        textBatch.flush();
+                        shader_swaps++;
+                    } active_batch = SPRITE_BATCH;
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } if (id == SKIP_ID) {
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2);
+                    spriteBatch.push(sprite.texture(),null,uv,quad,sprite.rotationRadians(),abgr,0,glow,invisible_id);
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } else spriteBatch.push(sprite.texture(),null,uv,quad,sprite.rotationRadians(),abgr,id,glow,invisible_id);
+                U.pushVec4();
+            } U.pushRect();
+        }
+    }
+
+    public void drawSprite(Sprite sprite, Rectanglef quad) { drawSprite(sprite, quad, 0xFFFFFFFF); }
+    public void drawSprite(Sprite sprite, Rectanglef quad, int abgr) { drawSprite(sprite, quad, abgr, 0); }
+    public void drawSprite(Sprite sprite, Rectanglef quad, int abgr, int id) { drawSprite(sprite, quad, abgr, id,true); }
+    public void drawSprite(Sprite sprite, Rectanglef quad, int abgr, int id, boolean stretch) { drawSprite(sprite, quad, abgr, id, 0f, stretch); }
+    public void drawSprite(Sprite sprite, Rectanglef quad, int abgr, int id, float glow, boolean stretch) { drawSprite(sprite, quad, abgr, id, glow, stretch,true); }
+    public void drawSprite(Sprite sprite, Rectanglef quad, int abgr, int id, float glow, boolean stretch, boolean invisible_id) {
+        if (rendering &! paused) {
+            Rectanglef tmp = U.popRect();
+            if (!stretch) {
+                float box_width = quad.lengthX();
+                float box_height = quad.lengthY();
+                float aspect_ratio = sprite.width() / sprite.height();
+                float aspect_width = box_width;
+                float aspect_height = aspect_width / aspect_ratio;
+                if (aspect_height > box_height) {
+                    aspect_height = box_height;
+                    aspect_width = aspect_height * aspect_ratio; }
+                float x0 = (box_width / 2f) - (aspect_width / 2f) + quad.minX;
+                float y0 = (box_height / 2f) - (aspect_height / 2f) + quad.minY;
+                quad = U.rectSet(tmp,x0,y0,x0+aspect_width,y0+aspect_height);
+            } if (quad.isValid()) {
+                Vector4f uv = sprite.uvCoordinates(U.popVec4());
+                if (active_batch != SPRITE_BATCH) {
+                    if (active_batch == TEXT_BATCH) {
+                        textBatch.flush();
+                        shader_swaps++;
+                    } active_batch = SPRITE_BATCH;
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } if (id == SKIP_ID) {
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2);
+                    spriteBatch.push(sprite.texture(),null,uv,quad,abgr,0,glow,invisible_id,false);
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } else spriteBatch.push(sprite.texture(),null,uv,quad,abgr,id,glow,invisible_id,false);
+                U.pushVec4();
+            } U.pushRect();
+        }
+    }
 
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad) { drawElement(diffuse, region, quad,0); }
     public void drawElement(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, int id) { drawElement(diffuse, region, quad, Color.WHITE_BITS, id); }
@@ -415,7 +573,7 @@ public class RendererGUI implements Disposable {
     public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id, float glow) { drawElement(diffuse,  quad, abgr, id, glow, true); }
     public void drawElement(Texture diffuse, Rectanglef quad, int abgr, int id, float glow, boolean invisible_id) {
         if (rendering && !paused && quad.isValid()) {
-            Vector4f region = U.vec4(0,0,1,1);
+            Vector4f region = U.popSetVec4(0,0,1,1);
             if (active_batch != SPRITE_BATCH) {
                 if (active_batch == TEXT_BATCH) {
                     textBatch.flush();
@@ -429,6 +587,7 @@ public class RendererGUI implements Disposable {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
             } else spriteBatch.push(diffuse, null, region, quad, abgr, id, glow, invisible_id,false);
+            U.pushVec4();
         }
     }
 
@@ -702,7 +861,7 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2);
-            } Rectanglef rect = U.rectf().set(scroll_bar);
+            } Rectanglef rect = U.popRect().set(scroll_bar);
             float sb_length_x = scroll_bar.lengthX();
             float sb_length_y = scroll_bar.lengthY();
             if (sb_length_x < sb_length_y) {
@@ -730,15 +889,15 @@ public class RendererGUI implements Disposable {
             } if (id == SKIP_ID) {
                 spriteBatch.flush();
                 Framebuffer.drawBuffers(0,1,2,3);
-            }
+            } U.pushRect();
         }
     }
 
-    public void drawOutline(Rectanglef quad, float thickness, int abgr, float glow) { drawOutline(quad,thickness,abgr,0,glow,true); }
-    public void drawOutline(Rectanglef quad, float thickness, int abgr, int id) { drawOutline(quad,thickness,abgr,id,0f,true); }
-    public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, boolean invisible_id) { drawOutline(quad, thickness, abgr, id,0,invisible_id); }
-    public void drawOutline(Rectanglef quad, float thickness, int abgr, int id, float glow, boolean invisible_id) {
-        Rectanglef outline = U.rectf().set(quad);
+    public void drawBorders(Rectanglef quad, float thickness, int abgr, float glow) { drawBorders(quad,thickness,abgr,0,glow,true); }
+    public void drawBorders(Rectanglef quad, float thickness, int abgr, int id) { drawBorders(quad,thickness,abgr,id,0f,true); }
+    public void drawBorders(Rectanglef quad, float thickness, int abgr, int id, boolean invisible_id) { drawBorders(quad, thickness, abgr, id,0,invisible_id); }
+    public void drawBorders(Rectanglef quad, float thickness, int abgr, int id, float glow, boolean invisible_id) {
+        Rectanglef outline = U.popSetRect(quad);
         outline.minY = quad.maxY - thickness;
         drawElement(outline, abgr, id, glow);
         outline.minY = quad.minY;
@@ -750,12 +909,181 @@ public class RendererGUI implements Disposable {
         outline.maxX = quad.maxX;
         outline.minX = quad.maxX - thickness;
         drawElement(outline,abgr,id,glow);
+        U.pushRect();
+    }
+
+
+
+    public void drawGadgetButton(Rectanglef quad, float padding, int abgr, boolean pressed) { drawGadgetButton(quad, padding, abgr, 0, pressed); }
+    public void drawGadgetButton(Rectanglef quad, float padding, int abgr, int id, boolean pressed) { drawGadgetButton(quad, padding, abgr, id, 0, pressed); }
+    public void drawGadgetButton(Rectanglef quad, float padding, int abgr, int id, float glow, boolean pressed) { drawGadgetButton(quad, padding, abgr, id, glow, pressed,true); }
+    public void drawGadgetButton(Rectanglef quad, float padding, int abgr, int id, float glow, boolean pressed, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            float box_width = quad.lengthX();
+            float box_height = quad.lengthY();
+            float padding_sum = padding * 2;
+            if (box_width >= padding_sum && box_height >= padding_sum) {
+                int iID = id;
+                if (active_batch != SPRITE_BATCH) {
+                    if (active_batch == TEXT_BATCH) {
+                        textBatch.flush();
+                        shader_swaps++;
+                    } active_batch = SPRITE_BATCH;
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } if (id == SKIP_ID) { iID = 0;
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2);
+                } Rectanglef rect = U.popRect();
+                rect.maxY = quad.maxY;
+                rect.minY = rect.maxY - padding;
+                rect.minX = quad.minX;
+                rect.maxX = rect.minX + padding;
+                Texture texture = GUI.gadgets.atlas.texture(0);
+                TextureRegion button_c; TextureRegion button_t;
+                TextureRegion button_l; TextureRegion button_r;
+                TextureRegion button_b; TextureRegion button_tl;
+                TextureRegion button_tr;TextureRegion button_bl;
+                TextureRegion button_br;
+                if (pressed) {
+                    button_c = GUI.gadgets.button_pressed_center;
+                    button_t = GUI.gadgets.button_pressed_top;
+                    button_l = GUI.gadgets.button_pressed_left;
+                    button_r = GUI.gadgets.button_pressed_right;
+                    button_b = GUI.gadgets.button_pressed_bottom;
+                    button_tl = GUI.gadgets.button_pressed_top_left;
+                    button_tr = GUI.gadgets.button_pressed_top_right;
+                    button_bl = GUI.gadgets.button_pressed_bottom_left;
+                    button_br = GUI.gadgets.button_pressed_bottom_right;
+                } else {
+                    button_c = GUI.gadgets.button_center;
+                    button_t = GUI.gadgets.button_top;
+                    button_l = GUI.gadgets.button_left;
+                    button_r = GUI.gadgets.button_right;
+                    button_b = GUI.gadgets.button_bottom;
+                    button_tl = GUI.gadgets.button_top_left;
+                    button_tr = GUI.gadgets.button_top_right;
+                    button_bl = GUI.gadgets.button_bottom_left;
+                    button_br = GUI.gadgets.button_bottom_right;
+                }
+                spriteBatch.push(texture, null, button_tl, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(box_width - padding,0f);
+                spriteBatch.push(texture, null, button_tr, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(0,- (box_height - padding));
+                spriteBatch.push(texture, null, button_br, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(- (box_width - padding),0f);
+                spriteBatch.push(texture, null, button_bl, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(0,padding);
+                rect.maxY = rect.minY + (box_height - padding_sum);
+                spriteBatch.push(texture, null, button_l, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(box_width - padding,0);
+                spriteBatch.push(texture, null, button_r, rect, abgr, iID, glow, invisible_id,false);
+                rect.maxY += padding;
+                rect.minY = rect.maxY - padding;
+                rect.minX = quad.minX + padding;
+                rect.maxX = quad.maxX - padding;
+                spriteBatch.push(texture, null, button_t, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(0,-(box_height - padding));
+                spriteBatch.push(texture, null, button_b, rect, abgr, iID, glow, invisible_id,false);
+                rect.set(quad);
+                rect.maxY -= padding;
+                rect.minY += padding;
+                rect.minX += padding;
+                rect.maxX -= padding;
+                spriteBatch.push(texture, null, button_c, rect, abgr, iID, glow, invisible_id,false);
+                if (id == SKIP_ID) {
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } U.pushRect();
+            }
+        }
+    }
+
+    public void drawGadgetBorders(Rectanglef quad, float thickness, int abgr) { drawGadgetBorders(quad, thickness, abgr, 0); }
+    public void drawGadgetBorders(Rectanglef quad, float thickness, int abgr, float glow) { drawGadgetBorders(quad, thickness, abgr, 0,glow); }
+    public void drawGadgetBorders(Rectanglef quad, float thickness, int abgr, int id) { drawGadgetBorders(quad, thickness, abgr, id,0); }
+    public void drawGadgetBorders(Rectanglef quad, float thickness, int abgr, int id, float glow) { drawGadgetBorders(quad, thickness, abgr, id, glow, true); }
+    public void drawGadgetBorders(Rectanglef quad, float thickness, int abgr, int id, float glow, boolean invisible_id) {
+        if (rendering && !paused && quad.isValid()) {
+            float box_width = quad.lengthX();
+            float box_height = quad.lengthY();
+            float padding_sum = thickness * 2;
+            if (box_width >= padding_sum && box_height >= padding_sum) {
+                int iID = id;
+                if (active_batch != SPRITE_BATCH) {
+                    if (active_batch == TEXT_BATCH) {
+                        textBatch.flush();
+                        shader_swaps++;
+                    } active_batch = SPRITE_BATCH;
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } if (id == SKIP_ID) { iID = 0;
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2);
+                } Rectanglef rect = U.popRect();
+                rect.maxY = quad.maxY;
+                rect.minY = rect.maxY - thickness;
+                rect.minX = quad.minX;
+                rect.maxX = rect.minX + thickness;
+                Texture texture = GUI.gadgets.atlas.texture(0);
+                TextureRegion border_t = GUI.gadgets.window_border_top;
+                TextureRegion border_l = GUI.gadgets.window_border_left;
+                TextureRegion border_r = GUI.gadgets.window_border_right;
+                TextureRegion border_b = GUI.gadgets.window_border_bottom;
+                TextureRegion border_tl = GUI.gadgets.window_border_top_left;
+                TextureRegion border_tr = GUI.gadgets.window_border_top_right;
+                TextureRegion border_bl = GUI.gadgets.window_border_bottom_left;
+                TextureRegion border_br = GUI.gadgets.window_border_bottom_right;
+                spriteBatch.push(texture, null, border_tl, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(box_width - thickness,0f);
+                spriteBatch.push(texture, null, border_tr, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(0,- (box_height - thickness));
+                spriteBatch.push(texture, null, border_br, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(- (box_width - thickness),0f);
+                spriteBatch.push(texture, null, border_bl, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(0,thickness);
+                rect.maxY = rect.minY + (box_height - padding_sum);
+                spriteBatch.push(texture, null, border_l, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(box_width - thickness,0);
+                spriteBatch.push(texture, null, border_r, rect, abgr, iID, glow, invisible_id,false);
+                rect.maxY += thickness;
+                rect.minY = rect.maxY - thickness;
+                rect.minX = quad.minX + thickness;
+                rect.maxX = quad.maxX - thickness;
+                spriteBatch.push(texture, null, border_t, rect, abgr, iID, glow, invisible_id,false);
+                rect.translate(0,-(box_height - thickness));
+                spriteBatch.push(texture, null, border_b, rect, abgr, iID, glow, invisible_id,false);
+                if (id == SKIP_ID) {
+                    spriteBatch.flush();
+                    Framebuffer.drawBuffers(0,1,2,3);
+                } U.pushRect();
+            }
+        }
     }
 
 
 
 
 
+
+    private void initializeBloomBuffers(int width, int height) throws Exception {
+        if (bloomBuffers != null) Disposable.dispose(bloomBuffers);
+        bloomBuffers = new Framebuffer[2];
+        for (int i = 0; i < 2; i++) {
+            Framebuffer framebuffer = new Framebuffer(width, height);
+            Framebuffer.bind(framebuffer);
+            Framebuffer.setClearColor(0,0,0,0);
+            Framebuffer.setClearMask(GL_COLOR_BUFFER_BIT);
+            Texture bloom_texture = Texture.generate2D(width, height);
+            bloom_texture.bindToActiveSlot();
+            bloom_texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
+            bloom_texture.filterLinear();
+            bloom_texture.clampToEdge();
+            Framebuffer.attachColor(bloom_texture,0,true);
+            Framebuffer.drawBuffer(0);
+            Framebuffer.readBuffer(0);
+            Framebuffer.checkStatus();
+            bloomBuffers[i] = framebuffer;
+        }
+    }
 
 
     private void initializeFramebuffer(int width, int height) throws Exception {
@@ -767,19 +1095,19 @@ public class RendererGUI implements Disposable {
         Texture diffuse_texture = Texture.generate2D(width, height);
         diffuse_texture.bindToActiveSlot();
         diffuse_texture.allocate(TextureFormat.RGBA8_UNSIGNED_NORMALIZED);
-        diffuse_texture.filterNearest();
+        diffuse_texture.filterLinear();
         diffuse_texture.clampToEdge();
         Framebuffer.attachColor(diffuse_texture,FRAMEBUFFER_SLOT_DIFFUSE,true);
         Texture normals_texture = Texture.generate2D(width, height);
         normals_texture.bindToActiveSlot();
         normals_texture.allocate(TextureFormat.RGB8_UNSIGNED_NORMALIZED);
-        normals_texture.filterNearest();
+        normals_texture.filterLinear();
         normals_texture.clampToEdge();
         Framebuffer.attachColor(normals_texture,FRAMEBUFFER_SLOT_NORMALS,true);
         Texture emissive_texture = Texture.generate2D(width, height);
         emissive_texture.bindToActiveSlot();
         emissive_texture.allocate(TextureFormat.R8_UNSIGNED_NORMALIZED);
-        emissive_texture.filterNearest();
+        emissive_texture.filterLinear();
         emissive_texture.clampToEdge();
         Framebuffer.attachColor(emissive_texture,FRAMEBUFFER_SLOT_EMISSIVE,true);
         Texture uid_texture = Texture.generate2D(width,height);
@@ -809,58 +1137,7 @@ public class RendererGUI implements Disposable {
 
 
 
-    private static final class PixelBuffer implements Disposable {
-        IntBuffer syncBuffer;
-        ByteBuffer readPixelBuffer;
-        BufferObject pixelPackBuffer;
-        long syncObject;
-        int syncStatus;
-        int pixelID;
 
-        PixelBuffer(int width, int height) {
-            syncBuffer = MemoryUtil.memAllocInt(1);
-            readPixelBuffer = MemoryUtil.memAlloc(Integer.BYTES);
-            pixelPackBuffer = new BufferObject(GL_PIXEL_PACK_BUFFER, GL_STREAM_READ);
-            pixelPackBuffer.bind().bufferData((long) width * height * Integer.BYTES);
-            BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER); // very important
-            syncStatus = GL_UNSIGNALED;
-            syncObject = 0L;
-            pixelID = 0;
-        }
-
-        void pixelReadOperation(Framebuffer framebuffer, int attachment, int x, int y) {
-            if (syncStatus == GL_SIGNALED) {
-                syncStatus = GL_UNSIGNALED;
-                glDeleteSync(syncObject);
-                syncObject = 0L;
-                pixelPackBuffer.bind();
-                ByteBuffer pixel = glMapBufferRange(GL_PIXEL_PACK_BUFFER,0,Integer.BYTES,GL_MAP_READ_BIT, readPixelBuffer);
-                if (pixel != null) {
-                    pixelID = (pixel.get(0)) | (pixel.get(1) << 8) | (pixel.get(2) << 16) | (pixel.get(3) << 24);
-                    glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
-                } Framebuffer.bindRead(framebuffer);
-                Framebuffer.readBuffer(attachment); // bind uid buffer for read ops
-                glReadPixels(x, y, 1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,0);
-                syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-                BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER); // very important
-            } else { if (syncObject == 0L) {
-                Framebuffer.bindRead(framebuffer);
-                Framebuffer.readBuffer(attachment);
-                pixelPackBuffer.bind();
-                glReadPixels(x, y, 1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,0);
-                syncObject = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-                BufferObject.bindZERO(GL_PIXEL_PACK_BUFFER);
-            } else { glGetSynciv(syncObject,GL_SYNC_STATUS,null,syncBuffer);
-                syncStatus = syncBuffer.get(0);}
-            }
-        }
-
-        public void dispose() {
-            if (syncBuffer != null) MemoryUtil.memFree(syncBuffer);
-            if (readPixelBuffer != null) MemoryUtil.memFree(readPixelBuffer);
-            Disposable.dispose(pixelPackBuffer);
-        }
-    }
 
 
 

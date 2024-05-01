@@ -2,11 +2,16 @@ package io.github.heathensoft.jlib.ui.gfx;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.utils.Color;
+import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.ui.GUI;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.system.MemoryUtil;
+
+import java.nio.BufferOverflowException;
+import java.nio.BufferUnderflowException;
 
 import static io.github.heathensoft.jlib.common.utils.U.*;
 import static org.lwjgl.opengl.GL11.*;
@@ -22,7 +27,8 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
  * v0------v1
  * 00000000 00000000 00000000 00001111 texture_slot_diffuse
  * 00000000 00000000 00000000 11110000 texture_slot_normals
- * 00000000 00000000 00111111 00000000 glow
+ * 00000000 00000000 00011111 00000000 glow
+ * 00000000 00000000 00100000 00000000 pixel AA
  * 00000000 00000000 01000000 00000000 rounded
  * 00000000 00000000 10000000 00000000 invisible_id (draw_alpha)
  * 11111111 11111111 00000000 00000000 pixel_id
@@ -38,6 +44,7 @@ public class SpriteBatchGUI extends BatchGUI {
     private final BufferObject indices;
     private final SamplerArray samplersDiffuse;
     private final SamplerArray samplersNormals;
+    private boolean pixel_antialiasing;
 
     SpriteBatchGUI(int capacity, int width, int height) {
         int vertex_size = 6;
@@ -46,7 +53,7 @@ public class SpriteBatchGUI extends BatchGUI {
         samplersDiffuse = new SamplerArray(NUM_TEXTURE_SLOTS,GL_TEXTURE_2D,0);
         samplersNormals = new SamplerArray(NUM_TEXTURE_SLOTS,GL_TEXTURE_2D,NUM_TEXTURE_SLOTS);
         buffer_capacity = capacity;
-        vertices = MemoryUtil.memAllocFloat(buffer_capacity * vertex_size);
+        vertices = MemoryUtil.memAllocFloat(buffer_capacity * sprite_size);
         indices = new BufferObject(GL_ELEMENT_ARRAY_BUFFER,GL_STATIC_DRAW);
         vertexBuffer = new BufferObject(GL_ARRAY_BUFFER,GL_DYNAMIC_DRAW);
         vertexAttribArray = new VertexAttributes().bind();
@@ -63,11 +70,21 @@ public class SpriteBatchGUI extends BatchGUI {
         updateResolution(width, height);
     }
 
+    public void enablePixelArtAntialiasing(boolean enable) {
+        this.pixel_antialiasing = enable;
+    }
+
     void push(Rectanglef quad, int abgr, int id, float glow, boolean draw_alpha, boolean ellipse) {
         if (count == buffer_capacity) flush();
-        int bits = ((round(clamp(glow) * 63.0f) & 0x3F) << 8);
+        //int bits = ((round(clamp(glow) * 63.0f) & 0x3F) << 8);
+        //bits |= 0xFF;
+        //if (ellipse) bits |= 0x4000;
+        //bits |= draw_alpha ? 1 << 15 : 0;
+        //bits |= (id & 0xFFFF) << 16;
+        int bits = ((round(clamp(glow) * 31.0f) & 0x1F) << 8);
         bits |= 0xFF;
         if (ellipse) bits |= 0x4000;
+        if (pixel_antialiasing) bits |= 0x2000;
         bits |= draw_alpha ? 1 << 15 : 0;
         bits |= (id & 0xFFFF) << 16;
         float shader_bits = Float.intBitsToFloat(bits);
@@ -81,7 +98,7 @@ public class SpriteBatchGUI extends BatchGUI {
 
     void push(Rectanglef quad, float rotation, int abgr, int id, float glow, boolean draw_alpha) {
         if (count == buffer_capacity) flush();
-        int bits = ((round(clamp(glow) * 63.0f) & 0x3F) << 8);
+        int bits = ((round(clamp(glow) * 31.0f) & 0x1F) << 8);
         bits |= 0xFF;
         bits |= draw_alpha ? 1 << 15 : 0;
         bits |= (id & 0xFFFF) << 16;
@@ -164,10 +181,11 @@ public class SpriteBatchGUI extends BatchGUI {
             }
         }
         int bits = (diffuse_slot | (normals_slot << 4)) & 0xFF;
-        bits |= ((round(clamp(glow) * 63.0f) & 0x3F) << 8);
+        bits |= ((round(clamp(glow) * 31.0f) & 0x1F) << 8);
         bits |= draw_alpha ? 1 << 15 : 0;
         bits |= (id & 0xFFFF) << 16;
         if (ellipse) bits |= 0x4000;
+        if (pixel_antialiasing) bits |= 0x2000;
         float shader_bits = Float.intBitsToFloat(bits);
         float color = Color.intBits_to_floatBits(abgr);
         vertices.put(quad.minX).put(quad.maxY).put(region.u()).put(region.v()).put(color).put(shader_bits);
@@ -175,6 +193,8 @@ public class SpriteBatchGUI extends BatchGUI {
         vertices.put(quad.maxX).put(quad.minY).put(region.u2()).put(region.v2()).put(color).put(shader_bits);
         vertices.put(quad.maxX).put(quad.maxY).put(region.u2()).put(region.v()).put(color).put(shader_bits);
         count++;
+
+
     }
 
     void push(Texture diffuse, Texture normals, TextureRegion region, Rectanglef quad, float rotation, int abgr, int id, float glow, boolean draw_alpha) {
@@ -203,9 +223,10 @@ public class SpriteBatchGUI extends BatchGUI {
             }
         }
         int bits = (diffuse_slot | (normals_slot << 4)) & 0xFF;
-        bits |= ((round(clamp(glow) * 63.0f) & 0x3F) << 8);
+        bits |= ((round(clamp(glow) * 31.0f) & 0x1F) << 8);
         bits |= draw_alpha ? 1 << 15 : 0;
         bits |= (id & 0xFFFF) << 16;
+        if (pixel_antialiasing) bits |= 0x2000;
         final float shader_bits = Float.intBitsToFloat(bits);
         final float color = Color.intBits_to_floatBits(abgr);
         final float u0 = region.u();
@@ -293,9 +314,10 @@ public class SpriteBatchGUI extends BatchGUI {
             }
         }
         int shader_bits = (diffuse_slot | (normals_slot << 4)) & 0xFF;
-        shader_bits |= ((round(clamp(glow) * 63.0f) & 0x3F) << 8);
+        shader_bits |= ((round(clamp(glow) * 31.0f) & 0x1F) << 8);
         shader_bits |= draw_alpha ? 1 << 15 : 0;
         shader_bits |= (id & 0xFFFF) << 16;
+        if (pixel_antialiasing) shader_bits |= 0x2000;
         if (ellipse) shader_bits |= 0x4000;
         float shader_ = Float.intBitsToFloat(shader_bits);
         float color = Color.intBits_to_floatBits(abgr);
@@ -329,9 +351,10 @@ public class SpriteBatchGUI extends BatchGUI {
             }
         }
         int bits = (diffuse_slot | (normals_slot << 4)) & 0xFF;
-        bits |= ((round(clamp(glow) * 63.0f) & 0x3F) << 8);
+        bits |= ((round(clamp(glow) * 31.0f) & 0x1F) << 8);
         bits |= draw_alpha ? 1 << 15 : 0;
         bits |= (id & 0xFFFF) << 16;
+        if (pixel_antialiasing) bits |= 0x2000;
         final float shader_bits = Float.intBitsToFloat(bits);
         final float color = Color.intBits_to_floatBits(abgr);
         final float u0 = region.x;

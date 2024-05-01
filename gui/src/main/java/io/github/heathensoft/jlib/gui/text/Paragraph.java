@@ -311,7 +311,7 @@ public class Paragraph implements Iterable<Word> {
             float glow = clamp(custom.glow());
             info_bits |= ((round(glow * 127.0f) & 0x7F) << 13);
         }
-        Vector4f color_rgb = U.vec4();
+        Vector4f color_rgb = U.popVec4();
         Vector4f prev_color = null;
         y -= fonts.ascent() * scale;
         float color_floatBits = 0;
@@ -330,7 +330,7 @@ public class Paragraph implements Iterable<Word> {
                 else return;
                 x = x2;
             } x += space;
-        }
+        } U.pushVec4();
     }
 
     public void drawDynamicSize(TextBatchGUI batch, float x, float y, float width, float size, boolean centered, float alpha) {
@@ -352,7 +352,7 @@ public class Paragraph implements Iterable<Word> {
                 float glow = clamp(custom.glow());
                 info_bits |= ((round(glow * 127.0f) & 0x7F) << 13);
             }
-            Vector4f color_rgb = U.vec4();
+            Vector4f color_rgb = U.popVec4();
             Vector4f prev_color = null;
             float color_floatBits = 0;
             for (Word word : words) {
@@ -368,7 +368,7 @@ public class Paragraph implements Iterable<Word> {
                     batch.pushVertex(x, y, color_floatBits,info_bits | character);
                     x += fonts.advance(character) * scale;
                 } x += space;
-            }
+            } U.pushVec4();
         }
 
     }

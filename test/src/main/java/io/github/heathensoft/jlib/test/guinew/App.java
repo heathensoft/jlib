@@ -2,17 +2,18 @@ package io.github.heathensoft.jlib.test.guinew;
 
 import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
+import io.github.heathensoft.jlib.lwjgl.utils.Resources;
 import io.github.heathensoft.jlib.lwjgl.window.*;
-import io.github.heathensoft.jlib.test.guinew.tt.BubbleDemo;
-import io.github.heathensoft.jlib.test.guinew.tt.MipTest;
-import io.github.heathensoft.jlib.test.guinew.tt.TextTest;
-import io.github.heathensoft.jlib.test.guinew.tt.ToggleTest;
+import io.github.heathensoft.jlib.test.guinew.tt.*;
+import io.github.heathensoft.jlib.test.ui.GridRoot;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.box.BoxWindow;
+import io.github.heathensoft.jlib.ui.gfx.BackGround;
 import org.joml.Vector4f;
 
 import java.util.List;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_B;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
@@ -26,22 +27,25 @@ import static org.lwjgl.opengl.GL11.GL_BLEND;
 public class App extends Application {
 
     private BubbleDemo bubbleDemo;
+    private Texture bg_texture;
 
     protected void engine_init(List<Resolution> supported, BootConfiguration config, String[] args) {
         config.settings_width = 1280;
         config.settings_height = 720;
         //config.settings_width = 1920;
         //config.settings_height = 1080;
-        //config.windowed_mode = false;
+        config.windowed_mode = true;
         config.auto_resolution = false;
         supported.add(Resolution.R_1280x720);
-        supported.add(Resolution.R_1920x1080);
+        //supported.add(Resolution.R_1920x1080);
+        //config.limit_fps = false;
+        //config.vsync_enabled = false;
     }
 
     protected void on_start(Resolution resolution) throws Exception {
-        //String name = "pixeltier_icon_pack";
-        //String folder = "C:\\dump\\gui\\MaterialIcons\\aseprite\\pixelTier";
-        //AtlasData atlas = TextureAtlas.pack(name,new WorkingDirectory(folder),0,GL_CLAMP_TO_EDGE,GL_NEAREST,GL_NEAREST,false,false);
+        //String name = "icons";
+        //String folder = "C:\\dump\\gui\\MaterialIcons\\All";
+        //AtlasData atlas = TextureAtlas.pack(name,new WorkingDirectory(folder),1,GL_CLAMP_TO_EDGE,GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR,true,false);
         //atlas.export("");
         //atlas.dispose();
         //String name = "TradeWinds64";
@@ -49,23 +53,54 @@ public class App extends Application {
         //BitmapFont font = BitmapFont.create(name,ttf,64,2,0,0,0,GL_LINEAR_MIPMAP_LINEAR,GL_LINEAR,true);
         //font.exportAsRepo("");
         //font.dispose();
+
+
+
+
+
         Framebuffer.setClearColor(new Vector4f(0.3f,0.3f,0.3f,1.0f));
         bubbleDemo = new BubbleDemo(resolution.width(),resolution.height());
         GUI.initialize(resolution);
-        BoxWindow textWindow = new BoxWindow(new TextTest(),"TextWindow");
-        BoxWindow toggleWindow = new BoxWindow(new ToggleTest(),"ToggleWindow");
-        BoxWindow mipmapTestWindow = new BoxWindow(new MipTest(),"MipmapTestWindow");
-        GUI.windows.register(textWindow);
-        GUI.windows.register(toggleWindow);
-        GUI.windows.register(mipmapTestWindow);
-        GUI.windows.openWindow(textWindow);
-        GUI.windows.openWindow(toggleWindow);
-        GUI.windows.openWindow(mipmapTestWindow);
+
+
+        ColorTest colorTest = new ColorTest();
+        GridRoot gridRoot = new GridRoot();
+
+
+        if (true) {
+            try {
+                Bitmap bitmap = Resources.image("res/jlib/ui/img/bg_stars.png");
+                bg_texture = bitmap.asTexture();
+                bg_texture.bindToActiveSlot();
+                bg_texture.textureRepeat();
+                bg_texture.filterLinear();
+                bitmap.dispose();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            BackGround backGround = new BackGround(bg_texture,new Vector4f(0.3f,0.4f,0.4f,1f));
+            backGround.velocityPixels().set(5,0);
+            colorTest.setBackground(backGround);
+            gridRoot.setBackground(backGround);
+
+        }
+
+        BoxWindow gridWindow = new BoxWindow(gridRoot,"GridWindow");
+        GUI.windows.register(gridWindow);
+        GUI.windows.openWindow(gridWindow);
+
+        BoxWindow colorPicker = new BoxWindow(colorTest,"ColorTestWindow");
+        GUI.windows.register(colorPicker);
+        GUI.windows.openWindow(colorPicker);
+
     }
 
     protected void on_update(float delta) {
+        //GUI.out.write("FPS: " + Engine.get().time().fps());
+        //if (GUI.keys.just_pressed(GLFW_KEY_B)) GUI.variables.bloom_enabled = !GUI.variables.bloom_enabled;
         if (GUI.keys.just_pressed(GLFW_KEY_ESCAPE)) Engine.get().exit();
         GUI.render_to_gui_framebuffer(delta);
+        Framebuffer.bindDefault();
     }
 
     protected void on_render(float frame_time, float alpha) {
@@ -79,7 +114,7 @@ public class App extends Application {
         GUI.render_gui_to_screen(0);
     }
 
-    protected void on_exit() { GUI.dispose(); Disposable.dispose(bubbleDemo); }
+    protected void on_exit() { GUI.dispose(); Disposable.dispose(bubbleDemo,bg_texture); }
     protected void resolution_request(Resolution resolution) throws Exception { GUI.on_app_resolution_update(resolution); }
     public static void main(String[] args) {
         Engine.get().run(new App(),args);

@@ -17,7 +17,7 @@
 # Region: <x> <y> <width> <height> <name>
 
 A: pixeltier_icon_pack 1024 512 1424
-T: 9728 9728 33071 0 0
+T: 9729 9729 33071 0 0
 
 R: 1008 0 16 16 armor_117
 R: 992 0 16 16 armor_116

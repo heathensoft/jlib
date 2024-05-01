@@ -1,8 +1,12 @@
 package io.github.heathensoft.jlib.lwjgl.window;
 
 
+import io.github.heathensoft.jlib.common.Disposable;
 import io.github.heathensoft.jlib.common.thread.ThreadService;
+import io.github.heathensoft.jlib.common.utils.Color;
+import io.github.heathensoft.jlib.lwjgl.gfx.Bitmap;
 import io.github.heathensoft.jlib.lwjgl.gfx.ShaderProgram;
+import io.github.heathensoft.jlib.lwjgl.gfx.Texture;
 import org.lwjgl.Version;
 import org.tinylog.Logger;
 
@@ -32,6 +36,7 @@ public final class Engine {
     private Application app;
     private DefaultInput input;
     private GLContext glContext;
+    private Texture textureError;
     private ThreadService threadPool;
 
     public void run(Application app, String[] args) {
@@ -128,6 +133,7 @@ public final class Engine {
                 Logger.info("exiting application");
                 app.set_state(Application.State.EXITING);
                 app.on_exit();
+                Disposable.dispose(textureError);
                 Logger.info("deleting shaders");
                 ShaderProgram.deleteAllProgramsAndResources();
                 Logger.info("terminating window");
@@ -173,6 +179,18 @@ public final class Engine {
     
     public Application app() {
         return app;
+    }
+
+    public Texture textureError() {
+        if (textureError == null) {
+            Bitmap bitmap = new Bitmap(16,16,4);
+            bitmap.clear(Color.ERROR_BITS);
+            textureError = bitmap.asTexture();
+            textureError.textureRepeat();
+            textureError.filterNearest();
+            bitmap.dispose();
+        } Logger.warn("Missing or Disposed Texture");
+        return textureError;
     }
     
     public <T extends Application> T app(Class<T> clazz) {

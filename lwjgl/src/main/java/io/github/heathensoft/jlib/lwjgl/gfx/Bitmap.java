@@ -686,6 +686,16 @@ public class Bitmap implements Disposable {
     }
 
 
+    public static Bitmap checkeredPattern(int abgr1, int abgr2, int size, int rows, int cols) {
+        int[][] pixels = new int[size * rows][size * cols];
+        for (int r = 0; r < pixels.length; r++) {
+            int y = r / size % 2;
+            for (int c = 0; c < pixels[r].length; c++) {
+                int x = c / size % 2;
+                pixels[r][c] = (x+y) % 2 == 0 ? abgr1 : abgr2;}
+        } return new Bitmap(pixels);
+    }
+
 }
 
 

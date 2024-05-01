@@ -1,7 +1,7 @@
 package io.github.heathensoft.jlib.ui.box;
 
-
-
+import io.github.heathensoft.jlib.common.utils.U;
+import io.github.heathensoft.jlib.ui.gfx.BackGround;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import org.joml.primitives.Rectanglef;
 
@@ -17,13 +17,21 @@ import java.util.List;
 public abstract class BoxContainer extends Box {
     
     protected List<Box> contents = new LinkedList<>();
+    protected BackGround background;
     protected float inner_spacing;
 
     /** Called just before preparing the contents */
     protected void prepareContainer(BoxWindow window, float dt) { }
 
-    /** Called just before rendering the contents */
-    protected void renderContainer(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) { }
+    /** Called just before rendering the contents. Default behavior. Override  */
+    protected void renderContainer(BoxWindow window, RendererGUI renderer, float x, float y, float dt, int parent_id) {
+        if (background != null) {
+            int id = iHasID() ? iID : parent_id;
+            Rectanglef quad = bounds(U.popRect(),x,y);
+            background.render(renderer,quad,id,dt);
+            U.pushRect();
+        }
+    }
 
     /** Called just before initializing the contents */
     protected void initContainer(BoxWindow boxWindow, BoxContainer parent) { }
@@ -42,7 +50,7 @@ public abstract class BoxContainer extends Box {
             } } else if (this instanceof VBoxContainer container) {for (Box box : contents) {
                 if (box.getBoundsOf(target,dst,x,y)) return true;
                 y -= (box.current_height + inner_spacing);
-            } } else if (this instanceof BowWindowRoot container) {
+            } } else if (this instanceof RootContainer container) {
                 x += container.border_padding;
                 y -= container.border_padding;
                 Box box = container.contents.get(0);
@@ -70,7 +78,7 @@ public abstract class BoxContainer extends Box {
                     box.renderBox(window, renderer, x, y, dt, parent_id);
                 } y -= (box.current_height + inner_spacing);
             }
-        } else if (this instanceof BowWindowRoot container) {
+        } else if (this instanceof RootContainer container) {
             x += container.border_padding;
             y -= container.border_padding;
             container.contents.get(0).renderBox(window, renderer, x, y, dt, parent_id);
@@ -93,7 +101,7 @@ public abstract class BoxContainer extends Box {
                     box.renderBoxText(window, renderer, x, y, dt);
                 } y -= (box.current_height + inner_spacing);
             }
-        } else if (this instanceof BowWindowRoot container) {
+        } else if (this instanceof RootContainer container) {
             x += container.border_padding;
             y -= container.border_padding;
             container.contents.get(0).renderBoxText(window, renderer, x, y, dt);
@@ -102,10 +110,10 @@ public abstract class BoxContainer extends Box {
         }
     }
 
-    protected final void initBox(BoxWindow window, BoxContainer parent) {
+    protected final void initializeBox(BoxWindow window, BoxContainer parent) {
         initContainer(window, parent);
         for (Box box : contents) {
-            box.initBox(window,this);
+            box.initializeBox(window,this);
         }
     }
 
@@ -132,6 +140,9 @@ public abstract class BoxContainer extends Box {
         }
     }
 
+    public BackGround backGround() { return background; }
+
+    public void setBackground(BackGround background) { this.background = background; }
 
     public boolean isEmpty() { return contents.isEmpty(); }
     
@@ -152,7 +163,7 @@ public abstract class BoxContainer extends Box {
         if (box == null) throw new IllegalStateException("Cannot add null Box to BoxContainer");
         if (built) throw new IllegalStateException("Cannot add Box to built BoxContainer");
         if (box.built) throw new IllegalStateException("Cannot add built Box to BoxContainer");
-        if (box instanceof BowWindowRoot) throw new IllegalStateException("Cannot add root container as child");
+        if (box instanceof RootContainer) throw new IllegalStateException("Cannot add root container as child");
         if (contents.contains(box)) throw new IllegalStateException("Cannot add same Box twice");
         contents.add(box);
     }

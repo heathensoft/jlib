@@ -1,10 +1,13 @@
 package io.github.heathensoft.jlib.ui.text;
 
+import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
+import org.joml.Vector4f;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 
 import static io.github.heathensoft.jlib.common.utils.Color.hex_to_rgb;
 
@@ -17,28 +20,54 @@ import static io.github.heathensoft.jlib.common.utils.Color.hex_to_rgb;
 public class Word {
 
     public enum Type {
-        REGULAR(        0,"Regular"),
-        VALUE(          1,"Value"),
-        VALUE_HIGH(     2,"Value High"),
-        VALUE_LOW(      3,"Value Low"),
-        ENTITY(         4,"Entity Neutral"),
-        ENTITY_FRIENDLY(5,"Entity Friendly"),
-        ENTITY_HOSTILE( 6,"Entity Hostile"),
-        ITEM(           7,"Item Common"),
-        ITEM_RARE(      8,"Item Rare"),
-        ITEM_UNIQUE(    9,"Item Unique"),
-        ACTION(         10,"Action Neutral"),
-        ACTION_SUCCESS( 11,"Action Success"),
-        ACTION_FAILURE( 12,"Action Failure"),
-        LOCATION(       13,"Location"),
-        OBJECT(         14,"Object"),
-        RESOURCE(       15,"Resource");
-        public final String name;
-        public final int id;
-        Type(int id, String name) {
+        T00(Color.hex_to_rgb("BBCDD4FF"),"Regular"),
+        T01(Color.hex_to_rgb("83C5CBFF"),"Value"),
+        T02(Color.hex_to_rgb("83C5CBFF"),"Value High"),
+        T03(Color.hex_to_rgb("83C5CBFF"),"Value Low"),
+        T04(Color.hex_to_rgb("D5BE87FF"),"Entity Neutral"),
+        T05(Color.hex_to_rgb("8AC789FF"),"Entity Friendly"),
+        T06(Color.hex_to_rgb("BF776CFF"),"Entity Hostile"),
+        T07(Color.hex_to_rgb("#7b98b0"),"Item Common"),
+        T08(Color.hex_to_rgb("D841DBFF"),"Item Rare"),
+        T09(Color.hex_to_rgb("FF6D00FF"),"Item Unique"),
+        T10(Color.hex_to_rgb("BBCDD4FF"),"Action Neutral"),
+        T11(Color.hex_to_rgb("5AC81EFF"),"Action Success"),
+        T12(Color.hex_to_rgb("B74545FF"),"Action Failure"),
+        T13(Color.hex_to_rgb("9E79D5FF"),"Location"),
+        T14(Color.hex_to_rgb("7D7BB0FF"),"Object"),
+        T15(Color.hex_to_rgb("CFB857FF"),"Resource");
+        private static final Type[] array = values();
+        public static final int count = array.length;
+        public static Type get(int ordinal) { return array[ordinal]; }
+        public final Vector4f color;
+        public String name;
+        Type(Vector4f color, String name) {
+            this.color = color;
             this.name = name;
-            this.id = id;
+        } public String toString() {
+            String hex = Color.rgb_to_hex(color);
+            return "W " + ordinal() + " " + hex + " " + name;
+        } public static void toFileFormat(List<String> dst) {
+            for (Type type : array) dst.add(type.toString());
+        } public static void fromFileFormat(List<String> list) {
+            for (String string : list) {
+                String[] split = string.trim().split("\\s+");
+                if (split.length >= 3 && split[0].equals("W")) {
+                    try { int ordinal = Integer.parseInt(split[1]);
+                        if (ordinal < count) {
+                            String hex = split[2];
+                            Color.hex_to_rgb(hex,get(ordinal).color);
+                            if (split.length > 3) {
+                                get(ordinal).name = split[2];
+                            }
+                        }
+                    }catch (NumberFormatException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
+
     }
 
     private byte[] value;
@@ -51,7 +80,7 @@ public class Word {
     }
     protected Word(byte c) { this(new byte[]{c}); }
 
-    public Type type() { return Type.REGULAR; }
+    public Type type() { return Type.T00; }
     public byte get(int index) throws ArrayIndexOutOfBoundsException { return value[index]; }
     public byte lastChar() { return value[length() - 1]; }
     public byte firstChar() { return value[0]; }

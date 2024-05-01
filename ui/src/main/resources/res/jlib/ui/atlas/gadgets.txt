@@ -1,0 +1,52 @@
+# https://github.com/heathensoft
+
+# GL_NEAREST = 9728
+# GL_LINEAR  = 9729
+# GL_NEAREST_MIPMAP_NEAREST = 9984
+# GL_LINEAR_MIPMAP_NEAREST  = 9985
+# GL_NEAREST_MIPMAP_LINEAR  = 9986
+# GL_LINEAR_MIPMAP_LINEAR   = 9987
+
+# GL_REPEAT = 10497
+# GL_CLAMP_TO_EDGE = 33071
+# GL_CLAMP_TO_BORDER = 33069
+# GL_MIRRORED_REPEAT = 33648
+
+# Atlas: <name> <width> <height> <sprites>
+# Texture: <minFilter> <magFilter> <textureWrap> <mipMap> <srgb>
+# Region: <x> <y> <width> <height> <name>
+
+A: default-gadgets 128 128 18
+T: 9729 9729 33071 0 0
+
+
+R: 1 1 10 10 button_tl
+R: 1 11 10 10 button_l
+R: 1 21 10 10 button_bl
+R: 11 1 10 10 button_t
+R: 11 11 10 10 button_c
+R: 11 21 10 10 button_b
+R: 21 1 10 10 button_tr
+R: 21 11 10 10 button_r
+R: 21 21 10 10 button_br
+
+R: 33 1 10 10 button_pressed_tl
+R: 33 11 10 10 button_pressed_l
+R: 33 21 10 10 button_pressed_bl
+R: 43 1 10 10 button_pressed_t
+R: 43 11 10 10 button_pressed_c
+R: 43 21 10 10 button_pressed_b
+R: 53 1 10 10 button_pressed_tr
+R: 53 11 10 10 button_pressed_r
+R: 53 21 10 10 button_pressed_br
+
+R: 65 1 10 10 border_tl
+R: 65 11 10 10 border_l
+R: 65 21 10 10 border_bl
+R: 75 1 10 10 border_t
+R: 75 11 10 10 border_c
+R: 75 21 10 10 border_b
+R: 85 1 10 10 border_tr
+R: 85 11 10 10 border_r
+R: 85 21 10 10 border_br
+

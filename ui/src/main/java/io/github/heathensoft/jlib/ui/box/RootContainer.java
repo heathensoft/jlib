@@ -6,7 +6,6 @@ import io.github.heathensoft.jlib.lwjgl.window.CursorObjects;
 import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.WindowAnchor;
-import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import org.joml.Vector2f;
 
 /**
@@ -18,8 +17,8 @@ import org.joml.Vector2f;
  */
 
 
-public abstract class BowWindowRoot extends BoxContainer {
-    
+public abstract class RootContainer extends BoxContainer {
+
     protected float max_width = Float.MAX_VALUE;
     protected float max_height = Float.MAX_VALUE;
     protected float border_padding;
@@ -28,6 +27,7 @@ public abstract class BowWindowRoot extends BoxContainer {
     public float maxWidth() { return max_width; }
     public float maxHeight() { return max_height; }
     public float borderPadding() { return border_padding; }
+
 
     public void setMaxHeight(float height) {
         if (built) throw new IllegalStateException("Cannot adjust built container");
@@ -95,109 +95,94 @@ public abstract class BowWindowRoot extends BoxContainer {
         }
     }
 
-    /** Call this when rendering container to have default window control */
-    protected void processRootInteraction(BoxWindow window, float x, float y) {
+    protected void windowResizeEvents(BoxWindow window, float x, float y) {
         if (iHasID()) {
-            Vector2f mouse_position = GUI.mouse_position(U.vec2());
+            Vector2f mouse_position = GUI.mousePosition(U.popVec2());
             WindowAnchor anchor = window.anchor();
-            final int NONE      = 0x00;
-            final int CENTER    = 0x01;
-            final int TOP       = 0x02;
-            final int RIGHT     = 0x04;
-            final int BOTTOM    = 0x08;
-            final int LEFT      = 0x10;
-            final float mouse_x = mouse_position.x;
-            final float mouse_y = mouse_position.y;
-            final float width  = current_width;
-            final float height = current_height;
-            final float x_bounds = x + width;
-            final float y_bounds = y - height;
+            final int N = 0x00; final int C = 0x01;
+            final int T = 0x02; final int R = 0x04;
+            final int B = 0x08; final int L = 0x10;
+            final float mx = mouse_position.x;
+            final float my = mouse_position.y;
+            final float w  = current_width;
+            final float h = current_height;
+            final float x_max = x + w;
+            final float y_min = y - h;
+            U.pushVec2();
             if (iClickedNotGrabbed(Mouse.LEFT)) {
                 if (window.isMaximized())
                     window.restore();
                 else window.maximize();
-            }
-            else if (iPressed(Mouse.LEFT)) {
+            } else if (iPressed(Mouse.LEFT)) {
                 if (iJustPressed()) {
                     GUI.windows.focusRequest(window);
-                }
-                if (border_padding >= 1) {
+                } if (border_padding >= 1) {
                     boolean grabbed = iGrabbed(Mouse.LEFT);
-                    final int TOP_RIGHT     = TOP       | RIGHT;
-                    final int BOTTOM_RIGHT  = BOTTOM    | RIGHT;
-                    final int BOTTOM_LEFT   = BOTTOM    | LEFT;
-                    final int TOP_LEFT      = TOP       | LEFT;
-
-                    if (drag_zone == NONE) {
+                    final int TR = T | R; final int BR = B | R;
+                    final int BL = B | L; final int TL = T | L;
+                    if (drag_zone == N) {
                         if (!locked_horizontal) {
-                            if (mouse_x <= (x + border_padding) &! anchor.anchored_left) { drag_zone |= LEFT; }
-                            else if (mouse_x >= (x_bounds - border_padding) &! anchor.anchored_right) { drag_zone |= RIGHT; }
+                            if (mx <= (x + border_padding) &! anchor.anchored_left) { drag_zone |= L; }
+                            else if (mx >= (x_max - border_padding) &! anchor.anchored_right) { drag_zone |= R; }
                         } if (!locked_vertical) {
-                            if (mouse_y <= (y_bounds + border_padding) &! anchor.anchored_bottom) { drag_zone |= BOTTOM; }
-                            else if (mouse_y >= (y - border_padding) &! anchor.anchored_top) { drag_zone |= TOP; }
-                        } if (drag_zone == NONE) drag_zone = CENTER;
-                    }
-                    switch (drag_zone) {
-                        case CENTER -> {
-                            Vector2f drag_vector = GUI.mouse_drag_vector(U.vec2(),Mouse.LEFT);
+                            if (my <= (y_min + border_padding) &! anchor.anchored_bottom) { drag_zone |= B; }
+                            else if (my >= (y - border_padding) &! anchor.anchored_top) { drag_zone |= T; }
+                        } if (drag_zone == N) drag_zone = C;
+                    } switch (drag_zone) {
+                        case C -> { Vector2f drag_vector = GUI.mouseDragVector(U.popVec2(),Mouse.LEFT);
                             if (grabbed) window.move(drag_vector);
-                        } case TOP -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                            U.pushVec2();
+                        } case T  -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             if (grabbed) window.dragTop(mouse_position);
-                        } case TOP_RIGHT -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                        } case TR -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                             if (grabbed) { window.dragTop(mouse_position); window.dragRight(mouse_position);}
-                        } case RIGHT -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                        } case R -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                             if (grabbed) { window.dragRight(mouse_position); }
-                        } case BOTTOM_RIGHT -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                        } case BR -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                             if (grabbed) { window.dragBottom(mouse_position); window.dragRight(mouse_position);}
-                        } case BOTTOM -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                        } case B -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             if (grabbed) window.dragBottom(mouse_position);
-                        } case BOTTOM_LEFT -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                        } case BL -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                             if (grabbed) { window.dragBottom(mouse_position); window.dragLeft(mouse_position);}
-                        } case LEFT -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                        } case L -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
                             if (grabbed) { window.dragLeft(mouse_position);}
-                        } case TOP_LEFT -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
+                        } case TL -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                             if (grabbed) { window.dragTop(mouse_position); window.dragLeft(mouse_position);}
                         }default -> {}
                     }
-                }
-                else drag_zone = CENTER;
-            }
-            else { drag_zone = NONE;
-
+                }  else drag_zone = C;
+            }  else { drag_zone = N;
                 if (iHovered()) {
-
                     if (border_padding >= 1) {
                         if (locked_horizontal) {
                             if (!locked_vertical) {
-                                if (mouse_y <= (y_bounds + border_padding)) {
-                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
-                                } else if (mouse_y >= (y - border_padding)) {
-                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                                if (my <= (y_min + border_padding) &!anchor.anchored_bottom) {
+                                        GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
+                                } else if (my >= (y - border_padding) &! anchor.anchored_top) {
+                                        GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                                 }
                             }
                         } else {
                             if (locked_vertical) {
-                                if (mouse_x <= (x + border_padding)) {
-                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
-                                } else if (mouse_x >= (x_bounds - border_padding)) {
-                                    GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
-                                }
-                            } else {
-                                if (mouse_x <= (x + border_padding)) {
-                                    if (mouse_y <= (y_bounds + border_padding)) {
+                                if (mx <= (x + border_padding) &!anchor.anchored_left) {
+                                        GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
+                                } else if (mx >= (x_max - border_padding) &!anchor.anchored_right) {
+                                        GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);}
+                            } else { if (mx <= (x + border_padding) &! anchor.anchored_left) {
+                                    if (my <= (y_min + border_padding) &! anchor.anchored_bottom) {
                                         GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
-                                    } else if (mouse_y >= (y - border_padding)) {
+                                    } else if (my >= (y - border_padding) &! anchor.anchored_top) {
                                         GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                                     } else GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
-                                } else if (mouse_x >= (x_bounds - border_padding)) {
-                                    if (mouse_y <= (y_bounds + border_padding)) {
+                                } else if (mx >= (x_max - border_padding) &! anchor.anchored_right) {
+                                    if (my <= (y_min + border_padding) &! anchor.anchored_bottom) {
                                         GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
-                                    } else if (mouse_y >= (y - border_padding)) {
+                                    } else if (my >= (y - border_padding) &! anchor.anchored_top) {
                                         GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);
                                     } else GUI.state.useCursorIcon(CursorObjects.CURSOR_H_RESIZE);
-                                } else if (mouse_y <= (y_bounds + border_padding)) {
+                                } else if (my <= (y_min + border_padding) &! anchor.anchored_bottom) {
                                     GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
-                                } else if (mouse_y >= (y - border_padding)) {
+                                } else if (my >= (y - border_padding) &! anchor.anchored_top) {
                                     GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                                 }
                             }
@@ -207,7 +192,7 @@ public abstract class BowWindowRoot extends BoxContainer {
             }
         }
     }
-    
+
     protected final void adjustDesiredWidth(float dx) { throw new RuntimeException("Illegal call for RootContainer"); }
     protected final void adjustDesiredHeight(float dy) { throw new RuntimeException("Illegal call for RootContainer"); }
     protected final float unlockedDesiredWidth() { throw new RuntimeException("Illegal call for RootContainer"); }
