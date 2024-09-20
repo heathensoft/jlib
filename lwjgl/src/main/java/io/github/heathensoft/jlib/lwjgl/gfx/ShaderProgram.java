@@ -244,7 +244,7 @@ public class ShaderProgram {
         bindProgram(commonPrograms().texture_pass_program);
         setUniform(ShaderProgram.UNIFORM_RESOLUTION,resolution);
         setUniform(ShaderProgram.UNIFORM_SAMPLER_2D,texture.bindTooAnySlot());
-        ShaderProgram.shaderPass().draw();
+        ShaderProgram.shaderPass().draw(pos,uv);
     }
 
     public static JLIBShaders commonPrograms() {
