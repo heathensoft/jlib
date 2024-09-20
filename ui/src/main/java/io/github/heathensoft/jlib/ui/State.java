@@ -118,7 +118,6 @@ public class State {
     public int pressedInteractable() { return pressed_element; }
     public int grabbedInteractable() { return grabbed_element; }
 
-
     public boolean mouseIsPressed() { return (active_mouse_button != -1); }
     public boolean mouseIsPressed(int button) { return (active_mouse_button == button); }
     public boolean mouseJustPressed(int button) { return mouseIsPressed(button) && (active_mouse_button_last != button); }

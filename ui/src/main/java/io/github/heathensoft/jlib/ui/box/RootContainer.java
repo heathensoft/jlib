@@ -130,8 +130,7 @@ public abstract class RootContainer extends BoxContainer {
                         } if (drag_zone == N) drag_zone = C;
                     } switch (drag_zone) {
                         case C -> { Vector2f drag_vector = GUI.mouseDragVector(U.popVec2(),Mouse.LEFT);
-                            if (grabbed) window.move(drag_vector);
-                            U.pushVec2();
+                            if (grabbed) window.move(drag_vector); U.pushVec2();
                         } case T  -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_V_RESIZE);
                             if (grabbed) window.dragTop(mouse_position);
                         } case TR -> {GUI.state.useCursorIcon(CursorObjects.CURSOR_CROSS_HAIR);

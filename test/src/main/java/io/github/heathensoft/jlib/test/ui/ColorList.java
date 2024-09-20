@@ -47,7 +47,7 @@ public class ColorList extends ItemList<Vector4f> {
         int color = item.isSelected() ? button_color_pressed : button_color_unpressed;
         renderer.drawGadgetButton(bounds, item_border_thickness,color,id,0.0f,item.isSelected());
         if (show_icons) {
-            float glow = item.isSelected() || item.iHovered() ? 1.0f : 0.0f;
+            float glow = item.isSelected() || item.iHovered() ? 0.75f : 0.0f;
             Rectanglef icon_bounds = U.rectExpand(U.popSetRect(bounds),-item_border_thickness);
             icon_bounds.maxX = icon_bounds.minX + icon_bounds.lengthY();
             Sprite sprite = GUI.icons.color_palette;
@@ -60,7 +60,7 @@ public class ColorList extends ItemList<Vector4f> {
         String string = item.name;
         TextAlignment alignment = show_icons ? TextAlignment.LEFT : TextAlignment.CENTERED;
         int color = item.isSelected() ? text_color_pressed : text_color_unpressed;
-        float glow = item.isSelected() || item.iHovered() ? 1.0f : 0.0f;
+        float glow = item.isSelected() || item.iHovered() ? 0.75f : 0.0f;
         renderer.drawStringFixedSize(string, alignment, bounds, font, color, 0, glow);
     }
 

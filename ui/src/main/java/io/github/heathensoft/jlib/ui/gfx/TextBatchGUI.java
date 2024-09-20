@@ -237,9 +237,9 @@ public class TextBatchGUI extends BatchGUI {
         }
     }
 
-    public void pushVertex(float x, float y, float color, int char_info) {
+    public void pushVertex(float x, float y, float color, int bits) {
         if (count == buffer_capacity) flush();
-        vertices.put(x).put(y).put(Float.intBitsToFloat(char_info)).put(color);
+        vertices.put(x).put(y).put(Float.intBitsToFloat(bits)).put(color);
         count++;
     }
 

@@ -9,6 +9,7 @@ import io.github.heathensoft.jlib.lwjgl.window.*;
 import io.github.heathensoft.jlib.ui.gfx.FontsGUI;
 import io.github.heathensoft.jlib.ui.gfx.RendererGUI;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
+import io.github.heathensoft.jlib.ui.text.TextEditor;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
@@ -59,15 +60,25 @@ public class GUI {
         initialized = true;
     }
 
+
+
+    static TextEditor editor = new TextEditor();
+    static Vector4f editor_color = new Vector4f(0.3f,0.8f,0.6f,1.0f);
+
     public static void render_to_gui_framebuffer(float dt) {
         Mouse mouse = Engine.get().input().mouse();
         state.update(renderer.pixelID(),dt);
         windows.update(dt);
         renderer.begin(mouse.position());
         windows.render(renderer,dt);
+        editor.activateTextProcessor();
+        Rectanglef rect = U.popSetRect(0,0,1280,720);
+        renderer.drawAsciiEditor(editor,rect,editor_color,0,FontsGUI.SLOT_MONO,8,20,1.0f,false,true);
+        U.pushRect();
         out.flush(renderer);
         renderer.end();
     }
+
 
 
     /**
@@ -84,10 +95,10 @@ public class GUI {
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         Texture texture = renderer.framebuffer().texture(color_buffer);
-        //Texture texture = renderer.bloomTexture();
+        if (color_buffer == 2) texture = renderer.bloomTexture();
         ShaderProgram.texturePass(texture);
         if (variables.bloom_enabled && color_buffer == 0) {
-            glEnable(GL_BLEND);
+            //glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             texture = renderer.bloomTexture();
             ShaderProgram.texturePass(texture);
@@ -165,7 +176,7 @@ public class GUI {
         public Vector4f tooltips_default_text_color = Color.intBits_to_rgb(0xFF99EE88);
 
         public boolean bloom_enabled = true;
-        public float bloom_threshold = 0.25f;
+        public float bloom_threshold = 0.20f;
         public int bloom_ping_pong_iterations = 10;
     }
 
@@ -234,7 +245,6 @@ public class GUI {
         ,color_palette, color_sample, color_fill, icon_view, list_view, settings, show_more, edit_text, upload, download
         ,arrow_north,arrow_east,arrow_south,arrow_west,arrow_north_east,arrow_north_west,arrow_south_east,arrow_south_west
         ,question_mark, garbage_bin, image_file, audio_file, text_file, folder, zoom_inn, zoom_out;
-
         Icons() throws Exception {
             atlas = load_default_icons();
             cut = atlas.createSprite(0,"sharp_content_cut_white_36dp");

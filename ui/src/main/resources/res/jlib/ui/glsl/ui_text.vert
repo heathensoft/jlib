@@ -1,7 +1,7 @@
 
 #define TEXT_BINDING_POINT 0 // <------
 #define NUM_CHARACTERS 95
-#define NUM_FONTS 4
+#define NUM_FONTS 4 // Could be 5
 
 layout (location = 0) in vec4 a_vertex;
 layout (location = 1) in vec4 a_color;
@@ -48,11 +48,18 @@ uniform vec2 u_resolution;
 
 float getCharGlow(uint glowBits) { return float(glowBits) / 255.0; }
 
+//vec4 invertColor(vec4 color) {
+//    float r = 1.0 - color.r;
+//    float g = 1.0 - color.g;
+//    float b = 1.0 - color.b;
+//    return vec4(r,g,b,color.a);
+//}
+
 vec4 invertColor(vec4 color) {
-    float r = 1.0 - color.r;
-    float g = 1.0 - color.g;
-    float b = 1.0 - color.b;
-    return vec4(r,g,b,color.a);
+    color.r = 1.0 - color.r;
+    color.g = 1.0 - color.g;
+    color.b = 1.0 - color.b;
+    return color;
 }
 
 vec4 getColor(vec4 aColor, bool inverted) {

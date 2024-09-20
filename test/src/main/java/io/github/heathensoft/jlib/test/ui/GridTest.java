@@ -109,7 +109,7 @@ public class GridTest extends ItemGrid<Sprite> {
         if (item.iGrabbed(Mouse.LEFT)) {
             renderer.drawDelayed(new Executor() {
                 @Override
-                public void execute() {
+                public void apply() {
                     float wh = item_width / 2f;
                     float hh = item_height / 2f;
                     Vector2f mouse = GUI.mousePosition(U.popVec2());

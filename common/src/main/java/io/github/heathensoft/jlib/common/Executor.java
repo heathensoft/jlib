@@ -7,8 +7,7 @@ package io.github.heathensoft.jlib.common;
 
 @FunctionalInterface
 public interface Executor {
-
     Executor voidExecutor = () -> {};
-    void execute();
+    void apply();
 
 }

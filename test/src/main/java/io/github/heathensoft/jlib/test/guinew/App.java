@@ -7,14 +7,14 @@ import io.github.heathensoft.jlib.lwjgl.window.*;
 import io.github.heathensoft.jlib.test.guinew.tt.*;
 import io.github.heathensoft.jlib.test.ui.GridRoot;
 import io.github.heathensoft.jlib.ui.GUI;
+import io.github.heathensoft.jlib.ui.WindowAnchor;
 import io.github.heathensoft.jlib.ui.box.BoxWindow;
 import io.github.heathensoft.jlib.ui.gfx.BackGround;
 import org.joml.Vector4f;
 
 import java.util.List;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_B;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 
@@ -58,7 +58,7 @@ public class App extends Application {
 
 
 
-        Framebuffer.setClearColor(new Vector4f(0.3f,0.3f,0.3f,1.0f));
+        Framebuffer.setClearColor(new Vector4f(0.0f,0.0f,0.0f,1.0f));
         bubbleDemo = new BubbleDemo(resolution.width(),resolution.height());
         GUI.initialize(resolution);
 
@@ -93,6 +93,11 @@ public class App extends Application {
         GUI.windows.register(colorPicker);
         GUI.windows.openWindow(colorPicker);
 
+        BoxWindow boxWindow = new BoxWindow(new TestRoot(), WindowAnchor.BOTTOM_LEFT,"BoxWindow");
+        GUI.windows.register(boxWindow);
+        GUI.windows.openWindow(boxWindow);
+        boxWindow.maximize();
+
     }
 
     protected void on_update(float delta) {
@@ -104,14 +109,16 @@ public class App extends Application {
     }
 
     protected void on_render(float frame_time, float alpha) {
-        bubbleDemo.renderDemo();
+        //bubbleDemo.renderDemo();
         Framebuffer.bindDefault();
         Framebuffer.viewport();
         Framebuffer.clear();
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_BLEND);
-        ShaderProgram.texturePass(bubbleDemo.texture());
-        GUI.render_gui_to_screen(0);
+        //ShaderProgram.texturePass(bubbleDemo.texture());
+        int buffer = 0;
+        if (GUI.keys.pressed(GLFW_KEY_LEFT_ALT))buffer = 2;
+        GUI.render_gui_to_screen(buffer);
     }
 
     protected void on_exit() { GUI.dispose(); Disposable.dispose(bubbleDemo,bg_texture); }

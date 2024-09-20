@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
+ * Boxes render methods will not be called if width or height < 1
  * @author Frederik Dahl
  * 18/02/2024
  */
@@ -69,12 +70,12 @@ public abstract class BoxContainer extends Box {
         renderContainer(window, renderer, x, y, dt, parent_id);
         if (iHasID()) { parent_id = interactableID(); }
         if (this instanceof HBoxContainer container) {for (Box box : contents) {
-                if (box.current_width > 0 && box.current_height > 0) {
+                if (box.current_width >= 1 && box.current_height >= 1) {
                     box.renderBox(window, renderer, x, y, dt, parent_id);
                 } x += (box.current_width + inner_spacing);
             }
         } else if (this instanceof VBoxContainer container) {for (Box box : contents) {
-                if (box.current_width > 0 && box.current_height > 0) {
+                if (box.current_width >= 1 && box.current_height >= 1) {
                     box.renderBox(window, renderer, x, y, dt, parent_id);
                 } y -= (box.current_height + inner_spacing);
             }
@@ -91,13 +92,13 @@ public abstract class BoxContainer extends Box {
     protected final void renderBoxText(BoxWindow window, RendererGUI renderer, float x, float y, float dt) {
         if (this instanceof HBoxContainer container) {
             for (Box box : contents) {
-                if (box.current_width > 0 && box.current_height > 0) {
+                if (box.current_width >= 1 && box.current_height >= 1) {
                     box.renderBoxText(window, renderer, x, y, dt);
                 } x += (box.current_width + inner_spacing);
             }
         } else if (this instanceof VBoxContainer container) {
             for (Box box : contents) {
-                if (box.current_width > 0 && box.current_height > 0) {
+                if (box.current_width >= 1 && box.current_height >= 1) {
                     box.renderBoxText(window, renderer, x, y, dt);
                 } y -= (box.current_height + inner_spacing);
             }

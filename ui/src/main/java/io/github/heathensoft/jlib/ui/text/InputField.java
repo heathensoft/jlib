@@ -124,8 +124,8 @@ public class InputField {
             } else if (key == GLFW_KEY_V) {
                 set(Engine.get().window().getClipboard());}
         } else { last_input_time = System.currentTimeMillis();
-            if (key == GLFW_KEY_DOWN) { navigate_down.execute();
-            } else if (key == GLFW_KEY_UP) { navigate_up.execute();
+            if (key == GLFW_KEY_DOWN) { navigate_down.apply();
+            } else if (key == GLFW_KEY_UP) { navigate_up.apply();
             } else if (key == GLFW_KEY_LEFT) {
                 if (cursor_pointer > 0) {
                     cursor_pointer--; }

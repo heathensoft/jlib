@@ -1,13 +1,10 @@
 package io.github.heathensoft.jlib.ui.gfx;
 import io.github.heathensoft.jlib.common.Disposable;
-import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.common.utils.Rand;
-import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
 import io.github.heathensoft.jlib.lwjgl.utils.Repository;
 import io.github.heathensoft.jlib.ui.text.Paragraph;
 import io.github.heathensoft.jlib.ui.text.Word;
-import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 import org.lwjgl.system.MemoryStack;
 import org.tinylog.Logger;
@@ -45,17 +42,17 @@ public class FontsGUI implements Disposable {
     public static final int SLOT_LORE = 2;
     public static final int SLOT_EDICT = 3;
 
-    private static final String[] DEFAULT_FONTS = new String[FONT_SLOTS];
+    private static final String[] DEFAULT_FONTS_NAME = new String[FONT_SLOTS];
     private static final String DEFAULT_FONTS_PATH = "res/jlib/ui/fonts/";
     static {
-        DEFAULT_FONTS[0] = "BaiJamjuree64";
-        DEFAULT_FONTS[1] = "LiberationMono64";
-        DEFAULT_FONTS[2] = "Gotu64";
-        //DEFAULT_FONTS[3] = "Bokor64";
+        DEFAULT_FONTS_NAME[0] = "BaiJamjuree64";
+        DEFAULT_FONTS_NAME[1] = "LiberationMono64";
+        DEFAULT_FONTS_NAME[2] = "Gotu64";
+        DEFAULT_FONTS_NAME[3] = "Play64";
         //DEFAULT_FONTS[0] = "TradeWinds64";
         //DEFAULT_FONTS[1] = "UncialAntiquas64";
         //DEFAULT_FONTS[2] = "UnifrakturCook64";
-        DEFAULT_FONTS[3] = "Play64";
+        //DEFAULT_FONTS_NAME[3] = "Play64";
     }
 
     private int currentFont;
@@ -98,7 +95,7 @@ public class FontsGUI implements Disposable {
 
     public void uploadDefaultFonts() throws Exception {
         for (int i = 0; i < FONT_SLOTS; i++) {
-            String font_name = DEFAULT_FONTS[i];
+            String font_name = DEFAULT_FONTS_NAME[i];
             if (font_name != null) {
                 String path = DEFAULT_FONTS_PATH + font_name + ".repo";
                 Repository repo = Repository.loadFromResources(path,64 * 1024);
@@ -448,14 +445,16 @@ public class FontsGUI implements Disposable {
      * 00000000 00000000 11111111 00000000 size
      * 00000000 11111111 00000000 00000000 glow
      * 00000011 00000000 00000000 00000000 font
-     * 11111100 00000000 00000000 00000000 unused (6-bit)
+     * 11111100 00000000 00000000 00000000 unused (6-bit) // window id (fits perfectly)
      */
 
     public static int bits_set_char(int bits, int c) {
         return bits | (c & 0x7F);
     }
     public static int bits_invert_color(int bits) { return bits | 0x80; }
-    public static int bits_set_size(int bits, float size) { return bits | ((round(clamp(size,1,256)) - 1) & 0xFF) << 8; }
+    public static int bits_set_size(int bits, float size) {
+        return bits | ((round(clamp(size,1,256)) - 1) & 0xFF) << 8;
+    }
     public static int bits_set_glow(int bits, float glow) {
         return bits | (round(clamp(glow) * 255.0f) & 0xFF) << 16;
     }

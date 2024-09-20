@@ -25,7 +25,7 @@ public abstract class InputProcessor {
      * when released. So use abs(key) to get the GLFW equivalent.
      * @param key the key value
      */
-    protected void on_key_event(int key, int mods) {}
+    protected void on_key_event(int key, int mods, int action) {}
     
     /**
      * Called when the cursor hovers over the window.

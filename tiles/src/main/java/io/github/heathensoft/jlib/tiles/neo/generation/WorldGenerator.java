@@ -105,7 +105,7 @@ public class WorldGenerator {
 
     public float get_humidity(int x, int y) {
         float mod = lerp(HUMIDITY_LERP_MIN,HUMIDITY_LERP_MAX, humidity_mod);
-        return raise(base_humidity[y][x],mod);
+        return raiseProportional(base_humidity[y][x],mod);
     }
 
     public float get_tier(int x, int y) {

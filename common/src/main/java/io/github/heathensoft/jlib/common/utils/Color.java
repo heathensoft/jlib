@@ -22,6 +22,22 @@ public class Color {
     public static final int WHITE_BITS = 0xFFFFFFFF;
     public static final int BLACK_BITS = 0xFF000000;
 
+    public static Vector4f rgb_lower_proportional(Vector4f dst, float amount) {
+        amount = clamp(amount);
+        dst.x = lowerProportional(dst.x,amount);
+        dst.y = lowerProportional(dst.y,amount);
+        dst.z = lowerProportional(dst.z,amount);
+        return dst;
+    }
+
+    public static Vector4f rgb_raise_proportional(Vector4f dst, float amount) {
+        amount = clamp(amount);
+        dst.x = raiseProportional(dst.x,amount);
+        dst.y = raiseProportional(dst.y,amount);
+        dst.z = raiseProportional(dst.z,amount);
+        return dst;
+    }
+
     public static Vector4f invertHSV(Vector4f dst) {
         dst.x = (dst.x + 180) % 360;
         dst.y = 1 - dst.y;

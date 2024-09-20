@@ -2,11 +2,17 @@
 ************************************************************************************************************************
 ENGINE:
 
+Engine uniform block? mouse, time, resolution
+
 Need an opengl struct in engine with version, limitations, compatibility / core.
 Then query this when creating shaders and allocating buffers.
 i.e. cannon use (#define version 460 core) when gl version is 4.3 or running on mac-os etc.
 
 Move reusable vectors etc. from MathLib to U
+
+
+ThreadPools. ATP. If tasks stack up to > 512 waiting it will start throwing exceptions.
+There has to be a way to handle this better???
 
 
 ************************************************************************************************************************
@@ -34,9 +40,88 @@ Add default blur, sharpen, bloom etc. shaders / passes:  Shader.bloomPass(textur
 ************************************************************************************************************************
 GUI:
 
+Fuck it. get rid of normal maps for GUI
+
+
+Renderer State:
+
+			render id
+			render glow
+			
+
+
+
+
+Windows
+
+It would be nice to know the window of the last clicked interactable.
+So when an interactable owned by that window is clicked, the window is focused.
+And when any thing else is clicked, the window loses focus.
+The alternative is to check this manually for every element, and have
+the element call window.focus. This is the current way.
+
+But doing this way (having interactable id's contain bits for an additional window ID)
+Would also require the vertices store an additional integer of data.
+I'm not sure.
+
+I think we're better of sticking to the old way. Focusing manually.
+It's more code, but more control. And having one integer of shader data is nice. 
+
+
+Window Types:
+
+BoxWindow:
+	Main Window interface, like you are used to
+	Windows Using the box package
+	Resizable, closable, named etc.
+	2 layers? Fixed layer, dynamic layer. Maybe not
+	Fixed layer windows are drawn first, Not affected by focus.
+	
+PopUp
+	
+	always in focus While open, drawn over boxWindows.
+	Position detirmined by where the mouse was on pop up. or screen centered. choose.
+	Interpolated size, growth on popIn, popOut. 
+	A window with a fixed set of options for something.
+	clicking anything closes the popUp.
+	Emmisive buffer is overwritten (Change blending)
+	Only one can be displayed at any given time.
+
+TransientWindow:
+	Drawn delayed(Over BoxWindows and popUps)
+	Draw calls from from within oter windowtypes.
+	Dissapears when not continously rendering. (Alpha interpolated phase out / phase in?)
+	Emmisive buffer is overwritten (Change blending)
+	Only one can be displayed at any given time.
+	Not interactable. Disable ID
+	Displays Tooltips/Hints/Etc. on hovering interactables
+	Or drag-Dropping items
+
+	When theese methods have just been called, the phase in starts
+	When theese methods are no longer called, the phase out starts
+	renderer.drawTransient(TransientWindow window); // transient windows are auto-positioned by mouse and screen
+	renderer.drawTransient(Executor func);	// Draw as you like
+
+Add in-editor todo lists:
+
+	 String Description
+	 String Project (like gui, map generation etc.) Better name
+	 Status Status
+	 Priority priority
+	 Date Deadline
+	 Date Created
+	 Date Completed
+	 A Repository is perfect for storing the todos.
+	 Dependency graphs? No. It's for one, maybe two people.
+	 Easy intuative sort
+
 File-cache: ctrl-f
 
+
+[Complete] (Fixed it elegantly. check out apply_glow in the Threshold Shader)
 Glow. Right now the glow shader data is really the threshold not the strength as i'd like it to be
+
+
 
 Draw borders when rendering containers instead of boxes
 Actually don¨t. use a wrapper bow for border. BorderBox
@@ -55,7 +140,7 @@ Scrollable BoxContainer.
 System.out to debut text window
 
 Remove Normal maps entirely from UI. Keep Glow. Leaves room for other functionality. like rendering lines. + more texture slots.
-(Maybe not. When making actual game UI, it might be cool to have)
+(Maybe not. When making actual game UI, it might be cool to have) Fuck it, remove normal maps from GUI.
 
 Delayed rendering. Render delayed commands. To be rendered after all windows. Used for dragged items and "help windows" (hovered descriptors)
 Rendered without ID.

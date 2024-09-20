@@ -94,7 +94,7 @@ public class ToggleTest extends DefaultRoot {
             U.pushRect();
         }
 
-        public void keyPress(int key, int mods) {
+        public void keyPress(int key, int mods, boolean repeat) {
             inputField.keyPress(key, mods);
         }
 

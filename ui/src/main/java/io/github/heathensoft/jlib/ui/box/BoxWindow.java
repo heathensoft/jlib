@@ -809,7 +809,10 @@ public final class BoxWindow extends Window {
         float y = a_y + (b_y - a_y) * t;
         float wh = (a.lengthX() + (b.lengthX() - a.lengthX()) * t) / 2f;
         float hh = (a.lengthY() + (b.lengthY() - a.lengthY()) * t) / 2f;
-        dst.minX = x - wh; dst.maxX = x + wh; dst.minY = y - hh; dst.maxY = y + hh;
+        dst.minX = x - wh;
+        dst.maxX = x + wh;
+        dst.minY = y - hh;
+        dst.maxY = y + hh;
     }
 
     private static final class FadingDisplay {

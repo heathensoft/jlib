@@ -14,7 +14,7 @@ public interface TextProcessor {
     /**
      * @param key "non-printable-key"
      */
-    void keyPress(int key, int mods);
+    void keyPress(int key, int mods, boolean repeat);
 
     /**
      * @param character ascii  [00 - 127]

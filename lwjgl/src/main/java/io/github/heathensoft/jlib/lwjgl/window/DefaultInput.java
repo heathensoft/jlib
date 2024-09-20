@@ -43,8 +43,8 @@ public class DefaultInput extends InputProcessor {
         keyboard.on_char_press(codepoint);
     }
 
-    protected void on_key_event(int key, int mods) {
-        keyboard.on_key_event(key,mods);
+    protected void on_key_event(int key, int mods, int action) {
+        keyboard.on_key_event(key,mods,action);
     }
 
     protected void on_mouse_hover(double x, double y) {

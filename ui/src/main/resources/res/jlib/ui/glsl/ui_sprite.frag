@@ -4,7 +4,7 @@
 
 layout (location=0) out vec4 f_diffuse;
 layout (location=1) out vec3 f_normals;
-layout (location=2) out float f_emissive;
+layout (location=2) out vec4 f_emissive;
 layout (location=3) out uint f_pixel_id;
 
 in VS_OUT {
@@ -77,7 +77,8 @@ void main() {
     }
 
     f_diffuse = diffuse;
-    f_emissive = glow * diffuse.a; // maybe no. Depends on blending
+    //f_emissive = glow * diffuse.a; // maybe no. Depends on blending
+    f_emissive = vec4(vec3(glow),diffuse.a);
     f_normals = normals;
     f_pixel_id = id;
 }

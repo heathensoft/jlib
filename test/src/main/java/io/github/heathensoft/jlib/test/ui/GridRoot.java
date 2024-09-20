@@ -32,7 +32,7 @@ public class GridRoot extends DefaultRoot {
         Bitmap atlas_png = Resources.image("res/jlib/ui/atlas/pixeltier_icon_pack.png");
         String atlas_info = Resources.asString("res/jlib/ui/atlas/pixeltier_icon_pack.txt");
         atlas = new TextureAtlas(atlas_info,atlas_png);
-        grid1 = new GridTest(6,5,64);
+        grid1 = new GridTest(12,10,32);
         grid1.enableMultiSelect(true);
         grid1.enableGrabbing(true);
         grid1.enableDoubleClick(true);
@@ -42,7 +42,7 @@ public class GridRoot extends DefaultRoot {
             grid1.addItem(sprite,entry.getKey());
         } grid1.sortByNames();
 
-        grid2 = new GridTest(6,3,64);
+        grid2 = new GridTest(12,6,32);
         grid2.enableMultiSelect(true);
         grid2.enableGrabbing(true);
         grid2.enableDoubleClick(true);

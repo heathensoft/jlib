@@ -13,5 +13,6 @@ public enum TextAlignment {
     public final boolean centered;
     TextAlignment(boolean centered) {
         this.centered = centered;
-    } public static TextAlignment DEFAULT = LEFT;
+    }
+    public static TextAlignment DEFAULT = LEFT;
 }

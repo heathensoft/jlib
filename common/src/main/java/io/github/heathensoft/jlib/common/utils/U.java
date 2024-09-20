@@ -121,6 +121,25 @@ public class U {
         return dst;
     }
 
+    public static Vector2f lerp(Vector2f a, Vector2f b, float t, Vector2f dst) {
+        if (t <= 0) dst.set(a);
+        else if (t >= 1) dst.set(b);
+        else {
+            dst.x = lerp(a.x,b.x,t);
+            dst.y = lerp(a.y,b.y,t);
+        } return dst;
+    }
+
+    public static Vector2f smoothLerp(Vector2f a, Vector2f b, float t, Vector2f dst) {
+        if (t <= 0) dst.set(a);
+        else if (t >= 1) dst.set(b);
+        else {
+            t = smooth(t);
+            dst.x = lerp(a.x,b.x,t);
+            dst.y = lerp(a.y,b.y,t);
+        } return dst;
+    }
+
 
     public static float angle2D(float x, float y) { return Math.atan2(y,x); }
     public static float angle2D(Vector2f v) { return Math.atan2(v.y,v.x); }
@@ -192,15 +211,50 @@ public class U {
         }
     }
 
+    // *********************************************************************
+    // Generalized Bit-operations.
+    // The following bit-operations assumes you are within the integer range.
+    // You are responsible for checking overflow
+    public static int bitsOr(int dst, int src, int dst_off, int src_len) {
+        return dst | ((src & ((1 << src_len) - 1)) << dst_off);
+    }
+
+    public static int bitsClear(int dst, int off, int len) {
+        return dst & ~(((1 << len) - 1) << off);
+    }
+
+    public static int bitsSet(int dst, int src, int dst_off, int src_len) {
+        int mask = (1 << src_len) - 1;
+        dst &= ~(mask << dst_off);
+        dst |= ((src & mask) << dst_off);
+        return dst;
+    }
+
+    public static int bitsSet(int dst, int n) {
+        return dst | (1 << n);
+    }
+
+    public static boolean bitIsSet(int bits, int n) {
+        return (bits & (1 << n)) > 0;
+    }
+
+    // *********************************************************************
+
     public static float brighten(float v, float amount) {
         return (amount == 0) ? v :  v * (1.f + amount);
     }
 
 
     // both arguments must be clamped
-    public static float raise(float v, float amount) {
+    public static float raiseProportional(float v, float amount) {
         return v + (1-v) * amount;
     }
+
+    public static float lowerProportional(float v, float amount) {
+        return v - v * amount;
+    }
+
+
 
     public static float contrast(float v, float c) {
         if (c == 0) return v;

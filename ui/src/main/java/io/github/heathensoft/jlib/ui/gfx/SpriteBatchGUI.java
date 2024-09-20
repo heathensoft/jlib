@@ -32,7 +32,7 @@ import static org.lwjgl.opengl.GL20.glVertexAttribPointer;
  * 00000000 00000000 01000000 00000000 rounded
  * 00000000 00000000 10000000 00000000 invisible_id (draw_alpha)
  * 11111111 11111111 00000000 00000000 pixel_id
- * Attempting to render disposed textures will color the output Ping (Color.ERROR_BITS)
+ * Attempting to render disposed textures will color the output Pink (Color.ERROR_BITS)
  * @author Frederik Dahl
  * 20/10/2023
  */

@@ -15,7 +15,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class Keyboard {
 
-    private final IntQueue queued_keys = new IntQueue(16);
+    private final IntQueue queued_keys = new IntQueue(48);
     private final IntQueue queued_chars = new IntQueue(16);
     private final boolean[] c_keys = new boolean[GLFW_KEY_LAST];
     private final boolean[] p_keys = new boolean[GLFW_KEY_LAST];
@@ -38,8 +38,10 @@ public class Keyboard {
             while (!queued_keys.isEmpty()) {
                 int key = queued_keys.dequeue();
                 int mods = queued_keys.dequeue();
+                int action = queued_keys.dequeue();
+                boolean repeat = action == GLFW_REPEAT;
                 if (key > 0) { c_keys[key] = true;
-                    textProcessor.keyPress(key,mods);
+                    textProcessor.keyPress(key,mods,repeat);
                 } else { key = Math.abs(key);
                     c_keys[key] = false;
                     textProcessor.keyRelease(key,mods);
@@ -48,12 +50,13 @@ public class Keyboard {
         }
     }
     
-    public void on_key_event(int key, int mods) {
-        if (queued_keys.size() == 32) {
+    public void on_key_event(int key, int mods, int action) {
+        if (queued_keys.size() == 48) {
             queued_keys.dequeue();
             queued_keys.dequeue();
         } queued_keys.enqueue(key);
         queued_keys.enqueue(mods);
+        queued_keys.enqueue(action);
     }
     
     public void on_char_press(int codepoint) {
@@ -121,7 +124,7 @@ public class Keyboard {
     }
     
     private static final TextProcessor tp_internal = new TextProcessor() {
-        public void keyPress(int key, int mods) {}
+        public void keyPress(int key, int mods, boolean repeat) {}
         public void keyRelease(int key, int mods) {}
         public void charPress(byte character) {}
         public void onTextProcessorActivated() {}

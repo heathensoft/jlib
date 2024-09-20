@@ -173,7 +173,7 @@ public class ColorPickerBox extends Box implements TextProcessor {
         }
     }
 
-    public void keyPress(int key, int mods) { inputField.keyPress(key, mods); }
+    public void keyPress(int key, int mods, boolean repeat) { inputField.keyPress(key, mods); }
 
     public void charPress(byte character) { inputField.charPress(character); }
 

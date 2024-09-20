@@ -142,8 +142,7 @@ public class Textfield extends ScrollBox implements TextProcessor {
     }
 
 
-
-    public void keyPress(int key, int mods) {
+    public void keyPress(int key, int mods, boolean repeat) {
         if (editing_enabled) {
             if ((mods & GLFW_MOD_CONTROL) > 0) {
                 if (key == GLFW_KEY_KP_ADD) {
@@ -194,7 +193,11 @@ public class Textfield extends ScrollBox implements TextProcessor {
         }
     }
 
-    public void charPress(byte character) { if (editing_enabled) text.charPress(character); }
+
+
+    public void charPress(byte character) {
+        if (editing_enabled) text.charPress(character);
+    }
     public void setPadding(float padding) { this.padding = padding; }
     public void lockScrollBar(boolean lock) { lock_scrollbar = lock; }
     public boolean isWordWrapEnabled() { return word_wrap_enabled; }

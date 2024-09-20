@@ -1,7 +1,6 @@
-#version 440 core
+
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
-
 struct TextureRegion {
     vec2[4] pos;    // x1,y1 | x2,y1 | x1,y2 | x2,y2
     vec2[4] uvs;    // u1,v2 | u2,v2 | u1,v1 | u2,v1

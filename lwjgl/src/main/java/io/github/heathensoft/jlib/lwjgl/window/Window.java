@@ -773,7 +773,7 @@ public class Window extends AbstractWindow {
             }*/
             if (key != GLFW_KEY_UNKNOWN && key < GLFW_KEY_LAST) {
                 key = action != GLFW_RELEASE ? key : -key;
-                current_processor.on_key_event(key,mods);
+                current_processor.on_key_event(key,mods,action);
             }
         }
     };

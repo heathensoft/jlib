@@ -7,23 +7,17 @@ import io.github.heathensoft.jlib.common.storage.generic.Stack;
 import io.github.heathensoft.jlib.common.utils.Color;
 import io.github.heathensoft.jlib.common.utils.U;
 import io.github.heathensoft.jlib.lwjgl.gfx.*;
-import io.github.heathensoft.jlib.lwjgl.window.Engine;
-import io.github.heathensoft.jlib.lwjgl.window.Mouse;
 import io.github.heathensoft.jlib.lwjgl.window.Resolution;
-import io.github.heathensoft.jlib.lwjgl.window.Window;
 import io.github.heathensoft.jlib.ui.GUI;
 import io.github.heathensoft.jlib.ui.text.Text;
 import io.github.heathensoft.jlib.ui.text.TextAlignment;
+import io.github.heathensoft.jlib.ui.text.TextEditor;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.joml.primitives.Rectanglef;
 import org.joml.primitives.Rectanglei;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.MemoryUtil;
 
-import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.LinkedList;
 
@@ -32,9 +26,6 @@ import static java.lang.Math.max;
 import static org.lwjgl.glfw.GLFW.glfwGetCursorPos;
 import static org.lwjgl.opengl.GL11.GL_UNSIGNED_INT;
 import static org.lwjgl.opengl.GL11.glReadPixels;
-import static org.lwjgl.opengl.GL15.GL_STREAM_READ;
-import static org.lwjgl.opengl.GL15.glUnmapBuffer;
-import static org.lwjgl.opengl.GL21.GL_PIXEL_PACK_BUFFER;
 import static org.lwjgl.opengl.GL30.*;
 import static org.lwjgl.opengl.GL32.GL_BLEND;
 import static org.lwjgl.opengl.GL32.GL_COLOR_BUFFER_BIT;
@@ -49,13 +40,12 @@ import static org.lwjgl.opengl.GL32.glBlendFuncSeparate;
 import static org.lwjgl.opengl.GL32.glDisable;
 import static org.lwjgl.opengl.GL32.glEnable;
 import static org.lwjgl.opengl.GL32.glScissor;
-import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL40.glBlendEquationi;
 import static org.lwjgl.opengl.GL40.glBlendFunci;
 
 /**
  * Master Renderer for GUI. Batch draw for quads. begin -> draw gui -> end.
- * REMEMBER YOU CAN SKIP RENDER ELEMENT ID (by using SKIP_ID as id argument)
+ * REMEMBER YOU CAN SKIP RENDER ELEMENT ID (by using SKIP_ID as id argument) // have this a state instead
  * Attempting to draw disposed textures will result in pink output colors (Color.ERROR_BITS)
  *
  * @author Frederik Dahl
@@ -162,14 +152,16 @@ public class RendererGUI implements Disposable {
                 IntBuffer buffer = stack.callocInt(1);
                 glReadPixels(mouse_screen_x,mouse_screen_y,1,1, GL_RED_INTEGER, GL_UNSIGNED_INT,buffer);
                 pixel_id = buffer.get(0);
-            } Framebuffer.drawBuffers(0,1,2,3);
+            }
+            Framebuffer.drawBuffers(0,1,2,3);
             Framebuffer.clear();
             glEnable(GL_BLEND); // Blending diffuse and normals
+            glDisable(GL_SCISSOR_TEST);
             glBlendEquation(GL_FUNC_ADD);
             glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-            glBlendEquationi(2,GL_MAX); // Blending emissive
-            glBlendFunci(2,GL_ONE,GL_ONE);
-            glDisable(GL_SCISSOR_TEST);
+            //glBlendEquationi(2,GL_MAX); // Blending emissive
+            //glBlendFunci(2,GL_ONE,GL_ONE);
+            //glBlendFunci(2,GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
             rendering = true;
         }
     }
@@ -177,7 +169,8 @@ public class RendererGUI implements Disposable {
     public void end() {
         if (rendering) {
             while (!delayed_calls.isEmpty()) {
-                delayed_calls.removeLast().execute();
+                // delayed calls has no id. And glow should be overridden. Not GL_MAX
+                delayed_calls.removeLast().apply();
             } frame_count++;
             spriteBatch.flush();
             textBatch.flush();
@@ -202,8 +195,9 @@ public class RendererGUI implements Disposable {
                 ShaderProgram.setUniform(ShaderProgram.UNIFORM_DIFFUSE,diffuse.bindTooAnySlot());
                 ShaderProgram.setUniform(ShaderProgram.UNIFORM_EMISSIVE,emissive.bindTooAnySlot());
                 ShaderProgram.setUniform("u_threshold",U.clamp(GUI.variables.bloom_threshold,0,2));
-                ShaderProgram.shaderPass().draw();
 
+                glDisable(GL_BLEND);
+                ShaderProgram.shaderPass().draw();
                 ShaderProgram.bindProgram(GUI.shaders.bloom_ping_pong);
                 for (int i = 0; i < bloom_iterations; i++) {
                     for (int j = 0; j < 2; j++) {
@@ -214,7 +208,6 @@ public class RendererGUI implements Disposable {
                         ShaderProgram.shaderPass().drawRepeat();
                     }
                 }
-
             }
 
 
@@ -258,6 +251,30 @@ public class RendererGUI implements Disposable {
     public void drawDelayed(Executor function) { delayed_calls.addFirst(function); }
     public void drawTooltip(String string, Vector2f mouse_position) { GUI.tooltips.display(string, mouse_position); }
     public void drawTooltip(String string, Vector2f mouse_position, int color) { GUI.tooltips.display(string, mouse_position, color); }
+
+
+    public void drawAsciiEditor(TextEditor text, Rectanglef bounds, Vector4f rgb, float y_offset, int font, float padding, float size, float glow, boolean wrap, boolean show_cursor) {
+        if (rendering && !paused && size > 1f) {
+            Rectanglef r = popSetRect(
+                    bounds.minX + padding,
+                    bounds.minY + padding,
+                    bounds.maxX - padding,
+                    bounds.maxY - padding
+            ); if (r.isValid()) {
+                if (active_batch != TEXT_BATCH) {
+                    if (active_batch == SPRITE_BATCH) {
+                        spriteBatch.flush();
+                        shader_swaps++;
+                    } active_batch = TEXT_BATCH;
+                    Framebuffer.drawBuffers(0,1,2);
+                } fonts.bindFontMetrics(font);
+                if (scissorStack.push(r)) {
+                    text.draw(textBatch,r,rgb,y_offset,size,glow,wrap,show_cursor);
+                    scissorStack.pop();
+                }
+            } U.pushRect();
+        }
+    }
 
 
     public void drawText(Text text, Rectanglef bounds, int font, float size) { drawText(text,bounds,font,size,false); }
